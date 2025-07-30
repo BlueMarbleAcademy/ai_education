@@ -16,9 +16,12 @@
     "axios": "^1.8.4",
     "azure-cosmos": "^0.0.1-security.3",
     "date-fns": "^4.1.0",
+    "docx": "^9.5.1",
+    "file-saver": "^2.0.5",
     "framer-motion": "^11.0.8",
-    "pdfjs-dist": "^5.0.375",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.344.0",
+    "pdfjs-dist": "^5.0.375",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -43,6 +46,6 @@
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "vite": "^5.4.2"
+    "vite": "^7.0.6"
   }
 }

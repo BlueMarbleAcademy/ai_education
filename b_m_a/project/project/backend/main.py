@@ -15,6 +15,14 @@ from pdf_utils import extract_text_from_pdf
 from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, generate_study_plan, update_study_plan, summarize_text
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse
 from pydantic import BaseModel
+from openai_client import summarize_large_text
+class SaveSummaryRequest(BaseModel):
+    summary: str
+
+class SaveSummaryResponse(BaseModel):
+    id: str
+    message: str
+
 
 # Load the environment variables
 load_dotenv()
@@ -709,10 +717,15 @@ async def update_study_plan_endpoint(request: UpdateStudyPlanRequest, user_claim
             detail=f"Failed to update study plan: {str(e)}"
         )
 
+
+
+
 @app.post("/summarize")
 async def summarize_file(
     file: UploadFile = None, 
-    text: str = Body(None)
+    text: str = Body(None),
+    style: str = Body("high"),
+    summary_format: str = Form("bullet") , # "bullet", "key", "qa"
 ):
     print("🔍 Entered /summarize route")
 
@@ -721,32 +734,55 @@ async def summarize_file(
 
     try:
         if file:
-            print(f"📄 File received: {file.filename}, type: {file.content_type}")
-            allowed_content_types = ["application/pdf", "text/plain"]
-            if file.content_type not in allowed_content_types:
-                raise HTTPException(status_code=400, detail="Invalid file type.")
+             print(f"📄 File received: {file.filename}, type: {file.content_type}")
+             allowed_types = {
+                 "application/pdf",
+                 "text/plain",
+                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+             }
 
-            file_location = f"temp_{file.filename}"
-            with open(file_location, "wb") as f:
-                content = await file.read()
-                f.write(content)
+           # Fallback: accept known file extensions
+             valid_extension = file.filename.endswith((".txt", ".pdf", ".docx"))
+   
+             if file.content_type not in allowed_types and not valid_extension:
+                 raise HTTPException(status_code=400, detail="Invalid file type.")
 
-            if file.content_type == "application/pdf":
-                print("📚 Extracting text from PDF...")
-                extracted_text = extract_text_from_pdf(file_location)
-            else:
-                print("📄 Reading plain text file...")
-                with open(file_location, "r", encoding="utf-8") as text_file:
-                    extracted_text = text_file.read()
+             file_location = f"temp_{file.filename}"
+             with open(file_location, "wb") as f:
+                 content = await file.read()
+                 f.write(content)
 
-            os.remove(file_location)
+             if file.content_type == "application/pdf":
+                 print("📚 Extracting text from PDF...")
+                 extracted_text = extract_text_from_pdf(file_location)
+             elif file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                    print("📄 Extracting text from DOCX...")
+                    try: 
+
+                         from docx import Document
+                         import io
+                         with open(file_location, "rb") as docx_file:
+                             docx_content = docx_file.read()
+                         document = Document(io.BytesIO(docx_content))
+                         extracted_text = "\n".join([para.text for para in document.paragraphs])
+
+                    except Exception as e:
+                         print(f"❌ Error extracting DOCX text: {e}")
+                         raise HTTPException(status_code=500, detail=f"Failed to extract DOCX content: {str(e)}")
+
+             else:
+                 print("📄 Reading plain text file...")
+                 with open(file_location, "r", encoding="utf-8") as text_file:
+                     extracted_text = text_file.read()
+
+             os.remove(file_location)
 
         else:
             print("📝 Text received in body")
             extracted_text = text
 
         print("✨ Sending to Azure for summarization...")
-        summary = summarize_text(extracted_text)
+        summary = summarize_large_text(extracted_text, style=style, format=summary_format)
         print("✅ Summary received")
 
     except Exception as e:
@@ -754,6 +790,40 @@ async def summarize_file(
         raise HTTPException(status_code=500, detail=str(e))
 
     return {"summary": summary}
+@app.post("/save-summary", response_model=SaveSummaryResponse)
+async def save_summary(
+    request: SaveSummaryRequest,
+    token: str = Depends(OAuth2PasswordBearer(tokenUrl="token"))
+):
+    try:
+        # Decode JWT to extract user ID
+        decoded_token = jwt.get_unverified_claims(token)
+        user_id = decoded_token.get("sub")  # This is the Azure AD B2C user ID
+
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in token")
+
+        summary_doc = {
+            "id": str(uuid.uuid4()),
+            "contentType": "summary",
+            "userId": user_id,
+            "data": {
+                "summary": request.summary,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        }
+
+        container.create_item(summary_doc)
+
+        return SaveSummaryResponse(
+            id=summary_doc["id"],
+            message="Summary saved successfully."
+        )
+
+    except Exception as e:
+        print(f"❌ Error saving summary: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to save summary.")
+
 # For development purposes
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -16,30 +16,96 @@ summarizer_client = AzureOpenAI(
 )
 SUMMARIZER_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_QUIZ_GENERATOR_DEPLOYMENT_NAME")
 
-def summarize_text(text: str) -> str:
+def summarize_text(text: str, style: str = "high", format: str = "bullet") -> str:
     """
     Summarize text using Azure OpenAI GPT model via the chat completions API.
     
     Args:
         text (str): The text to summarize.
+        style (str): "high" for concise or "detailed" for expanded summary.
+        format (str): "bullet", "key", or "qa".
         
     Returns:
         str: The generated summary.
     """
+    
     try:
+        system_prompt = {
+            "high": "You are an assistant that generates short, clear summaries. Focus on key points only. Avoid repetition or unnecessary detail.",
+            "detailed": "You are an assistant that creates detailed, structured summaries. Preserve depth and context. Explain key ideas comprehensively but clearly."
+        }.get(style, "You are an assistant that summarizes text.")
+
+        max_tokens = 250 if style == "high" else 700
+
+        format_prompt_map = {
+            "bullet": (
+                "Create a summary using 4-8 concise bullet points. "
+                "Each point should highlight a distinct idea or fact from the text."
+            ),
+            "key": (
+                "Extract the 4-6 most important sentences from the text. "
+                "These should capture core insights or arguments exactly as stated."
+            ),
+            "qa": (
+                "Read the following passage and create 3-6 Q&A pairs. "
+                "Each question should test understanding of an important idea, and the answer should be clear and factual."
+            )
+        }
+
+        user_prompt = format_prompt_map.get(format, "Summarize this text.") + f"\n\n{text}"
         response = summarizer_client.chat.completions.create(
             model=SUMMARIZER_DEPLOYMENT_NAME,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes text concisely."},
-                {"role": "user", "content": f"Please summarize the following text:\n\n{text}"}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
-            max_tokens=150,
+            max_tokens=max_tokens,
             temperature=0.5
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Error while calling Azure OpenAI for summarization: {str(e)}")
         raise Exception(f"Azure OpenAI summarization request failed: {str(e)}")
+
+
+# ---------------------------
+# Chunking and Merging Logic
+# ---------------------------
+def split_into_chunks(text: str, max_words: int = 1500) -> list:
+    """
+    Splits long text into smaller chunks to avoid token overflow.
+    """
+    words = text.split()
+    return [" ".join(words[i:i+max_words]) for i in range(0, len(words), max_words)]
+
+
+def summarize_large_text(text: str, style: str = "high", format: str = "bullet") -> str:
+    """
+    Handles long input text by chunking, summarizing each part,
+    and merging the results into one final summary.
+    """
+    chunks = split_into_chunks(text)
+    all_summaries = []
+
+    print(f"🧩 Text split into {len(chunks)} chunk(s)")
+
+    for i, chunk in enumerate(chunks):
+        try:
+            print(f"⏳ Summarizing chunk {i+1}/{len(chunks)}...")
+            partial_summary = summarize_text(chunk, style=style, format=format)
+            all_summaries.append(partial_summary)
+        except Exception as e:
+            print(f"❌ Chunk {i+1} failed: {str(e)}")
+            all_summaries.append("[Summary unavailable for this section]")
+
+    merged_summary = "\n\n".join(all_summaries)
+
+    if len(chunks) > 1:
+        print("📚 Creating final summary from chunked summaries...")
+        return summarize_text(merged_summary, style=style, format=format)
+    else:
+        return merged_summary
+
 
 
 # ---------------------------
