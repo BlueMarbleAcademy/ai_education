@@ -1,18 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { msalInstance } from "../../authConfig"; 
 import { useDropzone } from 'react-dropzone';
-import { jsPDF } from "jspdf";
-import { Document, Packer, Paragraph, TextRun } from "docx";
-import { saveAs } from "file-saver";
+import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 import {
-  FileText,
+  FileSearch,
   Upload,
   RefreshCw,
-  Download,
   Trash2,
-  FileSearch
+  ClipboardCopy
 } from 'lucide-react';
-import { generateSummary } from '../../api/apiService'; 
+import { generateSummary } from '../../api/apiService';
+import { msalInstance } from '../../authConfig';
 
 const Summarizer = () => {
   const [file, setFile] = useState(null);
@@ -21,6 +21,7 @@ const Summarizer = () => {
   const [error, setError] = useState('');
   const [summaryStyle, setSummaryStyle] = useState('high');
   const [summaryFormat, setSummaryFormat] = useState('bullet');
+  const [copied, setCopied] = useState(false);
 
   const callGenerateSummary = async (input) => {
     if (input instanceof FormData) {
@@ -28,96 +29,67 @@ const Summarizer = () => {
       input.append('summary_format', summaryFormat);
       return await generateSummary(input);
     } else {
-      return await generateSummary({
-        ...input,
-        style: summaryStyle,
-        summary_format: summaryFormat
-      });
+      return await generateSummary({ ...input, style: summaryStyle, summary_format: summaryFormat });
     }
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "summary.txt";
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
-    const lines = doc.splitTextToSize(summary, 180); // wrap text
+    const lines = doc.splitTextToSize(summary, 180);
     doc.text(lines, 10, 10);
-    doc.save("summary.pdf");
-   };
+    doc.save('summary.pdf');
+  };
 
   const handleDownloadDOCX = async () => {
     const doc = new Document({
-       sections: [{
-         properties: {},
-         children: [
-           new Paragraph({
-             children: [new TextRun(summary)],
-          }),
-        ],
-      }],
+      sections: [
+        {
+          properties: {},
+          children: [new Paragraph({ children: [new TextRun(summary)] })]
+        }
+      ]
     });
-
-  const blob = await Packer.toBlob(doc);
-  saveAs(blob, "summary.docx");
-};
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, 'summary.docx');
+  };
 
   const handleSaveSummary = async () => {
     if (!summary) return;
-
     try {
-     const accounts = msalInstance.getAllAccounts();
-     if (accounts.length === 0) {
-       alert("You must be logged in to save summaries.");
-        return;
-     }
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length === 0) return alert('You must be logged in.');
 
-     const tokenResponse = await msalInstance.acquireTokenSilent({
-      account: accounts[0],
-      scopes: ["https://bluemarbleacademy.onmicrosoft.com/tasks-api/tasks.read"], 
-     });
+      const tokenResponse = await msalInstance.acquireTokenSilent({
+        account: accounts[0],
+        scopes: ['https://bluemarbleacademy.onmicrosoft.com/tasks-api/tasks.read']
+      });
 
-     const token = tokenResponse.accessToken;
+      const token = tokenResponse.accessToken;
+      if (!token) return alert('You must be logged in.');
 
-      if (!token) {
-        alert("You must be logged in to save summaries.");
-        return;
-      }
-
-      const apiResponse = await fetch("http://localhost:8000/save-summary", {
-        method: "POST",
+      const res = await fetch('http://localhost:8000/save-summary', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ summary })
       });
 
-      const result = await apiResponse.json();
-      if (!apiResponse.ok) throw new Error(result.detail || "Failed to save summary");
-
-      alert("✅ Summary saved successfully!");
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.detail || 'Save failed');
+      alert('✅ Summary saved.');
     } catch (err) {
-      console.error("Error saving summary:", err);
-      alert("❌ Failed to save summary. See console for details.");
+      console.error('Save error:', err);
+      alert('❌ Could not save summary.');
     }
   };
-  
 
-
-
-  const onDrop = useCallback(async (acceptedFiles) => {
-    setError('');
-    const selectedFile = acceptedFiles[0];
-
-    if (selectedFile) {
+  const onDrop = useCallback(
+    async (acceptedFiles) => {
+      setError('');
+      const selectedFile = acceptedFiles[0];
+      if (!selectedFile) return;
       setFile(selectedFile);
       setIsProcessing(true);
 
@@ -125,58 +97,51 @@ const Summarizer = () => {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const text = e.target.result;
-          if (!text || text.trim() === "") {
-            setError("The text file appears to be empty.");
-            setIsProcessing(false);
-            return;
-          }
+          if (!text || text.trim() === '') return setError('Empty text file');
           try {
             const data = await callGenerateSummary({ text });
             setSummary(data.summary);
           } catch (err) {
-            console.error("Error generating summary:", err);
-            setError(err.message || 'Failed to generate summary. Please try again.');
+            console.error(err);
+            setError('Summary failed.');
           } finally {
             setIsProcessing(false);
           }
         };
-        reader.onerror = (e) => {
-          console.error("Error reading file:", e);
-          setError("Error reading the file. Please try again.");
-          setIsProcessing(false);
-        };
         reader.readAsText(selectedFile);
-      } else if (
-        selectedFile.type === 'application/pdf' ||
-        selectedFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      ) {
+      } else {
         const formData = new FormData();
         formData.append('file', selectedFile);
         try {
           const data = await callGenerateSummary(formData);
           setSummary(data.summary);
         } catch (err) {
-          console.error("Error generating summary:", err);
-          setError(err.message || 'Failed to generate summary. Please try again.');
+          console.error(err);
+          setError('Summary failed.');
         } finally {
           setIsProcessing(false);
         }
-      } else {
-        setError('Please upload a valid .txt, .pdf, or .docx file');
-        setIsProcessing(false);
       }
-    }
-  }, [summaryStyle, summaryFormat]);
+    },
+    [summaryStyle, summaryFormat]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'text/plain': ['.txt'],
       'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
     },
     maxFiles: 1
   });
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(summary).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
 
   const handleReset = () => {
     setFile(null);
@@ -185,175 +150,121 @@ const Summarizer = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="bg-blue-100 p-3 rounded-full">
-          <FileSearch className="h-8 w-8 text-blue-600" />
+    <div className="relative bg-gradient-to-br from-[#edf2ff] to-[#fef9ff] min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-purple-100 via-white to-transparent opacity-30 animate-pulse pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl p-8 ring-1 ring-gray-200 backdrop-blur"
+      >
+        <div className="flex items-center gap-4 mb-8">
+          <FileSearch className="h-8 w-8 text-indigo-600" />
+          <h1 className="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 animate-fade-in">
+            Smart Summarizer
+          </h1>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Text Summarizer</h1>
-      </div>
 
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="p-8 border-b border-gray-100">
-          {/* Summary Style */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Summary Style</label>
-            <div className="flex gap-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="high"
-                  checked={summaryStyle === 'high'}
-                  onChange={() => setSummaryStyle('high')}
-                  className="form-radio text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">High-level</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="detailed"
-                  checked={summaryStyle === 'detailed'}
-                  onChange={() => setSummaryStyle('detailed')}
-                  className="form-radio text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">Detailed</span>
-              </label>
-            </div>
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-sm font-semibold mb-1">Summary Style</label>
+            <select
+              value={summaryStyle}
+              onChange={(e) => setSummaryStyle(e.target.value)}
+              className="bg-gradient-to-r from-white to-gray-50 border border-gray-300 rounded-xl px-4 py-2 shadow-sm text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="high">High-Level</option>
+              <option value="detailed">Detailed</option>
+            </select>
           </div>
 
-          {/* Summary Format */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Summary Format</label>
-            <div className="flex gap-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="bullet"
-                  checked={summaryFormat === 'bullet'}
-                  onChange={() => setSummaryFormat('bullet')}
-                  className="form-radio text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">Bullet List</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="key"
-                  checked={summaryFormat === 'key'}
-                  onChange={() => setSummaryFormat('key')}
-                  className="form-radio text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">Key Sentences</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  value="qa"
-                  checked={summaryFormat === 'qa'}
-                  onChange={() => setSummaryFormat('qa')}
-                  className="form-radio text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">Q&A</span>
-              </label>
-            </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1">Summary Format</label>
+            <select
+              value={summaryFormat}
+              onChange={(e) => setSummaryFormat(e.target.value)}
+              className="bg-gradient-to-r from-white to-gray-50 border border-gray-300 rounded-xl px-4 py-2 shadow-sm text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="bullet">Bullet Points</option>
+              <option value="key">Key Sentences</option>
+              <option value="qa">Q&A</option>
+            </select>
           </div>
+        </div>
 
-          {/* File Upload */}
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors duration-200 ${
-              isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
-            } ${file ? 'bg-gray-50' : ''}`}
+        <motion.div
+          {...getRootProps()}
+          whileHover={{ scale: 1.02 }}
+          className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 bg-white shadow-inner ${isDragActive ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 hover:border-indigo-300'}`}
+        >
+          <input {...getInputProps()} />
+          <Upload className="mx-auto h-12 w-12 text-indigo-400 animate-bounce-slow" />
+          <p className="text-sm text-gray-600 mt-2">
+            {file ? `${file.name} (${(file.size / 1024).toFixed(1)} KB)` : 'Drop or click to upload a .txt, .pdf, or .docx file'}
+          </p>
+        </motion.div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl"
           >
-            <input {...getInputProps()} />
-            <div className="flex flex-col items-center gap-3">
-              <Upload className={`h-10 w-10 ${isDragActive ? 'text-blue-600' : 'text-gray-400'}`} />
-              {file ? (
-                <>
-                  <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {(file.size / 1024).toFixed(2)} KB
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-medium text-gray-900">
-                    Drop your file here, or click to select
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Supported formats: .txt, .pdf, .docx
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
+            {error}
+          </motion.div>
+        )}
 
-          {error && (
-            <div className="mt-4 p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-        </div>
+        <AnimatePresence>
+          {(isProcessing || summary) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-10 relative bg-white p-6 rounded-2xl shadow-xl ring-1 ring-indigo-100 overflow-hidden"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-br from-indigo-100 to-purple-100 opacity-10 rounded-2xl blur-lg animate-pulse pointer-events-none"></div>
 
-        {/* Summary Output */}
-        {(isProcessing || summary) && (
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Summary</h2>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Clear
-                </button>
+              <div className="flex justify-between items-center mb-4 relative z-10">
+                <h2 className="text-2xl font-semibold text-gray-800">Summary</h2>
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={handleReset} className="text-gray-500 hover:text-gray-800 text-sm">
+                    <Trash2 className="w-4 h-4" /> Clear
+                  </button>
 
-                {summary && (
-                  <>
-                    <button
-                      onClick={handleDownloadPDF}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
-                    >
-                      📄 Save as PDF
-                    </button>
+                  <button onClick={handleDownloadPDF} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-xl text-sm">
+                    PDF
+                  </button>
 
-                    <button
-                      onClick={handleDownloadDOCX}
-                      className="flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors duration-200"
-                    >
-                      📝 Save as DOCX
-                    </button>
+                  <button onClick={handleDownloadDOCX} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-4 py-2 rounded-xl text-sm">
+                    DOCX
+                  </button>
 
-                    <button
-                      onClick={handleSaveSummary}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
-                    >
-                      💾 Save Summary
-                    </button>
-                  </>
+                  <button onClick={handleSaveSummary} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm">
+                    Save
+                  </button>
+
+                  <button onClick={handleCopy} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-4 py-2 rounded-xl text-sm">
+                    <ClipboardCopy className="inline-block w-4 h-4 mr-1" />
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative z-10 whitespace-pre-wrap text-gray-800 animate-fade-in-delay max-h-[400px] overflow-y-auto">
+                {isProcessing ? (
+                  <div className="flex items-center gap-2 text-indigo-500 animate-pulse">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Generating summary...
+                  </div>
+                ) : (
+                  summary
                 )}
               </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-6">
-              {isProcessing ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="h-6 w-6 text-blue-600 animate-spin" />
-                  <span className="ml-3 text-gray-600">Generating summary...</span>
-                </div>
-              ) : (
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {summary}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };
