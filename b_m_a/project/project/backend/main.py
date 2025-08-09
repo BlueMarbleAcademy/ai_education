@@ -719,7 +719,6 @@ async def update_study_plan_endpoint(request: UpdateStudyPlanRequest, user_claim
 
 
 
-
 @app.post("/summarize")
 async def summarize_file(
     file: UploadFile = None, 

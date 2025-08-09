@@ -7,18 +7,58 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+.parcel-cache/
 *.local
 
-# Editor directories and files
+# Editor
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.python-version
+
+# Virtual envs
+venv/
+backend/venv/
+project/backend/venv/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Backend-only ignores (safe for code)
+backend/venv/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.coverage
+backend/*.sqlite*
+backend/*.db
+backend/.env
+project/backend/venv/
+project/backend/**/__pycache__/
+project/backend/.pytest_cache/
+
+

@@ -26,3 +26,4 @@ def extract_text_from_pdf(pdf_path):
         # Handle any other exceptions
         print(f"Error extracting PDF text: {str(e)}")
         return f"Error extracting PDF text: {str(e)}"
+    print(f"📄 Extracted {len(text)} characters from PDF.")

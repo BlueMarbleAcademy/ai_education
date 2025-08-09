@@ -19,40 +19,76 @@ SUMMARIZER_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_QUIZ_GENERATOR_DEPLOYMENT_N
 def summarize_text(text: str, style: str = "high", format: str = "bullet") -> str:
     """
     Summarize text using Azure OpenAI GPT model via the chat completions API.
-    
+
     Args:
         text (str): The text to summarize.
         style (str): "high" for concise or "detailed" for expanded summary.
         format (str): "bullet", "key", or "qa".
-        
+
     Returns:
         str: The generated summary.
     """
-    
     try:
-        system_prompt = {
-            "high": "You are an assistant that generates short, clear summaries. Focus on key points only. Avoid repetition or unnecessary detail.",
-            "detailed": "You are an assistant that creates detailed, structured summaries. Preserve depth and context. Explain key ideas comprehensively but clearly."
-        }.get(style, "You are an assistant that summarizes text.")
-
-        max_tokens = 250 if style == "high" else 700
-
-        format_prompt_map = {
-            "bullet": (
-                "Create a summary using 4-8 concise bullet points. "
-                "Each point should highlight a distinct idea or fact from the text."
+        # System prompts - updated tone and clarity
+        system_prompts = {
+            "high": (
+                "You are a summarization assistant. Generate concise summaries that focus only on essential facts and ideas. "
+                "Avoid repetition and unnecessary elaboration. Use a clear, professional tone."
+                
             ),
-            "key": (
-                "Extract the 4-6 most important sentences from the text. "
-                "These should capture core insights or arguments exactly as stated."
-            ),
-            "qa": (
-                "Read the following passage and create 3-6 Q&A pairs. "
-                "Each question should test understanding of an important idea, and the answer should be clear and factual."
+            "detailed": (
+                "You are a summarization expert. Generate in-depth summaries that retain the structure and meaning of the original content. "
+                "Include all key points while staying accurate and well-organized. Avoid personal opinions or markdown formatting."
             )
         }
+        system_prompt = system_prompts.get(style, system_prompts["high"])
 
-        user_prompt = format_prompt_map.get(format, "Summarize this text.") + f"\n\n{text}"
+        # Output length optimization
+        max_tokens = 350 if style == "high" else 900
+
+        # User prompt templates - stripped markdown, tightened instructions
+        format_prompts = { 
+            "bullet": (
+                "Read the following text and generate a clear, study-ready summary using bullet points.\n\n"
+                "Instructions:\n"
+                "- Use as many bullet points as needed to fully cover the main ideas without repetition.\n"
+                "- Start each bullet with a KEY TERM in all caps or Title Case, followed by a clear explanation.\n"
+                "- Avoid markdown symbols or special formatting.\n"
+                "- Separate each point with a line break for readability.\n"
+                "- Use an educational tone appropriate for students.\n\n"
+                "Format:\n"
+                "- KEY TERM: supporting explanation.\n"
+                "- Another Term: further explanation.\n\n"
+                "Text:\n\"\"\"\n{text}\n\"\"\""
+            ),
+            "key": (
+                "Read the text and extract the most important sentences that capture the key insights.\n\n"
+                "Instructions:\n"
+                "- Select only the most essential sentences for understanding.\n"
+                "- Number them, and use ALL CAPS or Title Case to highlight important terms.\n"
+                "- Do not use markdown or special characters.\n\n"
+                "Format:\n"
+                "1. KEY TERM — sentence.\n"
+                "2. Another Concept — sentence.\n\n"
+                "Text:\n\"\"\"\n{text}\n\"\"\""
+            ),
+            "qa": (
+            "Generate question-and-answer pairs based on the text to help with studying.\n\n"
+            "Instructions:\n"
+            "- Include as many pairs as needed to cover major points.\n"
+            "- Label with Q: and A: (do not use markdown or symbols).\n"
+            "- Highlight important terms using ALL CAPS or quotation marks.\n"
+            "- Add line breaks between each pair.\n\n"
+            "Format:\n"
+            "Q: What is the main idea of X?\n"
+            "A: The main idea is that \"X\" plays a critical role in ...\n\n"
+            "Text:\n\"\"\"\n{text}\n\"\"\""
+            )
+        }
+        user_prompt_template = format_prompts.get(format, format_prompts["bullet"])
+        user_prompt = user_prompt_template.format(text=text)
+
+        # API call
         response = summarizer_client.chat.completions.create(
             model=SUMMARIZER_DEPLOYMENT_NAME,
             messages=[
@@ -60,13 +96,19 @@ def summarize_text(text: str, style: str = "high", format: str = "bullet") -> st
                 {"role": "user", "content": user_prompt}
             ],
             max_tokens=max_tokens,
-            temperature=0.5
+            temperature=0.3,  # More deterministic
         )
-        return response.choices[0].message.content.strip()
+
+        raw_output = response.choices[0].message.content.strip()
+
+        # Post-processing: strip markdown characters like `**` or `#`
+        cleaned_output = raw_output.replace("**", "").replace("#", "").strip()
+
+        return cleaned_output
+
     except Exception as e:
         print(f"Error while calling Azure OpenAI for summarization: {str(e)}")
         raise Exception(f"Azure OpenAI summarization request failed: {str(e)}")
-
 
 # ---------------------------
 # Chunking and Merging Logic
@@ -100,11 +142,7 @@ def summarize_large_text(text: str, style: str = "high", format: str = "bullet")
 
     merged_summary = "\n\n".join(all_summaries)
 
-    if len(chunks) > 1:
-        print("📚 Creating final summary from chunked summaries...")
-        return summarize_text(merged_summary, style=style, format=format)
-    else:
-        return merged_summary
+    return merged_summary
 
 
 
