@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
@@ -9,7 +9,10 @@ import {
   Upload,
   RefreshCw,
   Trash2,
-  ClipboardCopy
+  ClipboardCopy,
+  PencilLine,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { generateSummary } from '../../api/apiService';
 import { msalInstance } from '../../authConfig';
@@ -23,6 +26,45 @@ const Summarizer = () => {
   const [summaryFormat, setSummaryFormat] = useState('bullet');
   const [copied, setCopied] = useState(false);
 
+  // Editing / status
+  const [isEditing, setIsEditing] = useState(true);
+  const [dirty, setDirty] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+
+  // Autosize textarea
+  const textareaRef = useRef(null);
+  const autoSize = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = '0px';
+    el.style.height = el.scrollHeight + 'px';
+  };
+  useEffect(() => { autoSize(); }, [summary, isEditing]);
+
+  // Warn on close if unsaved edits
+  useEffect(() => {
+    const handler = (e) => {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirty]);
+
+  
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const isSave = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's';
+      if (isSave) {
+        e.preventDefault();
+        handleSaveSummary();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [summary, dirty]);
+
   const callGenerateSummary = async (input) => {
     if (input instanceof FormData) {
       input.append('style', summaryStyle);
@@ -35,7 +77,7 @@ const Summarizer = () => {
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
-    const lines = doc.splitTextToSize(summary, 180);
+    const lines = doc.splitTextToSize(summary || '', 180);
     doc.text(lines, 10, 10);
     doc.save('summary.pdf');
   };
@@ -45,7 +87,7 @@ const Summarizer = () => {
       sections: [
         {
           properties: {},
-          children: [new Paragraph({ children: [new TextRun(summary)] })]
+          children: [new Paragraph({ children: [new TextRun(summary || '')] })]
         }
       ]
     });
@@ -54,14 +96,14 @@ const Summarizer = () => {
   };
 
   const handleSaveSummary = async () => {
-    if (!summary) return;
+    if (!summary?.trim()) return;
     try {
       const accounts = msalInstance.getAllAccounts();
       if (accounts.length === 0) return alert('You must be logged in.');
 
       const tokenResponse = await msalInstance.acquireTokenSilent({
         account: accounts[0],
-        scopes: ['https://bluemarbleacademy.onmicrosoft.com/tasks-api/tasks.read']
+        scopes: ['https://bluemarbleacademy.onmicrosoft.com/tasks-api/tasks.read'] 
       });
 
       const token = tokenResponse.accessToken;
@@ -78,6 +120,9 @@ const Summarizer = () => {
 
       const result = await res.json();
       if (!res.ok) throw new Error(result.detail || 'Save failed');
+      setDirty(false);
+      setIsEditing(false);
+      setLastSavedAt(Date.now());
       alert('✅ Summary saved.');
     } catch (err) {
       console.error('Save error:', err);
@@ -93,14 +138,24 @@ const Summarizer = () => {
       setFile(selectedFile);
       setIsProcessing(true);
 
+      const afterGen = (data) => {
+        setSummary(data.summary || '');
+        setDirty(false);
+        setIsEditing(true); // ready to edit
+        setLastSavedAt(null);
+      };
+
       if (selectedFile.type === 'text/plain') {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const text = e.target.result;
-          if (!text || text.trim() === '') return setError('Empty text file');
+          if (!text || text.trim() === '') {
+            setIsProcessing(false);
+            return setError('Empty text file');
+          }
           try {
             const data = await callGenerateSummary({ text });
-            setSummary(data.summary);
+            afterGen(data);
           } catch (err) {
             console.error(err);
             setError('Summary failed.');
@@ -114,7 +169,7 @@ const Summarizer = () => {
         formData.append('file', selectedFile);
         try {
           const data = await callGenerateSummary(formData);
-          setSummary(data.summary);
+          afterGen(data);
         } catch (err) {
           console.error(err);
           setError('Summary failed.');
@@ -137,6 +192,7 @@ const Summarizer = () => {
   });
 
   const handleCopy = () => {
+    if (!summary) return;
     navigator.clipboard.writeText(summary).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -147,7 +203,12 @@ const Summarizer = () => {
     setFile(null);
     setSummary('');
     setError('');
+    setDirty(false);
+    setIsEditing(true);
+    setLastSavedAt(null);
   };
+
+  const wordCount = summary.trim() ? summary.trim().split(/\s+/).length : 0;
 
   return (
     <div className="relative bg-gradient-to-br from-[#edf2ff] to-[#fef9ff] min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -188,7 +249,7 @@ const Summarizer = () => {
             >
               <option value="bullet">Bullet Points</option>
               <option value="key">Key Sentences</option>
-              <option value="qa">Q&A</option>
+              <option value="qa">Q&amp;A</option>
             </select>
           </div>
         </div>
@@ -209,8 +270,9 @@ const Summarizer = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl"
+            className="mt-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl flex items-center gap-2"
           >
+            <AlertCircle className="w-4 h-4" />
             {error}
           </motion.div>
         )}
@@ -225,40 +287,116 @@ const Summarizer = () => {
             >
               <div className="absolute -inset-1 bg-gradient-to-br from-indigo-100 to-purple-100 opacity-10 rounded-2xl blur-lg animate-pulse pointer-events-none"></div>
 
-              <div className="flex justify-between items-center mb-4 relative z-10">
-                <h2 className="text-2xl font-semibold text-gray-800">Summary</h2>
-                <div className="flex gap-2 flex-wrap">
-                  <button onClick={handleReset} className="text-gray-500 hover:text-gray-800 text-sm">
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-semibold text-gray-800">Summary</h2>
+
+                  {dirty ? (
+                    <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 text-[11px]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      Unsaved
+                    </span>
+                  ) : lastSavedAt ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 text-[11px]">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Saved
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={handleReset}
+                    className="text-gray-600 hover:text-gray-900 text-sm inline-flex items-center gap-1"
+                  >
                     <Trash2 className="w-4 h-4" /> Clear
                   </button>
 
-                  <button onClick={handleDownloadPDF} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-xl text-sm">
+                  <div className="hidden sm:block h-6 w-px bg-gray-200" />
+
+                  <button
+                    onClick={() => setIsEditing((v) => !v)}
+                    className="text-sm inline-flex items-center gap-1 px-3 py-2 rounded-xl border hover:bg-gray-50"
+                  >
+                    {isEditing ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" /> Done
+                      </>
+                    ) : (
+                      <>
+                        <PencilLine className="w-4 h-4" /> Edit
+                      </>
+                    )}
+                  </button>
+
+                  <div className="hidden sm:block h-6 w-px bg-gray-200" />
+
+                  <button
+                    onClick={handleCopy}
+                    disabled={!summary}
+                    className="transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white px-4 py-2 rounded-xl text-sm inline-flex items-center"
+                  >
+                    <ClipboardCopy className="w-4 h-4 mr-1" />
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={!summary}
+                    className="transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-xl text-sm"
+                  >
                     PDF
                   </button>
 
-                  <button onClick={handleDownloadDOCX} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-4 py-2 rounded-xl text-sm">
+                  <button
+                    onClick={handleDownloadDOCX}
+                    disabled={!summary}
+                    className="transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-4 py-2 rounded-xl text-sm"
+                  >
                     DOCX
                   </button>
 
-                  <button onClick={handleSaveSummary} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm">
+                  <button
+                    onClick={handleSaveSummary}
+                    disabled={!dirty || !summary}
+                    className="transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm"
+                  >
                     Save
-                  </button>
-
-                  <button onClick={handleCopy} className="transition-all duration-200 transform hover:scale-105 hover:shadow-md bg-gradient-to-r from-indigo-500 to-blue-600 text-white px-4 py-2 rounded-xl text-sm">
-                    <ClipboardCopy className="inline-block w-4 h-4 mr-1" />
-                    {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
               </div>
 
-              <div className="relative z-10 whitespace-pre-wrap text-gray-800 animate-fade-in-delay max-h-[400px] overflow-y-auto">
+              {/* Editor / Preview */}
+              <div className="relative z-10">
                 {isProcessing ? (
                   <div className="flex items-center gap-2 text-indigo-500 animate-pulse">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Generating summary...
                   </div>
                 ) : (
-                  summary
+                  <>
+                    {isEditing ? (
+                      <textarea
+                        ref={textareaRef}
+                        value={summary}
+                        onChange={(e) => { setSummary(e.target.value); setDirty(true); }}
+                        onInput={autoSize}
+                        placeholder="Your summary will appear here. Edit it before saving."
+                        className="w-full min-h-[220px] max-h-[500px] overflow-y-auto rounded-xl border border-indigo-200/70 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/60 px-4 py-3 text-gray-800 leading-relaxed bg-white/80"
+                        spellCheck={true}
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap text-gray-800 max-h-[500px] overflow-y-auto rounded-xl border border-transparent px-2 py-1">
+                        {summary}
+                      </div>
+                    )}
+
+                    <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+                      <span>{wordCount} words • {summary.length} chars</span>
+                      <span className="opacity-70">Tip: Press Ctrl/Cmd + S to save</span>
+                    </div>
+                  </>
                 )}
               </div>
             </motion.div>
