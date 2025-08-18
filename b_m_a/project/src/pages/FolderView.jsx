@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, Search, Filter, List, LayoutGrid, ChevronDown, ChevronUp,
   Calendar as CalendarIcon, MoreVertical, Pencil, Trash2, FolderSymlink
@@ -9,11 +8,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Mic2, LayoutGrid as GridIcon, Edit3, Zap } from "lucide-react";
 
 const studyTools = [
-  { label: "AI Flashcards",    icon: <Brain className="text-2xl"/>,   color: "from-indigo-500 to-violet-500" },
-  { label: "Voice Notes",      icon: <Mic2 className="text-2xl"/>,    color: "from-purple-500 to-pink-500" },
-  { label: "Mind Maps",        icon: <GridIcon className="text-2xl"/>, color: "from-green-500 to-emerald-500" },
-  { label: "Practice Tests",   icon: <Edit3 className="text-2xl"/>,   color: "from-orange-500 to-yellow-500" },
-  { label: "Smart Summarizer", icon: <Zap className="text-2xl"/>,     color: "from-cyan-500 to-sky-500" },
+  { label: "AI Flashcards",    icon: <Brain className="text-2xl"/>,   color: "from-indigo-500 to-violet-500", page: "/tools/flashcards"},
+  { label: "Voice Notes",      icon: <Mic2 className="text-2xl"/>,    color: "from-purple-500 to-pink-500", page: "/tools/voice-notes"},
+  { label: "Mind Maps",        icon: <GridIcon className="text-2xl"/>, color: "from-green-500 to-emerald-500", page: "/tools/mind-maps"},
+  { label: "Practice Tests",   icon: <Edit3 className="text-2xl"/>,   color: "from-orange-500 to-yellow-500", page: "/tools/practice-tests"},
+  { label: "Smart Summarizer", icon: <Zap className="text-2xl"/>,     color: "from-cyan-500 to-sky-500", page: "/tools/summarizer"},
 ];
 
 const initialItems = [
@@ -235,9 +234,11 @@ export default function FolderView() {
               >
                 {tool.icon}
                 <span className="mt-3 font-semibold">{tool.label}</span>
+                <Link to = {tool.page}>
                 <button className="mt-4 px-4 py-1 bg-white text-slate-700 rounded-full text-sm shadow hover:scale-105">
                   Create
                 </button>
+                </Link>
               </motion.div>
             ))}
           </div>
