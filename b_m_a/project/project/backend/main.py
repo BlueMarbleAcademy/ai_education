@@ -16,6 +16,8 @@ from openai_client import generate_quiz, generate_answer_explanation, evaluate_s
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse
 from pydantic import BaseModel
 from openai_client import summarize_large_text
+from models import FolderCreate, FolderUpdate, FolderOut
+from models import Folder, CreateFolderRequest, UpdateFolderRequest
 class SaveSummaryRequest(BaseModel):
     summary: str
 
@@ -717,6 +719,263 @@ async def update_study_plan_endpoint(request: UpdateStudyPlanRequest, user_claim
             detail=f"Failed to update study plan: {str(e)}"
         )
 
+# =========================
+# FOLDERS (per-user)
+# contentType = "folder"
+# Partition key = user_claims["sub"] (userId)
+# =========================
+
+def _map_folder_doc_to_out(doc) -> FolderOut:
+    data = doc.get("data", {})
+    return FolderOut(
+        id=doc["id"],
+        name=data.get("name", ""),
+        color=data.get("color", ""),
+        starred=bool(data.get("starred", False)),
+        items=int(data.get("items", 0)),
+        createdAt=doc.get("createdAt", ""),
+        updatedAt=data.get("updatedAt")
+    )
+
+@app.get("/folders", response_model=List[FolderOut])
+async def list_folders(user_claims: dict = Depends(validate_token)):
+    try:
+        query = """
+        SELECT c.id, c.createdAt, c.data
+        FROM c
+        WHERE c.userId = @userId AND c.contentType = 'folder'
+        ORDER BY c.createdAt DESC
+        """
+        parameters = [{"name": "@userId", "value": user_claims["sub"]}]
+        items = list(container.query_items(
+            query=query,
+            parameters=parameters,
+            enable_cross_partition_query=True
+        ))
+        # items here are projections; rebuild minimal dict shape
+        result = []
+        for it in items:
+            doc = {
+                "id": it["id"],
+                "createdAt": it.get("createdAt", ""),
+                "data": it.get("data", {})
+            }
+            result.append(_map_folder_doc_to_out(doc))
+        return result
+    except Exception as e:
+        print(f"Error listing folders: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list folders")
+
+@app.post("/folders", response_model=FolderOut)
+async def create_folder(payload: FolderCreate, user_claims: dict = Depends(validate_token)):
+    try:
+        now = datetime.utcnow().isoformat()
+        doc = {
+            "id": str(uuid.uuid4()),
+            "userId": user_claims["sub"],
+            "contentType": "folder",
+            "createdAt": now,
+            "data": {
+                "name": payload.name.strip(),
+                "color": payload.color,
+                "starred": bool(payload.starred),
+                "items": int(payload.items or 0),
+                "updatedAt": None
+            }
+        }
+        container.create_item(doc)
+        return _map_folder_doc_to_out(doc)
+    except Exception as e:
+        print(f"Error creating folder: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create folder")
+
+@app.patch("/folders/{folder_id}", response_model=FolderOut)
+async def update_folder(folder_id: str, payload: FolderUpdate, user_claims: dict = Depends(validate_token)):
+    try:
+        doc = container.read_item(item=folder_id, partition_key=user_claims["sub"])
+        if doc.get("contentType") != "folder":
+            raise HTTPException(status_code=400, detail="Not a folder item")
+
+        data = doc.setdefault("data", {})
+        if payload.name is not None:
+            data["name"] = payload.name.strip()
+        if payload.color is not None:
+            data["color"] = payload.color
+        if payload.starred is not None:
+            data["starred"] = bool(payload.starred)
+        if payload.items is not None:
+            data["items"] = int(payload.items)
+
+        data["updatedAt"] = datetime.utcnow().isoformat()
+
+        doc = container.replace_item(item=folder_id, body=doc)
+        return _map_folder_doc_to_out(doc)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating folder: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update folder")
+
+@app.delete("/folders/{folder_id}")
+async def delete_folder(folder_id: str, user_claims: dict = Depends(validate_token)):
+    try:
+        # Optional: verify belongs-to user first (read then delete)
+        doc = container.read_item(item=folder_id, partition_key=user_claims["sub"])
+        if doc.get("contentType") != "folder":
+            raise HTTPException(status_code=400, detail="Not a folder item")
+
+        container.delete_item(item=folder_id, partition_key=user_claims["sub"])
+        return {"message": "Folder deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting folder: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete folder")
+
+@app.get("/folders/stats")
+async def folder_stats(user_claims: dict = Depends(validate_token)):
+    try:
+        # Total folders
+        q_total = """
+        SELECT VALUE COUNT(1)
+        FROM c
+        WHERE c.userId = @userId AND c.contentType = 'folder'
+        """
+        # Starred folders
+        q_starred = """
+        SELECT VALUE COUNT(1)
+        FROM c
+        WHERE c.userId = @userId AND c.contentType = 'folder' AND IS_DEFINED(c.data.starred) AND c.data.starred = true
+        """
+        # Total items (sum of data.items)
+        q_items = """
+        SELECT VALUE SUM(c.data.items)
+        FROM c
+        WHERE c.userId = @userId AND c.contentType = 'folder'
+        """
+
+        params = [{"name": "@userId", "value": user_claims["sub"]}]
+
+        total = list(container.query_items(q_total, parameters=params, enable_cross_partition_query=True))
+        starred = list(container.query_items(q_starred, parameters=params, enable_cross_partition_query=True))
+        total_items = list(container.query_items(q_items, parameters=params, enable_cross_partition_query=True))
+
+        return {
+            "totalFolders": (total[0] if total else 0) or 0,
+            "starredFolders": (starred[0] if starred else 0) or 0,
+            "totalItems": (total_items[0] if total_items else 0) or 0
+        }
+    except Exception as e:
+        print(f"Error computing folder stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to compute folder stats")
+@app.get("/folders")
+async def list_folders(user_claims: dict = Depends(validate_token)):
+    try:
+        query = "SELECT c.id, c.data.name, c.data.color, c.data.starred, c.data.items FROM c WHERE c.userId = @uid AND c.contentType = 'folder' ORDER BY c.data.name"
+        params = [{"name": "@uid", "value": user_claims["sub"]}]
+        rows = list(container.query_items(query=query, parameters=params, enable_cross_partition_query=True))
+        # normalize shape for frontend
+        return [
+            {
+                "id": r["id"],
+                "name": r["data"]["name"] if isinstance(r.get("data"), dict) else r["name"],
+                "color": r["data"]["color"] if isinstance(r.get("data"), dict) else r["color"],
+                "starred": r["data"]["starred"] if isinstance(r.get("data"), dict) else r.get("starred", False),
+                "items": r["data"]["items"] if isinstance(r.get("data"), dict) else r.get("items", 0),
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        print("list_folders error:", e)
+        raise HTTPException(status_code=500, detail="Failed to list folders")
+
+# Create folder
+@app.post("/folders")
+async def create_folder(body: CreateFolderRequest, user_claims: dict = Depends(validate_token)):
+    try:
+        doc = {
+            "id": str(uuid.uuid4()),
+            "userId": user_claims["sub"],
+            "contentType": "folder",
+            "createdAt": datetime.utcnow().isoformat(),
+            "data": {
+                "name": body.name.strip(),
+                "color": body.color,
+                "starred": bool(body.starred),
+                "items": 0,
+            },
+        }
+        container.create_item(doc)
+        return {
+            "id": doc["id"],
+            "name": doc["data"]["name"],
+            "color": doc["data"]["color"],
+            "starred": doc["data"]["starred"],
+            "items": doc["data"]["items"],
+        }
+    except Exception as e:
+        print("create_folder error:", e)
+        raise HTTPException(status_code=500, detail="Failed to create folder")
+
+# Update (rename / color / star / items)
+@app.patch("/folders/{folder_id}")
+async def update_folder(folder_id: str, body: UpdateFolderRequest, user_claims: dict = Depends(validate_token)):
+    try:
+        doc = container.read_item(item=folder_id, partition_key=user_claims["sub"])
+        if doc.get("userId") != user_claims["sub"] or doc.get("contentType") != "folder":
+            raise HTTPException(status_code=404, detail="Folder not found")
+
+        data = doc.setdefault("data", {})
+        if body.name is not None:   data["name"] = body.name.strip()
+        if body.color is not None:  data["color"] = body.color
+        if body.starred is not None:data["starred"] = bool(body.starred)
+        if body.items is not None:  data["items"] = int(body.items)
+
+        doc["updatedAt"] = datetime.utcnow().isoformat()
+        container.replace_item(item=folder_id, body=doc)
+        return {
+            "id": doc["id"],
+            "name": data["name"],
+            "color": data["color"],
+            "starred": data["starred"],
+            "items": data["items"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("update_folder error:", e)
+        raise HTTPException(status_code=500, detail="Failed to update folder")
+
+# Delete folder
+@app.delete("/folders/{folder_id}")
+async def delete_folder(folder_id: str, user_claims: dict = Depends(validate_token)):
+    try:
+        # ensure ownership
+        doc = container.read_item(item=folder_id, partition_key=user_claims["sub"])
+        if doc.get("userId") != user_claims["sub"] or doc.get("contentType") != "folder":
+            raise HTTPException(status_code=404, detail="Folder not found")
+        container.delete_item(item=folder_id, partition_key=user_claims["sub"])
+        return {"ok": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("delete_folder error:", e)
+        raise HTTPException(status_code=500, detail="Failed to delete folder")
+
+
+@app.get("/folders/stats")
+async def folder_stats(user_claims: dict = Depends(validate_token)):
+    try:
+        query = "SELECT c.data.starred AS starred, c.data.items AS items FROM c WHERE c.userId = @uid AND c.contentType = 'folder'"
+        params = [{"name": "@uid", "value": user_claims["sub"]}]
+        rows = list(container.query_items(query=query, parameters=params, enable_cross_partition_query=True))
+        total_folders = len(rows)
+        starred = sum(1 for r in rows if r.get("starred"))
+        total_items = sum(int(r.get("items") or 0) for r in rows)
+        return {"totalFolders": total_folders, "starredFolders": starred, "totalItems": total_items}
+    except Exception as e:
+        print("folder_stats error:", e)
+        raise HTTPException(status_code=500, detail="Failed to get stats")
 
 
 @app.post("/summarize")

@@ -15,7 +15,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { generateSummary } from '../../api/apiService';
-import { msalInstance } from '../../authConfig';
+
+
+import SaveToFolderButton from '../../components/SaveToFolderButton';
 
 const Summarizer = () => {
   const [file, setFile] = useState(null);
@@ -52,19 +54,6 @@ const Summarizer = () => {
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
 
-  
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      const isSave = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's';
-      if (isSave) {
-        e.preventDefault();
-        handleSaveSummary();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [summary, dirty]);
-
   const callGenerateSummary = async (input) => {
     if (input instanceof FormData) {
       input.append('style', summaryStyle);
@@ -95,41 +84,6 @@ const Summarizer = () => {
     saveAs(blob, 'summary.docx');
   };
 
-  const handleSaveSummary = async () => {
-    if (!summary?.trim()) return;
-    try {
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length === 0) return alert('You must be logged in.');
-
-      const tokenResponse = await msalInstance.acquireTokenSilent({
-        account: accounts[0],
-        scopes: ['https://bluemarbleacademy.onmicrosoft.com/tasks-api/tasks.read'] 
-      });
-
-      const token = tokenResponse.accessToken;
-      if (!token) return alert('You must be logged in.');
-
-      const res = await fetch('http://localhost:8000/save-summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ summary })
-      });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.detail || 'Save failed');
-      setDirty(false);
-      setIsEditing(false);
-      setLastSavedAt(Date.now());
-      alert('✅ Summary saved.');
-    } catch (err) {
-      console.error('Save error:', err);
-      alert('❌ Could not save summary.');
-    }
-  };
-
   const onDrop = useCallback(
     async (acceptedFiles) => {
       setError('');
@@ -140,8 +94,8 @@ const Summarizer = () => {
 
       const afterGen = (data) => {
         setSummary(data.summary || '');
-        setDirty(false);
-        setIsEditing(true); // ready to edit
+        setDirty(true);        // unsaved until user stores it in a folder
+        setIsEditing(true);
         setLastSavedAt(null);
       };
 
@@ -210,6 +164,31 @@ const Summarizer = () => {
 
   const wordCount = summary.trim() ? summary.trim().split(/\s+/).length : 0;
 
+  // Build the item that will be saved to a folder by SaveToFolderButton
+  const buildFolderItem = () => {
+    const now = new Date();
+    const baseTitle =
+      file?.name
+        ? `Summary: ${file.name}`
+        : `Summary ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+    const snippet = summary ? summary.replace(/\s+/g, ' ').slice(0, 140) : '';
+    return {
+      title: baseTitle,
+      description: snippet,
+      type: 'Summary',
+      date: now.toLocaleString(),
+      tags: ['smart-summarizer'],
+      fullText: summary,
+      timestamp: now
+    };
+  };
+
+  // called by SaveToFolderButton after successful save
+  const handleSaved = () => {
+    setDirty(false);
+    setLastSavedAt(Date.now());
+  };
+
   return (
     <div className="relative bg-gradient-to-br from-[#edf2ff] to-[#fef9ff] min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-purple-100 via-white to-transparent opacity-30 animate-pulse pointer-events-none" />
@@ -222,7 +201,7 @@ const Summarizer = () => {
       >
         <div className="flex items-center gap-4 mb-8">
           <FileSearch className="h-8 w-8 text-indigo-600" />
-          <h1 className="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 animate-fade-in">
+          <h1 className="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
             Smart Summarizer
           </h1>
         </div>
@@ -260,7 +239,7 @@ const Summarizer = () => {
           className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 bg-white shadow-inner ${isDragActive ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 hover:border-indigo-300'}`}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-indigo-400 animate-bounce-slow" />
+          <Upload className="mx-auto h-12 w-12 text-indigo-400" />
           <p className="text-sm text-gray-600 mt-2">
             {file ? `${file.name} (${(file.size / 1024).toFixed(1)} KB)` : 'Drop or click to upload a .txt, .pdf, or .docx file'}
           </p>
@@ -285,7 +264,7 @@ const Summarizer = () => {
               exit={{ opacity: 0 }}
               className="mt-10 relative bg-white p-6 rounded-2xl shadow-xl ring-1 ring-indigo-100 overflow-hidden"
             >
-              <div className="absolute -inset-1 bg-gradient-to-br from-indigo-100 to-purple-100 opacity-10 rounded-2xl blur-lg animate-pulse pointer-events-none"></div>
+              <div className="absolute -inset-1 bg-gradient-to-br from-indigo-100 to-purple-100 opacity-10 rounded-2xl blur-lg pointer-events-none"></div>
 
               {/* Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
@@ -357,20 +336,24 @@ const Summarizer = () => {
                     DOCX
                   </button>
 
-                  <button
-                    onClick={handleSaveSummary}
-                    disabled={!dirty || !summary}
-                    className="transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm"
-                  >
-                    Save
-                  </button>
+                  {/* Save into a folder; when done, clear "Unsaved" */}
+                  {summary && (
+                    <SaveToFolderButton
+                      toolType="Smart Summarizer"
+                      label="Save to Folder"
+                      size="md"
+                      color="bg-emerald-600 text-white hover:brightness-110"
+                      buildItem={buildFolderItem}
+                      onSaved={handleSaved}   // <-- wire up
+                    />
+                  )}
                 </div>
               </div>
 
               {/* Editor / Preview */}
               <div className="relative z-10">
                 {isProcessing ? (
-                  <div className="flex items-center gap-2 text-indigo-500 animate-pulse">
+                  <div className="flex items-center gap-2 text-indigo-500">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                     Generating summary...
                   </div>
@@ -394,7 +377,7 @@ const Summarizer = () => {
 
                     <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
                       <span>{wordCount} words • {summary.length} chars</span>
-                      <span className="opacity-70">Tip: Press Ctrl/Cmd + S to save</span>
+                      <span className="opacity-70">Tip: Save into a folder to track it</span>
                     </div>
                   </>
                 )}

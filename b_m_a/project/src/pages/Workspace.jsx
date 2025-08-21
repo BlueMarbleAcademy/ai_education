@@ -1,36 +1,62 @@
-
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   FolderPlus,
   Star,
   BarChart3,
   FolderKanban,
-  List
+  List,
+  RefreshCcw,
+  Search
 } from "lucide-react";
 import FolderManager from "./FolderManager";
 import { motion, AnimatePresence } from "framer-motion";
 
-const folderStats = [
-  {
-    icon: <FolderKanban className="w-6 h-6 text-blue-700"/>,
-    count: 4,
-    label: "Total Folders",
-    bg: "from-blue-500 to-indigo-500"
-  },
-  {
-    icon: <Star className="w-6 h-6 text-yellow-600"/>,
-    count: 2,
-    label: "Starred Folders",
-    bg: "from-yellow-400 to-amber-500"
-  },
-  {
-    icon: <BarChart3 className="w-6 h-6 text-green-600"/>,
-    count: 41,
-    label: "Total Items",
-    bg: "from-green-400 to-emerald-500"
-  }
-];
+// MSAL
+import { msalInstance, protectedResources } from "../authConfig";
 
+const API_BASE = "http://localhost:8000";
+
+// ---------- Auth + API helpers ----------
+async function getToken() {
+  const accounts = msalInstance.getAllAccounts();
+  if (!accounts || accounts.length === 0) {
+    // Surface a clear message to the UI; don't crash
+    throw new Error("You need to sign in to see your workspace.");
+  }
+  const request = {
+    scopes: protectedResources.todoListApi.scopes,
+    account: accounts[0],
+  };
+  try {
+    const result = await msalInstance.acquireTokenSilent(request);
+    return result.accessToken;
+  } catch {
+    const result = await msalInstance.acquireTokenPopup(request);
+    return result.accessToken;
+  }
+}
+
+async function apiFetch(path, options = {}) {
+  const token = await getToken();
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    let msg = "";
+    try {
+      msg = await res.text();
+    } catch {}
+    throw new Error(msg || `Request failed (${res.status})`);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// ---------- UI palette ----------
 const folderColors = [
   "from-indigo-100 to-indigo-200",
   "from-fuchsia-100 to-pink-100",
@@ -38,38 +64,199 @@ const folderColors = [
   "from-green-100 to-lime-100",
   "from-cyan-100 to-sky-100",
   "from-purple-100 to-violet-100",
-  "from-red-100 to-rose-100"
+  "from-red-100 to-rose-100",
 ];
 
-const initialFolders = [
-  { id: "1", name: "Project Documentation", items: 5, color: folderColors[0], starred: true },
-  { id: "2", name: "Research Materials",   items: 8, color: folderColors[1], starred: false },
-  { id: "3", name: "Design Assets",        items: 3, color: folderColors[2], starred: true },
-  { id: "4", name: "Meeting Notes",        items: 6, color: folderColors[3], starred: false }
-];
-
-const Workspace = () => {
+export default function Workspace() {
   const [view, setView] = useState("grid");
-  const [folders, setFolders] = useState(initialFolders);
+  const [folders, setFolders] = useState([]);
+  const [stats, setStats] = useState({ totalFolders: 0, starredFolders: 0, totalItems: 0 });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [search, setSearch] = useState("");
 
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedColor, setSelectedColor] = useState(folderColors[0]);
 
-  const createFolder = () => {
-    if (!newFolderName.trim()) return;
-    const newFolder = {
-      id: Date.now().toString(),
-      name: newFolderName,
-      items: 0,
-      color: selectedColor,
-      starred: false
+  const statCards = useMemo(
+    () => [
+      { icon: <FolderKanban className="w-6 h-6 text-blue-700" />,   count: stats.totalFolders ?? 0, label: "Total Folders",  bg: "from-blue-500 to-indigo-500" },
+      { icon: <Star className="w-6 h-6 text-yellow-600" />,         count: stats.starredFolders ?? 0, label: "Starred Folders", bg: "from-yellow-400 to-amber-500" },
+      { icon: <BarChart3 className="w-6 h-6 text-green-600" />,     count: stats.totalItems ?? 0,    label: "Total Items",    bg: "from-green-400 to-emerald-500" },
+    ],
+    [stats]
+  );
+
+  const deriveStats = useCallback((list) => {
+    const totalFolders = list.length;
+    const starredFolders = list.filter(f => !!f.starred).length;
+    const totalItems = list.reduce((sum, f) => sum + (Number(f.items) || 0), 0);
+    return { totalFolders, starredFolders, totalItems };
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const [foldersRes, statsRes] = await Promise.allSettled([
+        apiFetch("/folders", { method: "GET" }),
+        apiFetch("/folders/stats", { method: "GET" }),
+      ]);
+
+      // Folders
+      let serverFolders = [];
+      if (foldersRes.status === "fulfilled") {
+        serverFolders = (foldersRes.value || []).map(f => ({
+          id: f.id,
+          name: f.name,
+          items: f.items ?? 0,
+          color: f.color || folderColors[0],
+          starred: !!f.starred,
+        }));
+        setFolders(serverFolders);
+      } else {
+        // if folders call failed (likely not signed in)
+        setFolders([]);
+        setErr(foldersRes.reason?.message || "Failed to load folders.");
+      }
+
+      // Stats
+      if (statsRes.status === "fulfilled") {
+        setStats(statsRes.value || deriveStats(serverFolders));
+      } else {
+        // fallback: derive client-side if folders are available
+        setStats(deriveStats(serverFolders));
+        if (!err) {
+          // keep existing message if one already set
+          const msg = statsRes.reason?.message;
+          if (msg) setErr(prev => prev || msg);
+        }
+      }
+    } catch (e) {
+      setFolders([]);
+      setStats({ totalFolders: 0, starredFolders: 0, totalItems: 0 });
+      setErr(typeof e?.message === "string" ? e.message : "Failed to load workspace.");
+    } finally {
+      setLoading(false);
+    }
+  }, [deriveStats, err]);
+
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  // cross-tab refresh
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "folders:changed") loadAll();
     };
-    setFolders([newFolder, ...folders]);
-    setNewFolderName("");
-    setSelectedColor(folderColors[0]);
-    setIsModalOpen(false);
-  };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [loadAll]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return folders;
+    const q = search.toLowerCase();
+    return folders.filter(f =>
+      f.name.toLowerCase().includes(q) ||
+      String(f.items ?? "").toLowerCase().includes(q)
+    );
+  }, [folders, search]);
+
+  async function createFolder() {
+    if (!newFolderName.trim()) return;
+    setErr("");
+    try {
+      const created = await apiFetch("/folders", {
+        method: "POST",
+        body: JSON.stringify({
+          name: newFolderName.trim(),
+          color: selectedColor,
+          starred: false,
+          items: 0,
+        }),
+      });
+      // update list
+      const next = [{
+        id: created.id,
+        name: created.name,
+        items: created.items ?? 0,
+        color: created.color || selectedColor,
+        starred: !!created.starred,
+      }, ...folders];
+      setFolders(next);
+      // refresh/derive stats
+      try {
+        const s = await apiFetch("/folders/stats", { method: "GET" });
+        setStats(s);
+      } catch {
+        setStats(deriveStats(next));
+      }
+      // reset modal
+      setNewFolderName("");
+      setSelectedColor(folderColors[0]);
+      setIsModalOpen(false);
+    } catch (e) {
+      setErr(typeof e?.message === "string" ? e.message : "Failed to create folder.");
+    }
+  }
+
+  // Callbacks for child (FolderManager)
+  async function onToggleStar(id) {
+    setErr("");
+    const f = folders.find(x => x.id === id);
+    if (!f) return;
+    try {
+      const updated = await apiFetch(`/folders/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ starred: !f.starred }),
+      });
+      const next = folders.map(x => x.id === id ? { ...x, starred: !!updated.starred } : x);
+      setFolders(next);
+      // stats may change (starred count)
+      try {
+        const s = await apiFetch("/folders/stats", { method: "GET" });
+        setStats(s);
+      } catch {
+        setStats(deriveStats(next));
+      }
+    } catch (e) {
+      setErr("Failed to toggle star.");
+    }
+  }
+
+  async function onRename(id, newName) {
+    if (!newName?.trim()) return;
+    setErr("");
+    try {
+      const updated = await apiFetch(`/folders/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      setFolders(prev => prev.map(x => x.id === id ? { ...x, name: updated.name } : x));
+    } catch (e) {
+      setErr("Failed to rename folder.");
+    }
+  }
+
+  async function onDelete(id) {
+    setErr("");
+    try {
+      await apiFetch(`/folders/${id}`, { method: "DELETE" });
+      const next = folders.filter(x => x.id !== id);
+      setFolders(next);
+      try {
+        const s = await apiFetch("/folders/stats", { method: "GET" });
+        setStats(s);
+      } catch {
+        setStats(deriveStats(next));
+      }
+    } catch (e) {
+      setErr("Failed to delete folder.");
+    }
+  }
 
   return (
     <div className="min-h-screen px-6 py-8 bg-gradient-to-br from-white via-slate-100 to-slate-200">
@@ -77,19 +264,36 @@ const Workspace = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <h1 className="text-3xl font-bold text-slate-800 tracking-tight">My Workspace</h1>
         <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search folders and content..."
-            className="px-4 py-2 rounded-full shadow-md bg-white/70 backdrop-blur text-slate-700 w-72 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
+          <div className="px-4 py-2 rounded-full shadow-md bg-white/70 backdrop-blur text-slate-700 w-72 flex items-center gap-2 focus-within:ring-2 focus-within:ring-indigo-400">
+            <Search className="w-4 h-4 opacity-70" />
+            <input
+              type="text"
+              placeholder="Search folders and content..."
+              className="bg-transparent outline-none flex-1"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
           <button
             onClick={() => setView(v => v === "grid" ? "list" : "grid")}
             className="p-2 rounded-lg shadow-inner bg-white/70 backdrop-blur border border-slate-300"
+            title="Toggle view"
           >
             {view === "grid"
               ? <List className="w-5 h-5 text-slate-700"/>
               : <FolderKanban className="w-5 h-5 text-slate-700"/>}
           </button>
+
+          <button
+            onClick={loadAll}
+            className="p-2 rounded-lg shadow-inner bg-white/70 backdrop-blur border border-slate-300"
+            title="Refresh"
+            disabled={loading}
+          >
+            <RefreshCcw className={`w-5 h-5 text-slate-700 ${loading ? "animate-spin" : ""}`} />
+          </button>
+
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 rounded-xl shadow bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white font-medium hover:scale-[1.03] transition-transform"
@@ -99,14 +303,21 @@ const Workspace = () => {
         </div>
       </div>
 
+      {/* ERR */}
+      {err ? (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-rose-100 text-rose-800 border border-rose-200">
+          {err}
+        </div>
+      ) : null}
+
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        {folderStats.map((stat, i) => (
+        {statCards.map((stat, i) => (
           <motion.div
-            key={i}
+            key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
+            transition={{ delay: i * 0.08 }}
             className={`p-6 rounded-2xl text-white shadow-xl bg-gradient-to-br ${stat.bg}`}
           >
             <div className="flex items-center gap-4">
@@ -121,27 +332,25 @@ const Workspace = () => {
       </div>
 
       {/* FOLDER MANAGER */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <FolderManager view={view} folders={folders} setFolders={setFolders}/>
+      <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <FolderManager
+          view={view}
+          folders={filtered}
+          onToggleStar={onToggleStar}
+          onRename={onRename}
+          onDelete={onDelete}
+        />
       </motion.div>
 
-      {/* MODAL */}
+      {/* MODAL: Create Folder */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-center items-center"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-3xl shadow-2xl p-6 w-[90%] max-w-md space-y-6"
             >
               <h2 className="text-xl font-bold text-slate-800">Create New Folder</h2>
@@ -156,9 +365,8 @@ const Workspace = () => {
                   <button
                     key={idx}
                     onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${color} border-2 ${
-                      selectedColor === color ? "border-blue-500" : "border-transparent"
-                    }`}
+                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${color} border-2 ${selectedColor === color ? "border-blue-500" : "border-transparent"}`}
+                    title={color}
                   />
                 ))}
               </div>
@@ -171,7 +379,8 @@ const Workspace = () => {
                 </button>
                 <button
                   onClick={createFolder}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white disabled:opacity-60"
+                  disabled={!newFolderName.trim()}
                 >
                   Create
                 </button>
@@ -182,6 +391,4 @@ const Workspace = () => {
       </AnimatePresence>
     </div>
   );
-};
-
-export default Workspace;
+}

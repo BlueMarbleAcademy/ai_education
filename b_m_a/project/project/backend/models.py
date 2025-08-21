@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -71,3 +71,42 @@ class UpdateStudyPlanResponse(BaseModel):
     id: str
     message: str
     updatedPlan: Dict[str, Any]
+
+class FolderCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    color: str
+    starred: bool = False
+    items: int = 0
+
+class FolderUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    color: Optional[str] = None
+    starred: Optional[bool] = None
+    items: Optional[int] = None  # keep in sync with your tools count
+
+class FolderOut(BaseModel):
+    id: str
+    name: str
+    color: str
+    starred: bool
+    items: int
+    createdAt: str
+    updatedAt: Optional[str] = None
+class Folder(BaseModel):
+    id: Optional[str] = None
+    name: str
+    color: str
+    starred: bool = False
+    items: int = 0  # total items in this folder (kept in sync by client)
+    contentType: Literal["folder"] = "folder"
+
+class CreateFolderRequest(BaseModel):
+    name: str
+    color: str
+    starred: bool = False
+
+class UpdateFolderRequest(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+    starred: Optional[bool] = None
+    items: Optional[int] = None

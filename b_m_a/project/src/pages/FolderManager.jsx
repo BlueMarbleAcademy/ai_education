@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Trash2, Pencil } from "lucide-react";
@@ -40,28 +39,26 @@ const ConfirmModal = ({ open, title, subtitle, confirmLabel = "Delete", onClose,
   );
 };
 
-const FolderManager = ({ view, folders, setFolders }) => {
+const FolderManager = ({ view, folders, onToggleStar, onRename, onDelete }) => {
   const navigate = useNavigate();
   const [pendingDelete, setPendingDelete] = useState(null);
 
-  const toggleStar = (id) =>
-    setFolders(folders.map(f => (f.id === id ? { ...f, starred: !f.starred } : f)));
-
-  const renameFolder = (id) => {
-    const newName = prompt("Enter new folder name:");
-    if (newName) {
-      setFolders(folders.map(f => (f.id === id ? { ...f, name: newName } : f)));
+  const renameFolder = (e, id, currentName) => {
+    e.stopPropagation();
+    const newName = prompt("Enter new folder name:", currentName);
+    if (newName && newName.trim()) {
+      onRename(id, newName.trim());
     }
   };
 
-  const onDeleteClicked = (e, folder) => {
+  const askDelete = (e, folder) => {
     e.stopPropagation();
     setPendingDelete(folder);
   };
 
   const confirmDelete = () => {
     if (pendingDelete) {
-      setFolders(folders.filter(f => f.id !== pendingDelete.id));
+      onDelete(pendingDelete.id);
       setPendingDelete(null);
     }
   };
@@ -90,16 +87,16 @@ const FolderManager = ({ view, folders, setFolders }) => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={(e) => { e.stopPropagation(); toggleStar(folder.id); }}>
+                <button onClick={(e) => { e.stopPropagation(); onToggleStar(folder.id); }} title="Star / Unstar">
                   <Star
                     className={`w-5 h-5 ${folder.starred ? "text-yellow-500" : "text-slate-400"}`}
                     fill={folder.starred ? "currentColor" : "none"}
                   />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); renameFolder(folder.id); }}>
+                <button onClick={(e) => renameFolder(e, folder.id, folder.name)} title="Rename">
                   <Pencil className="w-5 h-5 text-blue-500 hover:text-blue-700" />
                 </button>
-                <button onClick={(e) => onDeleteClicked(e, folder)}>
+                <button onClick={(e) => askDelete(e, folder)} title="Delete">
                   <Trash2 className="w-5 h-5 text-red-400 hover:text-red-600" />
                 </button>
               </div>
@@ -139,16 +136,16 @@ const FolderManager = ({ view, folders, setFolders }) => {
                 <div className="text-lg font-bold text-slate-800 mb-1">{folder.name}</div>
                 <div className="text-sm text-slate-600">{folder.items} items</div>
                 <div className="absolute top-3 right-3 flex gap-2">
-                  <button onClick={(e) => { e.stopPropagation(); toggleStar(folder.id); }}>
+                  <button onClick={(e) => { e.stopPropagation(); onToggleStar(folder.id); }} title="Star / Unstar">
                     <Star
                       className={`w-5 h-5 ${folder.starred ? "text-yellow-500" : "text-slate-400"}`}
                       fill={folder.starred ? "currentColor" : "none"}
                     />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); renameFolder(folder.id); }}>
+                  <button onClick={(e) => renameFolder(e, folder.id, folder.name)} title="Rename">
                     <Pencil className="w-4 h-4 text-blue-500 hover:text-blue-700" />
                   </button>
-                  <button onClick={(e) => onDeleteClicked(e, folder)}>
+                  <button onClick={(e) => askDelete(e, folder)} title="Delete">
                     <Trash2 className="w-4 h-4 text-red-400 hover:text-red-600" />
                   </button>
                 </div>
@@ -171,16 +168,16 @@ const FolderManager = ({ view, folders, setFolders }) => {
               <div className="text-lg font-bold text-slate-800 mb-1">{folder.name}</div>
               <div className="text-sm text-slate-600">{folder.items} items</div>
               <div className="absolute top-3 right-3 flex gap-2">
-                <button onClick={(e) => { e.stopPropagation(); toggleStar(folder.id); }}>
+                <button onClick={(e) => { e.stopPropagation(); onToggleStar(folder.id); }} title="Star / Unstar">
                   <Star
                     className={`w-5 h-5 ${folder.starred ? "text-yellow-500" : "text-slate-400"}`}
                     fill={folder.starred ? "currentColor" : "none"}
                   />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); renameFolder(folder.id); }}>
+                <button onClick={(e) => renameFolder(e, folder.id, folder.name)} title="Rename">
                   <Pencil className="w-4 h-4 text-blue-500 hover:text-blue-700" />
                 </button>
-                <button onClick={(e) => onDeleteClicked(e, folder)}>
+                <button onClick={(e) => askDelete(e, folder)} title="Delete">
                   <Trash2 className="w-4 h-4 text-red-400 hover:text-red-600" />
                 </button>
               </div>
