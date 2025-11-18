@@ -297,6 +297,27 @@ export const getStudyPlan = async (planId) => {
 };
 
 /**
+ * Delete a specific study plan by ID
+ * @param {String} planId - The ID of the study plan to delete
+ * @returns {Promise<Object>} - The delete response
+ */
+export const deleteStudyPlan = async (planId) => {
+  const endpoint = `http://localhost:8000/study-plans/${planId}`;
+
+  const options = {
+    method: "DELETE",
+  };
+
+  try {
+    const response = await callProtectedApi(endpoint, options);
+    return response; // Expected format: { message: "..." }
+  } catch (error) {
+    console.error(`Error deleting study plan ${planId}:`, error);
+    throw error;
+  }
+};
+
+/**
  * Update a study plan based on quiz results
  * @param {String} planId - The ID of the study plan to update
  * @param {Array} quizIds - Array of quiz IDs to use for updating the plan

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from 'react-router-dom';
 import { TestTube, PlusCircle, Check, X } from "lucide-react";
 import QuizWizard from "./QuizWizard";
 import QuizDisplay from "./QuizDisplay";
@@ -64,6 +65,28 @@ const PracticeTests = () => {
     saveQuiz,
     saveQuizAttempt,
   } = useQuizData();
+
+  const location = useLocation();
+
+  // If navigated here with a generated quiz in location.state, initialize UI
+  useEffect(() => {
+    if (location && location.state && location.state.generatedQuiz) {
+      try {
+        const g = location.state.generatedQuiz;
+        setGeneratedQuiz(g);
+        setShowQuiz(false);
+        setShowUpload(true);
+        setQuizStatus(g ? 'ready' : 'idle');
+        if (g && g.questions) {
+          setUserAnswers(Array(g.questions.length).fill(null));
+        }
+        // Clear location state to avoid re-processing if user navigates back
+        // (can't mutate history here easily; but this will be harmless)
+      } catch (err) {
+        console.error('Error initializing from generatedQuiz state', err);
+      }
+    }
+  }, [location]);
 
   // New state for AI-evaluated answers
   const [aiEvaluatedAnswers, setAiEvaluatedAnswers] = useState({});

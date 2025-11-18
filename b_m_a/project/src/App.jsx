@@ -7,6 +7,7 @@ import StudyTools from "./pages/StudyTools";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import AIFlashcards from "./pages/tools/AIFlashcards/AIFlashcards";
+import ErrorBoundary from './components/ErrorBoundary';
 import VoiceNotes from "./pages/tools/VoiceNotes";
 import MindMaps from "./pages/tools/MindMaps";
 import PracticeTests from "./pages/tools/PracticeTests/PracticeTests";
@@ -28,7 +29,7 @@ function App() {
           <Route path="/tools" element={<StudyTools />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/tools/flashcards" element={<AIFlashcards />} />
+          <Route path="/tools/flashcards" element={<ErrorBoundary><AIFlashcards /></ErrorBoundary>} />
           <Route path="/tools/voice-notes" element={<VoiceNotes />} />
           <Route path="/tools/mind-maps" element={<MindMaps />} />
           <Route path="/tools/practice-tests" element={<PracticeTests />} />

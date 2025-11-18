@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
@@ -20,6 +21,7 @@ import { generateSummary } from '../../api/apiService';
 import SaveToFolderButton from '../../components/SaveToFolderButton';
 
 const Summarizer = () => {
+  const location = useLocation();
   const [file, setFile] = useState(null);
   const [summary, setSummary] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,6 +44,35 @@ const Summarizer = () => {
     el.style.height = el.scrollHeight + 'px';
   };
   useEffect(() => { autoSize(); }, [summary, isEditing]);
+
+  // If navigated here with prefill text (from the Study Planner), auto-generate a summary
+  useEffect(() => {
+    const prefill = location?.state?.summarizeText;
+    if (prefill && typeof prefill === 'string' && prefill.trim().length > 0) {
+      // Auto-run summarization for the provided text by wrapping it in a .txt FormData
+      (async () => {
+        setError('');
+        setIsProcessing(true);
+        try {
+          const formData = new FormData();
+          const blob = new Blob([prefill], { type: 'text/plain' });
+          // append as a file so backend endpoints expecting file uploads will accept it
+          formData.append('file', blob, 'task-description.txt');
+
+          const data = await callGenerateSummary(formData);
+          setSummary(data.summary || '');
+          setDirty(true);
+          setIsEditing(true);
+          setLastSavedAt(null);
+        } catch (err) {
+          console.error('Auto summarization failed', err);
+          setError('Summary failed.');
+        } finally {
+          setIsProcessing(false);
+        }
+      })();
+    }
+  }, [location]);
 
   // Warn on close if unsaved edits
   useEffect(() => {

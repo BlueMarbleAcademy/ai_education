@@ -109,6 +109,29 @@ const AIFlashcards = () => {
         }
     }, [fetchSavedDecks, decksFetchedRef]);
 
+    // Global async error handlers to surface unhandled rejections / errors during async work
+    useEffect(() => {
+        const onUnhandledRejection = (ev) => {
+            console.error('Unhandled promise rejection in AIFlashcards:', ev.reason || ev);
+            // show a user-friendly alert for now
+            // avoid interrupting normal flow in production
+            try { alert('An unexpected error occurred while loading flashcards. See console for details.'); } catch (e) {}
+        };
+
+        const onError = (ev) => {
+            console.error('Global error in AIFlashcards:', ev.error || ev.message || ev);
+            try { alert('An unexpected error occurred. See console for details.'); } catch (e) {}
+        };
+
+        window.addEventListener('unhandledrejection', onUnhandledRejection);
+        window.addEventListener('error', onError);
+
+        return () => {
+            window.removeEventListener('unhandledrejection', onUnhandledRejection);
+            window.removeEventListener('error', onError);
+        };
+    }, []);
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Processing Modal */}

@@ -189,6 +189,13 @@ class LocalContainer:
             filtered.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
             return filtered
 
+        # Handle parameterized study_plan queries like: SELECT * FROM c WHERE c.userId = @uid AND c.contentType = 'study_plan'
+        if "from c where c.userid = @uid" in q and "and c.contenttype = 'study_plan'" in q:
+            user_id = params.get("@uid")
+            filtered = [it for it in items if (it.get("userId") == user_id and it.get("contentType") == "study_plan")]
+            filtered.sort(key=lambda x: x.get("createdAt", ""), reverse=True)
+            return filtered
+
         if "from c where c.userid = '" in q and "and c.contenttype = 'study_plan'" in q:
             try:
                 start = q.index("c.userid = '") + len("c.userid = '")
@@ -992,6 +999,8 @@ async def create_study_plan(
                 "title": title,
                 "description": description if description else study_plan_data.get("description", ""),
                 "content": study_plan_data,
+                # Save the raw extracted text from uploaded PDFs so clients can access the source
+                "source_text": all_text,
                 "tags": tag_list,
                 "pdfs": pdf_names,
                 "duration_info": duration_info,
@@ -1001,7 +1010,16 @@ async def create_study_plan(
 
         container.create_item(body=study_plan_document)
         print(f"Study plan created with ID: {study_plan_document['id']}")
-        return {"id": study_plan_document["id"], "plan": study_plan_data, "message": "Study plan created successfully"}
+        # Return saved metadata so clients can immediately show the saved plan
+        saved_meta = {
+            "id": study_plan_document["id"],
+            "title": study_plan_document["data"].get("title"),
+            "description": study_plan_document["data"].get("description"),
+            "tags": study_plan_document["data"].get("tags", []),
+            "createdAt": study_plan_document.get("createdAt"),
+            "updatedAt": study_plan_document["data"].get("updatedAt"),
+        }
+        return {"id": study_plan_document["id"], "plan": study_plan_data, "saved": saved_meta, "message": "Study plan created successfully"}
     except HTTPException:
         raise
     except Exception as e:
@@ -1044,6 +1062,24 @@ async def get_study_plan(plan_id: str, user_claims: dict = Depends(validate_toke
     except Exception as e:
         print(f"Error retrieving study plan: {str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study plan not found")
+
+
+@app.delete("/study-plans/{plan_id}")
+async def delete_study_plan(plan_id: str, user_claims: dict = Depends(validate_token)):
+    try:
+        # Read the document to ensure it exists and belongs to the user
+        doc = container.read_item(item=plan_id, partition_key=user_claims["sub"])
+        if doc.get("contentType") != "study_plan" or doc.get("userId") != user_claims["sub"]:
+            raise HTTPException(status_code=404, detail="Study plan not found")
+
+        # Delete the study plan
+        container.delete_item(item=plan_id, partition_key=user_claims["sub"])
+        return {"message": "Study plan deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting study plan: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete study plan: {str(e)}")
 
 @app.post("/update-study-plan", response_model=UpdateStudyPlanResponse)
 async def update_study_plan_endpoint(request: UpdateStudyPlanRequest, user_claims: dict = Depends(validate_token)):

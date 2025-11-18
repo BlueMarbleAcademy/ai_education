@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useDeckData } from './hooks';
 import { X } from 'lucide-react';
 
@@ -48,12 +48,12 @@ const FlashcardDeckList = ({ decks, onDeckSelect }) => {
 
     return (
         <div className="space-y-4">
-            {decks.map((deck) => {
-                const cards = deck.data.cards || [];
+            {decks.filter(Boolean).map((deck) => {
+                const cards = deck?.data?.cards || [];
 
                 return (
                     <div
-                        key={deck.id}
+                        key={deck?.id}
                         className="relative group bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md hover:shadow-lg cursor-pointer transition-shadow duration-200 ease-in-out"
                         onClick={() => onDeckSelect(deck)}
                     >
@@ -64,7 +64,7 @@ const FlashcardDeckList = ({ decks, onDeckSelect }) => {
                             <X className="h-4 w-4" />
                         </button>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                            {deck.data.title || "Untitled Deck"}
+                            {deck?.data?.title || "Untitled Deck"}
                         </h3>
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-600 dark:text-gray-400">

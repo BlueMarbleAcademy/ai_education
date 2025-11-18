@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useMsal } from "@azure/msal-react";
 import { getTasks } from "../api/apiService";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { subDays, isSameDay } from "date-fns";
 
 const Dashboard = () => {
   const { instance, accounts } = useMsal();
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [studyPlans, setStudyPlans] = useState([]);
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
@@ -86,6 +88,48 @@ const Dashboard = () => {
     fetchTasks();
   }, [userData]);
 
+  // Fetch study plans
+  useEffect(() => {
+    const fetchStudyPlans = async () => {
+      try {
+        const token = await instance.acquireTokenSilent({
+          scopes: ["api://api/access"],
+          account: instance.getActiveAccount(),
+        });
+        const response = await fetch("http://localhost:8000/study-plans", {
+          headers: {
+            Authorization: `Bearer ${token.accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setStudyPlans(data.study_plans || []);
+        }
+      } catch (error) {
+        console.error("Error fetching study plans:", error);
+      }
+    };
+
+    if (userData) {
+      fetchStudyPlans();
+    }
+  }, [userData, instance]);
+
+  // Calculate streak from study plans
+  const streak = useMemo(() => {
+    const today = new Date();
+    let count = 0;
+    for (let i = 0; i < 30; i++) {
+      const checkDay = subDays(today, i);
+      const has = studyPlans.some((p) => {
+        const d = p.updatedAt || p.createdAt;
+        return d ? isSameDay(new Date(d), checkDay) : false;
+      });
+      if (has) count++; else break;
+    }
+    return count;
+  }, [studyPlans]);
+
   // Display loading state if still loading
   if (loading && !userData) {
     return (
@@ -149,6 +193,15 @@ const Dashboard = () => {
         <p className="text-gray-600">
           You're signed in as <span className="font-medium">{email}</span>
         </p>
+        <div className="mt-3">
+          <div className="inline-flex items-center gap-3 bg-sky-50 border border-sky-100 text-gray-800 px-3 py-2 rounded-md shadow-sm">
+            <div className="text-xl">🔥</div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-xs text-gray-600">Current streak</span>
+              <span className="text-sm font-semibold">{streak} {streak === 1 ? 'day' : 'days'}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Error message */}
@@ -302,7 +355,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <AchievementCard
               icon={Trophy}
-              title="7 Day Streak"
+              title={`${streak} Day Streak`}
               description="Consistent learning pays off!"
               color="text-blue-600"
               bgColor="bg-blue-100"

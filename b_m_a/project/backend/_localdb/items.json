@@ -12,5 +12,2971 @@
     "tags": [],
     "settings": {},
     "contentType": "voice_note"
+  },
+  {
+    "id": "bdded97f-ba65-4315-a6e5-145c370e3023",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "study_plan",
+    "createdAt": "2025-11-18T11:30:00.705117",
+    "data": {
+      "title": "math",
+      "description": "Study Duration: 4 weeks",
+      "content": {
+        "title": "math",
+        "description": "Explore the fascinating concept of the Banach–Tarski Paradox while learning about advanced mathematical constructs such as non-measurable sets, the Axiom of Choice, rotations in 3D space, and their implications.",
+        "duration": "4 weeks",
+        "overview": "This study plan focuses on understanding the Banach–Tarski Paradox, the underlying mathematical principles, and the abstract nature of infinite sets and axioms. By the end, students will grasp key concepts like non-measurable sets, 3D rotations, and the Axiom of Choice, as well as their role in creating seemingly impossible constructions.",
+        "weekly_schedule": [
+          {
+            "week": 1,
+            "theme": "Introduction to Infinite Sets and Foundation of Axiom of Choice",
+            "description": "Start with understanding infinite sets, their behavior, and the basics of the Axiom of Choice as the foundation for the Banach–Tarski Paradox.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Introduction to Infinite Sets",
+                    "description": "Learn what infinite sets are and how they defy conventional understanding.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read an article introducing infinite sets and their behavior.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Create flashcards for key terms such as 'infinite sets', 'countable infinity', and 'non-measurable sets'.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Understanding the Axiom of Choice",
+                    "description": "Explore the Axiom of Choice and its controversial yet crucial role in mathematics.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study an introductory summary on the Axiom of Choice and its implications.",
+                        "duration": "25 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Summarize key points from the reading to break down the complexity of the concept.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "topics": [
+                  {
+                    "title": "Examples of Infinite Sets",
+                    "description": "Analyze examples to solidify understanding of infinite sets and their properties.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "tool": "Practice Test Generator",
+                        "description": "Test your knowledge of infinite sets using multiple-choice questions.",
+                        "duration": "30 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 4,
+                "topics": [
+                  {
+                    "title": "Exploring Non-Measurable Sets",
+                    "description": "Learn the implications of sets that cannot be measured or described in conventional ways.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read a detailed explanation of non-measurable sets and their properties.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 5,
+                "topics": [
+                  {
+                    "title": "Week 1 Progress Assessment",
+                    "description": "Recap and test your understanding of infinite sets, the Axiom of Choice, and non-measurable sets.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "tool": "Practice Test Generator",
+                        "description": "Generate a customized quiz covering Week 1 topics.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "discussion",
+                        "description": "Use Voice Notes to record reflections or questions on topics covered this week.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Develop a strong foundation in infinite sets and their properties.",
+              "Understand the significance and application of the Axiom of Choice.",
+              "Grasp the concept of non-measurable sets and their peculiar implications."
+            ],
+            "assessment": "Take a short multiple-choice quiz to test understanding and revisit confusing concepts using flashcards or AI Summarizer."
+          },
+          {
+            "week": 2,
+            "theme": "Delving into 3D Rotations and Non-Intuitive Math Constructions",
+            "description": "Study the peculiar properties of rotations in 3D space that allow abstract math constructions to occur.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Rotations in 3D Space",
+                    "description": "Learn how rotations contribute to mathematical constructions.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study a reference explaining rotations in 3D space and their mathematical properties.",
+                        "duration": "25 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Mind Maps",
+                        "description": "Create a mind map illustrating how rotations enable the creation of structured sets.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Constructing Non-Measurable Sets",
+                    "description": "Explore how rotations and the Axiom of Choice help create non-measurable sets.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study an advanced article on creating non-measurable sets using 3D rotations and the Axiom of Choice.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand the mechanics of 3D rotations and their role in abstract constructions.",
+              "Learn how the Axiom of Choice interacts with rotational mathematics."
+            ],
+            "assessment": "Generate a quiz to test understanding of the role of 3D rotations and non-measurable sets."
+          },
+          {
+            "week": 3,
+            "theme": "Banach–Tarski Paradox Demystified",
+            "description": "Focus on the components, formation, and implications of the Banach–Tarski Paradox.",
+            "weekly_goals": [
+              "Fully understand how the paradox arises from the components studied in previous weeks.",
+              "Break down the steps leading to constructing two identical spheres."
+            ],
+            "assessment": "Recap key concepts using flashcards and practice tests; review weak areas through voice notes or AI summarization."
+          },
+          {
+            "week": 4,
+            "theme": "Reflecting on Abstract Mathematics and Real-World Applications",
+            "description": "Conclude the study plan by reflecting on the ability of mathematics to create counterintuitive results, and understanding its philosophical implications.",
+            "weekly_goals": [
+              "Identify key lessons and philosophical points from the Banach–Tarski Paradox.",
+              "Reflect on the possibility and limits of abstract mathematics."
+            ],
+            "assessment": "Conduct a self-evaluation to determine understanding of abstract mathematics and revisit prior weak areas through tools."
+          }
+        ],
+        "study_techniques": [
+          {
+            "technique": "Flashcards",
+            "description": "Create flashcards using the Flashcard Generator to memorize key terms or concepts.",
+            "best_for": "Definitions, axioms, and properties."
+          },
+          {
+            "technique": "Mind Maps",
+            "description": "Use visual organizers to connect complex ideas and see their relationship.",
+            "best_for": "Linking components of the Banach–Tarski Paradox."
+          },
+          {
+            "technique": "Practice Quizzes",
+            "description": "Test understanding using questions generated by the Practice Test Generator.",
+            "best_for": "Assess knowledge and identify gaps in understanding."
+          },
+          {
+            "technique": "AI Summarizer",
+            "description": "Condense lengthy explanations into key takeaways.",
+            "best_for": "Breaking down difficult topics like the Axiom of Choice."
+          }
+        ],
+        "resources": [
+          {
+            "title": "Understanding Infinite Sets",
+            "type": "article",
+            "description": "Provides foundational knowledge on infinite sets and their significance in modern math."
+          },
+          {
+            "title": "Rotations in 3D",
+            "type": "video",
+            "description": "Explains how 3D rotations work and their mathematical importance."
+          },
+          {
+            "title": "Banach–Tarski Paradox Explained",
+            "type": "tool",
+            "description": "Generates summaries and quizzes based on the paradox's components."
+          }
+        ]
+      },
+      "tags": [],
+      "pdfs": [
+        "Untitled document (1).pdf"
+      ],
+      "duration_info": {
+        "duration": 4,
+        "unit": "weeks"
+      },
+      "updatedAt": null
+    }
+  },
+  {
+    "id": "68d66f17-88f1-468c-b5ce-7f346b80f8b1",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T11:56:44.852876",
+    "data": {
+      "title": "Infinite Sets and the Banach-Tarski Paradox Quiz",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the Banach-Tarski Paradox primarily about?",
+          "options": [
+            "The ability to split a sphere into smaller parts to form another sphere of identical size.",
+            "The impossibility of creating infinite sets using finite axioms.",
+            "The concept of measurable sets and their applications.",
+            "The role of the Axiom of Choice in probability problems."
+          ],
+          "correct_answer": "The ability to split a sphere into smaller parts to form another sphere of identical size."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical principle is essential for the Banach-Tarski Paradox?",
+          "options": [
+            "The Pythagorean Theorem",
+            "The concept of measurable sets",
+            "The Axiom of Choice",
+            "Set Theory of Finite Elements"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are involved in the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite sets",
+            "Countable sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical concept allows the 3D rotations in the Banach-Tarski Paradox?",
+          "options": [
+            "Linear transformations",
+            "Euclidean geometry",
+            "Group theory",
+            "Vector calculus"
+          ],
+          "correct_answer": "Group theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which space does the Banach-Tarski Paradox apply to?",
+          "options": [
+            "2-dimensional planes",
+            "3-dimensional space",
+            "4-dimensional space",
+            "Infinite-dimensional Hilbert space"
+          ],
+          "correct_answer": "3-dimensional space"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is one key implication of the paradox?",
+          "options": [
+            "Infinity can only exist theoretically.",
+            "Physical objects rely on infinite divisibility.",
+            "Non-measurable sets contradict intuition about volume and size.",
+            "The paradox disproves Euclidean geometry."
+          ],
+          "correct_answer": "Non-measurable sets contradict intuition about volume and size."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why does the Banach-Tarski Paradox defy common sense?",
+          "options": [
+            "It allows finite shapes to be recreated infinitely.",
+            "It shows that a solid object can be reassembled into an identical copy without adding material.",
+            "It disproves basic physical laws.",
+            "It requires measurable sets for construction."
+          ],
+          "correct_answer": "It shows that a solid object can be reassembled into an identical copy without adding material."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which axiom is critical for the creation of non-measurable sets?",
+          "options": [
+            "The Axiom of Parallel Lines",
+            "The Axiom of Infinity",
+            "The Axiom of Completeness",
+            "The Axiom of Choice"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which field of mathematics studies the properties of infinite sets explored in the Banach-Tarski Paradox?",
+          "options": [
+            "Calculus",
+            "Topology",
+            "Set theory",
+            "Number theory"
+          ],
+          "correct_answer": "Set theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox suggest about the abstract nature of infinite sets?",
+          "options": [
+            "They are irrelevant to most areas of mathematics.",
+            "They allow constructions that violate physical intuition.",
+            "They are dependent on measurable properties.",
+            "They conform to traditional rules of geometry."
+          ],
+          "correct_answer": "They allow constructions that violate physical intuition."
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": [
+        {
+          "attemptId": "7e2aa181-8bbe-44e1-94ab-795e2ccef00c",
+          "timestamp": "2025-11-18T11:57:38.709911",
+          "score": 20,
+          "timeTaken": 20,
+          "userAnswers": [
+            "The impossibility of creating infinite sets using finite axioms.",
+            "The Pythagorean Theorem",
+            "Non-measurable sets",
+            "Group theory",
+            "4-dimensional space",
+            "Physical objects rely on infinite divisibility.",
+            "It disproves basic physical laws.",
+            "The Axiom of Completeness",
+            "Number theory",
+            "They are dependent on measurable properties."
+          ],
+          "mode": "quiz"
+        }
+      ]
+    }
+  },
+  {
+    "id": "b7e4f0f2-1eba-4763-b683-ae35807966ec",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:07:19.197687",
+    "data": {
+      "title": "Understanding Infinite Sets and the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox demonstrate about infinite sets?",
+          "options": [
+            "Infinite sets can be rearranged to form two identical copies of themselves.",
+            "Infinite sets have a finite number of elements.",
+            "Infinite sets do not follow the rules of geometry.",
+            "Infinite sets are impossible to measure."
+          ],
+          "correct_answer": "Infinite sets can be rearranged to form two identical copies of themselves."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical principle underlies the Banach-Tarski Paradox?",
+          "options": [
+            "Pythagorean Theorem",
+            "Axiom of Choice",
+            "Principle of Non-Contradiction",
+            "Law of Large Numbers"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are central to understanding the Banach-Tarski Paradox?",
+          "options": [
+            "Finite sets",
+            "Measurable sets",
+            "Non-measurable sets",
+            "Empty sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "In the Banach-Tarski Paradox, objects are split and reassembled using rotations in which dimension?",
+          "options": [
+            "1D",
+            "2D",
+            "3D",
+            "4D"
+          ],
+          "correct_answer": "3D"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the Axiom of Choice known for in mathematics?",
+          "options": [
+            "Allowing the selection of elements from each set in a collection, even without a specific rule.",
+            "Ensuring the correctness of basic arithmetic operations.",
+            "Defining the structure of measurable sets.",
+            "Setting the principles of calculus."
+          ],
+          "correct_answer": "Allowing the selection of elements from each set in a collection, even without a specific rule."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why are non-measurable sets important in the Banach-Tarski Paradox?",
+          "options": [
+            "They are easier to visualize.",
+            "They allow constructions that defy intuitive geometric properties.",
+            "They provide proof for the existence of finite sets.",
+            "They simplify mathematical operations."
+          ],
+          "correct_answer": "They allow constructions that defy intuitive geometric properties."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How does the Banach-Tarski Paradox challenge traditional geometric intuition?",
+          "options": [
+            "By proving infinite sets are finite in certain cases.",
+            "By showing that objects can be split and reassembled to create more than one identical copy of the original object.",
+            "By demonstrating that the rules of arithmetic don't apply to infinite sets.",
+            "By suggesting the impossibility of rotations in 3D space."
+          ],
+          "correct_answer": "By showing that objects can be split and reassembled to create more than one identical copy of the original object."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following concepts is crucial for explaining the Banach-Tarski Paradox?",
+          "options": [
+            "3D rotations",
+            "Euler's Formula",
+            "Calculus integration",
+            "Linear transformations"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which aspect of the Banach-Tarski Paradox is most influenced by abstract mathematical axioms?",
+          "options": [
+            "The exact method of splitting the object.",
+            "The use of measurable sets.",
+            "The ability to create multiple identical copies of the object.",
+            "The visualization of geometric shapes."
+          ],
+          "correct_answer": "The ability to create multiple identical copies of the object."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the primary purpose of studying the Banach-Tarski Paradox?",
+          "options": [
+            "To understand the abstract nature of infinite sets.",
+            "To solve problems related to measurable sets.",
+            "To apply calculus principles to geometry.",
+            "To determine the limits of physics in 3D space."
+          ],
+          "correct_answer": "To understand the abstract nature of infinite sets."
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "4eb6ee12-1845-4512-a576-fea6400f1dc1",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:07:30.101142",
+    "data": {
+      "title": "Understanding Infinite Sets and the Banach–Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the Banach–Tarski Paradox?",
+          "options": [
+            "A principle stating that infinite sets cannot exist.",
+            "A mathematical theorem stating that a sphere can be divided and reconstructed into two identical spheres.",
+            "A scientific theory about the origins of the universe.",
+            "A paradox demonstrating the limitations of axioms in mathematics."
+          ],
+          "correct_answer": "A mathematical theorem stating that a sphere can be divided and reconstructed into two identical spheres"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical principle is essential for the Banach–Tarski Paradox?",
+          "options": [
+            "The Axiom of Choice",
+            "The Law of Large Numbers",
+            "The Fundamental Theorem of Calculus",
+            "Euclid's Postulates"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the concept of 'non-measurable sets' refer to?",
+          "options": [
+            "Sets that cannot be visualized geometrically.",
+            "Sets whose size or volume cannot be consistently defined using standard measures.",
+            "Sets that do not follow mathematical axioms.",
+            "Sets that do not have elements."
+          ],
+          "correct_answer": "Sets whose size or volume cannot be consistently defined using standard measures"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following fields of mathematics does the Banach–Tarski Paradox belong to?",
+          "options": [
+            "Probability Theory",
+            "Abstract Algebra",
+            "Set Theory",
+            "Number Theory"
+          ],
+          "correct_answer": "Set Theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "In the Banach–Tarski Paradox, why are 3D rotations significant?",
+          "options": [
+            "They show how spheres can roll and interact.",
+            "They allow the decomposition and reassembly of shapes into identical copies.",
+            "They create new mathematical axioms for infinite sets.",
+            "They help visualize non-euclidean spaces."
+          ],
+          "correct_answer": "They allow the decomposition and reassembly of shapes into identical copies"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What role does the Axiom of Choice play in constructing the Banach–Tarski Paradox?",
+          "options": [
+            "It ensures that every element in a set has a unique pair.",
+            "It allows mathematicians to select elements in a set without a specific rule.",
+            "It prohibits the existence of infinite sets.",
+            "It defines the measurable volume for abstract shapes."
+          ],
+          "correct_answer": "It allows mathematicians to select elements in a set without a specific rule"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which characteristic is shared by non-measurable sets?",
+          "options": [
+            "They cannot be subset of a finite set.",
+            "They cannot be assigned a consistent size or volume.",
+            "They are infinite sets composed of irrational numbers.",
+            "They are lines rather than planes."
+          ],
+          "correct_answer": "They cannot be assigned a consistent size or volume"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of construction does the Banach–Tarski Paradox result in?",
+          "options": [
+            "An impossible construction",
+            "A measurable geometric construction",
+            "A physical construction",
+            "A finite mathematical object"
+          ],
+          "correct_answer": "An impossible construction"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Banach–Tarski Paradox considered abstract?",
+          "options": [
+            "It applies only to imaginary sets.",
+            "It deals with concepts that are not physically realizable but mathematically valid.",
+            "It disregards all axioms in mathematics.",
+            "It has no basis in mathematical theory."
+          ],
+          "correct_answer": "It deals with concepts that are not physically realizable but mathematically valid"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which key mathematical concept is highlighted through the Banach–Tarski Paradox?",
+          "options": [
+            "The limitations of infinite numbers",
+            "The concept of infinite sets and their abstract properties",
+            "The relationship between geometry and physics",
+            "The constraints of Euclidean geometry"
+          ],
+          "correct_answer": "The concept of infinite sets and their abstract properties"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "31d66714-9606-437d-9a92-c0b95c51085b",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:07:42.291453",
+    "data": {
+      "title": "Infinite Sets and the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox primarily demonstrate?",
+          "options": [
+            "The impossibility of dividing finite sets",
+            "How infinite sets can be divided and reconstructed in unintuitive ways",
+            "A method for proving Fermat’s Last Theorem",
+            "The behavior of measurable sets under transformations"
+          ],
+          "correct_answer": "How infinite sets can be divided and reconstructed in unintuitive ways"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical concept is essential for understanding the Banach-Tarski Paradox?",
+          "options": [
+            "Pythagorean Theorem",
+            "The Axiom of Choice",
+            "Principle of Mathematical Induction",
+            "Logarithmic Functions"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which type of sets are involved in the Banach-Tarski Paradox?",
+          "options": [
+            "Non-measurable sets",
+            "Finite sets",
+            "Countable sets",
+            "Closed sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is unique about the structures created in the Banach-Tarski Paradox?",
+          "options": [
+            "They involve time travel",
+            "They appear to create physical objects through mathematics",
+            "They involve seemingly impossible constructions",
+            "They rely on infinite dimensions"
+          ],
+          "correct_answer": "They involve seemingly impossible constructions"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Axiom of Choice allow mathematicians to do?",
+          "options": [
+            "Pick an element from multiple non-empty sets simultaneously",
+            "Calculate the area of a non-measurable set",
+            "Perform infinite rotations in three-dimensional space",
+            "Prove the existence of prime numbers"
+          ],
+          "correct_answer": "Pick an element from multiple non-empty sets simultaneously"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of transformation plays a key role in the 3D constructions of the Banach-Tarski Paradox?",
+          "options": [
+            "Linear transformations",
+            "Translations",
+            "3D rotations",
+            "Scaling transformations"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which field of mathematics deals with the Banach-Tarski Paradox?",
+          "options": [
+            "Geometry",
+            "Set theory",
+            "Calculus",
+            "Numerical analysis"
+          ],
+          "correct_answer": "Set theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Banach-Tarski Paradox considered counterintuitive?",
+          "options": [
+            "It suggests infinite sets can be divided into smaller infinite pieces and reassembled into the original set",
+            "It disproves physical laws using mathematics",
+            "It shows that finite sets behave differently under rotations",
+            "It proves that measurable sets cannot be divided"
+          ],
+          "correct_answer": "It suggests infinite sets can be divided into smaller infinite pieces and reassembled into the original set"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What kind of sets are NOT compatible with the Banach-Tarski Paradox?",
+          "options": [
+            "Non-measurable sets",
+            "Measurable sets",
+            "Infinite sets",
+            "3D rotational sets"
+          ],
+          "correct_answer": "Measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which statement best describes the Banach-Tarski Paradox?",
+          "options": [
+            "It demonstrates the conservation of volume in infinite sets",
+            "It proves that an infinite ball can be split into pieces and reassembled into two identical balls of the same size",
+            "It disproves the Axiom of Choice",
+            "It shows how measurable sets behave under transformations"
+          ],
+          "correct_answer": "It proves that an infinite ball can be split into pieces and reassembled into two identical balls of the same size"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "56dc2a41-c2f0-4269-8335-00d070632ea4",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:07:52.256180",
+    "data": {
+      "title": "Infinite Sets and the Banach-Tarski Paradox Quiz",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical concept does the Banach-Tarski Paradox primarily rely on?",
+          "options": [
+            "The Axiom of Choice",
+            "The Law of Large Numbers",
+            "Non-Euclidean Geometry",
+            "The Fundamental Theorem of Calculus"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following is true about the Banach-Tarski Paradox?",
+          "options": [
+            "It applies to measurable sets.",
+            "It involves 2D rotations.",
+            "It allows a sphere to be divided and reconstructed into two identical spheres.",
+            "It contradicts all known axioms of mathematics."
+          ],
+          "correct_answer": "It allows a sphere to be divided and reconstructed into two identical spheres."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Non-measurable sets are essential in understanding the Banach-Tarski Paradox. What does it mean for a set to be non-measurable?",
+          "options": [
+            "It cannot be assigned a finite volume.",
+            "It is too small to be observed.",
+            "It is geometrically impossible to construct.",
+            "Its measurements depend on its location."
+          ],
+          "correct_answer": "It cannot be assigned a finite volume."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical property makes the Banach-Tarski Paradox possible in three dimensions?",
+          "options": [
+            "Infinite divisibility",
+            "3D transformations and rotations",
+            "Perfect symmetry",
+            "Chaos theory"
+          ],
+          "correct_answer": "3D transformations and rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical axiom plays a critical role in constructing non-measurable sets?",
+          "options": [
+            "The Parallel Postulate",
+            "The Axiom of Choice",
+            "The Continuum Hypothesis",
+            "The Transitive Property"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which key concept does the Banach-Tarski Paradox demonstrate in relation to infinite sets?",
+          "options": [
+            "Finite divisions are always possible.",
+            "Infinite sets can exhibit counterintuitive properties.",
+            "Infinite sets are equal to finite sets under transformations.",
+            "Motion in a vacuum creates paradoxes."
+          ],
+          "correct_answer": "Infinite sets can exhibit counterintuitive properties."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why can the results of the Banach-Tarski Paradox not be achieved in two dimensions?",
+          "options": [
+            "2D objects lack volume.",
+            "2D transformations are less abstract.",
+            "The Axiom of Choice does not apply to 2D space.",
+            "Non-measurable sets cannot form in two dimensions."
+          ],
+          "correct_answer": "2D objects lack volume."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach-Tarski Paradox fundamentally challenges our understanding of what mathematical concept?",
+          "options": [
+            "Probability theory",
+            "Volume and measure",
+            "Integral calculus",
+            "Geometric constructions"
+          ],
+          "correct_answer": "Volume and measure"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the abstract nature of infinite sets allow mathematicians to explore?",
+          "options": [
+            "Practical applications of mathematics",
+            "Paradoxes and counterintuitive properties",
+            "Chaos theory in geometry",
+            "Symmetry in prime numbers"
+          ],
+          "correct_answer": "Paradoxes and counterintuitive properties"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What specific type of transformation is crucial for the Banach-Tarski Paradox?",
+          "options": [
+            "Linear scaling",
+            "3D rotations",
+            "Quadratic equations",
+            "Time dilation"
+          ],
+          "correct_answer": "3D rotations"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "c6b72fe8-bac9-4ed0-bbc1-aee4b43ab933",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:08:00.934745",
+    "data": {
+      "title": "Infinite Sets and the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox demonstrate about infinite sets?",
+          "options": [
+            "They can be measured accurately.",
+            "They can be divided and reassembled into larger shapes.",
+            "They are conceptually impossible.",
+            "They only exist in 2D spaces."
+          ],
+          "correct_answer": "They can be divided and reassembled into larger shapes"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical principle is closely tied to the Banach-Tarski Paradox?",
+          "options": [
+            "Pythagorean Theorem",
+            "Axiom of Choice",
+            "Fundamental Theorem of Calculus",
+            "Law of Large Numbers"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which concept explains the existence of non-measurable sets in mathematics?",
+          "options": [
+            "Finite geometry",
+            "Probability theory",
+            "Set theory and axioms",
+            "Linear algebra"
+          ],
+          "correct_answer": "Set theory and axioms"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach-Tarski Paradox applies specifically to which kind of space?",
+          "options": [
+            "2D space",
+            "3D space",
+            "Time-space continuum",
+            "Flat Euclidean surfaces"
+          ],
+          "correct_answer": "3D space"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is a characteristic property of non-measurable sets?",
+          "options": [
+            "They have a definitive volume.",
+            "They cannot be assigned a meaningful measure.",
+            "They must exist in 2D only.",
+            "They require calculus to be understood."
+          ],
+          "correct_answer": "They cannot be assigned a meaningful measure"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following is essential for constructing the Banach-Tarski Paradox?",
+          "options": [
+            "3D rotations",
+            "Symmetry groups",
+            "Probability calculations",
+            "Differentiation rules"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach-Tarski Paradox challenges our understanding of which fundamental mathematical concept?",
+          "options": [
+            "Calculus",
+            "Geometry",
+            "Measure theory",
+            "Algebraic expressions"
+          ],
+          "correct_answer": "Measure theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The paradox relies on breaking objects into parts that are:",
+          "options": [
+            "Symmetric and measurable.",
+            "Finite and countable.",
+            "Non-measurable and abstract.",
+            "Irregular and inconsistent."
+          ],
+          "correct_answer": "Non-measurable and abstract"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which axiom is crucial for understanding the Banach-Tarski Paradox?",
+          "options": [
+            "Axiom of Completeness",
+            "Axiom of Independence",
+            "Axiom of Choice",
+            "Axiom of Probability"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of rotations are involved in constructing the Banach-Tarski Paradox?",
+          "options": [
+            "2D Rotations in a plane",
+            "3D Rotations around an axis",
+            "Chaotic rotational movements",
+            "Oscillating rotational patterns"
+          ],
+          "correct_answer": "3D Rotations around an axis"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "503ae418-eb6c-4c92-be86-138e2b9056a9",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:08:10.075119",
+    "data": {
+      "title": "Infinite Sets and the Banach–Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the Banach–Tarski Paradox primarily concerned with?",
+          "options": [
+            "Dividing a sphere into pieces and reconstructing it into two identical spheres",
+            "The theory of relativity",
+            "Concepts of quantum mechanics",
+            "Finding the volume of an infinite cylinder"
+          ],
+          "correct_answer": "Dividing a sphere into pieces and reconstructing it into two identical spheres"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical concept is crucial to the Banach–Tarski Paradox?",
+          "options": [
+            "The Pythagorean Theorem",
+            "The Axiom of Choice",
+            "Newton's Laws",
+            "Taylor Series Expansion"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is a non-measurable set?",
+          "options": [
+            "A set with elements that cannot be counted",
+            "A set for which a consistent definition of volume does not exist",
+            "A set with infinite elements",
+            "A set only defined in two dimensions"
+          ],
+          "correct_answer": "A set for which a consistent definition of volume does not exist"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which property of 3D rotations is used in the Banach–Tarski Paradox?",
+          "options": [
+            "Their ability to preserve distances",
+            "Their ability to create infinite loops",
+            "Their symmetry with 2D translations",
+            "Their use in defining gravitational fields"
+          ],
+          "correct_answer": "Their ability to preserve distances"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Banach–Tarski Paradox considered 'paradoxical'?",
+          "options": [
+            "It contradicts laws of physics",
+            "It violates standard intuition about volume and duplication",
+            "It disproves the concept of infinity",
+            "It conflicts with Einstein's theories"
+          ],
+          "correct_answer": "It violates standard intuition about volume and duplication"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are crucial for constructing the Banach–Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite sets",
+            "Bounded sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Axiom of Choice enables which of the following actions?",
+          "options": [
+            "Picking elements randomly out of infinite sets without any rule",
+            "Choosing elements from sets even without a constructive selection process",
+            "Measuring the volume of infinite sets",
+            "Defining shapes in multi-dimensional space"
+          ],
+          "correct_answer": "Choosing elements from sets even without a constructive selection process"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which field of mathematics does the Banach–Tarski Paradox belong to?",
+          "options": [
+            "Geometry",
+            "Set Theory",
+            "Calculus",
+            "Topology"
+          ],
+          "correct_answer": "Set Theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is a key implication of the Banach–Tarski Paradox?",
+          "options": [
+            "Infinite sets cannot be used in physics",
+            "Volume is not always additive in certain mathematical conditions",
+            "The concept of infinity does not apply in real-world applications",
+            "The Paradox disproves Euclidean geometry"
+          ],
+          "correct_answer": "Volume is not always additive in certain mathematical conditions"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which assumption is essential for the Banach–Tarski Paradox to work?",
+          "options": [
+            "Symmetry of 3D objects",
+            "The universality of mathematical axioms",
+            "Existence of a finite number of dimensions",
+            "Acceptance of the Axiom of Choice"
+          ],
+          "correct_answer": "Acceptance of the Axiom of Choice"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "b6826c80-b994-484f-84ea-75fdd8d623b8",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:08:18.942330",
+    "data": {
+      "title": "Infinite Sets and the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox demonstrate?",
+          "options": [
+            "A sphere can be divided and reassembled into two identical spheres.",
+            "Infinite sets have no measurable properties.",
+            "Geometric shapes cannot be divided into smaller parts.",
+            "The Axiom of Choice invalidates infinite constructions."
+          ],
+          "correct_answer": "A sphere can be divided and reassembled into two identical spheres."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical principle is crucial for the Banach-Tarski Paradox?",
+          "options": [
+            "The Axiom of Choice",
+            "Principle of Induction",
+            "Newton's Laws",
+            "Euclid's Elements"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is a key concept explored in the study of infinite sets?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite numbers",
+            "Discrete mathematics"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What kind of transformations are involved in the Banach-Tarski Paradox?",
+          "options": [
+            "Linear transformations",
+            "Reflections",
+            "3D rotations",
+            "Translations"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which concept in mathematics allows constructing non-intuitive results like the Banach-Tarski paradox?",
+          "options": [
+            "Riemann Hypothesis",
+            "The Axiom of Choice",
+            "Relativity principle",
+            "Law of Large Numbers"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is NOT a characteristic of non-measurable sets?",
+          "options": [
+            "Cannot be assigned a standard volume",
+            "Defined in finite geometry",
+            "Exist within infinite sets",
+            "Require abstract mathematical principles to define"
+          ],
+          "correct_answer": "Defined in finite geometry"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How does the Banach-Tarski Paradox affect our understanding of volume?",
+          "options": [
+            "It confirms volume conservation laws in all scenarios.",
+            "It challenges the conventional concept of volume in infinite sets.",
+            "It provides a method to calculate the volume of irregular shapes.",
+            "It disproves the existence of infinite sets."
+          ],
+          "correct_answer": "It challenges the conventional concept of volume in infinite sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What kind of sets are created using the Axiom of Choice in the Banach-Tarski Paradox?",
+          "options": [
+            "Continuous sets",
+            "Non-measurable sets",
+            "Bounded sets",
+            "Finite sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What role do 3D rotations play in the Banach-Tarski Paradox?",
+          "options": [
+            "They ensure spheres maintain their volume.",
+            "They allow reassembly without distortion.",
+            "They provide a basis for measurable transformations.",
+            "They prove the impossibility of infinite constructions."
+          ],
+          "correct_answer": "They allow reassembly without distortion."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the primary abstraction used in the study of infinite sets?",
+          "options": [
+            "Geometric axioms",
+            "Logical reasoning",
+            "Abstract axioms like the Axiom of Choice",
+            "Physical laws"
+          ],
+          "correct_answer": "Abstract axioms like the Axiom of Choice"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "6891c830-c452-41a6-b4f1-5ce34f194da5",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:08:29.154030",
+    "data": {
+      "title": "Infinite Sets and the Banach–Tarski Paradox Quiz",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the Banach–Tarski Paradox primarily focused on?",
+          "options": [
+            "Division of finite sets into smaller subsets",
+            "Breaking a sphere into smaller parts and reassembling it into two identical spheres",
+            "Understanding measurable sets in physics",
+            "The mathematical application of probability theory"
+          ],
+          "correct_answer": "Breaking a sphere into smaller parts and reassembling it into two identical spheres"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which key axiom is essential to the Banach–Tarski Paradox?",
+          "options": [
+            "Axiom of Measurability",
+            "Axiom of Finite Sets",
+            "Axiom of Choice",
+            "Axiom of 3D Rotations"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are critical in understanding the Banach–Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Finite sets",
+            "Non-measurable sets",
+            "Countable sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach–Tarski Paradox applies to which type of geometry?",
+          "options": [
+            "Euclidean geometry",
+            "Non-Euclidean geometry",
+            "Abstract algebraic geometry",
+            "Projective geometry"
+          ],
+          "correct_answer": "Euclidean geometry"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What concept plays a significant role in the Banach–Tarski Paradox by allowing seemingly impossible constructions?",
+          "options": [
+            "Finite probabilities",
+            "3D rotations",
+            "Infinite multidimensional spaces",
+            "Non-continuous intervals"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following statements is true about infinite sets in the context of the Banach–Tarski Paradox?",
+          "options": [
+            "Infinite sets cannot be partitioned into non-measurable subsets",
+            "Infinite sets are larger than all finite sets but still bounded",
+            "Infinite sets allow for constructions that defy physical intuition",
+            "Infinite sets are always measurable"
+          ],
+          "correct_answer": "Infinite sets allow for constructions that defy physical intuition"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Axiom of Choice enable in mathematics?",
+          "options": [
+            "Selection of elements from an infinite set without explicit criteria",
+            "Limitation of infinite sets to measurable ones",
+            "Rotation of geometrical shapes in 3D space",
+            "Construction of non-continuous sequences"
+          ],
+          "correct_answer": "Selection of elements from an infinite set without explicit criteria"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the key distinction between non-measurable sets and measurable sets?",
+          "options": [
+            "Non-measurable sets have well-defined volumes",
+            "Measurable sets can be finitely partitioned",
+            "Measurable sets obey conventional laws of volume and area",
+            "Non-measurable sets are always empty"
+          ],
+          "correct_answer": "Measurable sets obey conventional laws of volume and area"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach–Tarski Paradox demonstrates which surprising property?",
+          "options": [
+            "Infinite sets cannot exist in real space",
+            "Objects can be divided and reassembled to create duplicates",
+            "A single object can occupy infinite physical space",
+            "Finite sets provide better partitioning solutions"
+          ],
+          "correct_answer": "Objects can be divided and reassembled to create duplicates"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why does the Banach–Tarski Paradox not apply to physical objects in the real world?",
+          "options": [
+            "Physical objects are inherently finite and measurable",
+            "The Axiom of Choice is a purely hypothetical tool",
+            "3D rotations do not exist in physical space",
+            "Objects in the real world lack abstract properties"
+          ],
+          "correct_answer": "Physical objects are inherently finite and measurable"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "b40834a4-32a2-4d14-a38a-b17004561d81",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:08:39.893902",
+    "data": {
+      "title": "Infinite Sets & The Banach-Tarski Paradox Quiz",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the Banach-Tarski Paradox primarily concerned with?",
+          "options": [
+            "The division of finite sets into subsets",
+            "The recreation of a shape by dividing it infinitely",
+            "The decomposition and reconstruction of 3D objects using infinite sets",
+            "The measurement of finite geometrical objects"
+          ],
+          "correct_answer": "The decomposition and reconstruction of 3D objects using infinite sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical principle makes the Banach-Tarski Paradox possible?",
+          "options": [
+            "The Principle of Induction",
+            "The Axiom of Choice",
+            "The Theory of Relativity",
+            "The Fundamental Theorem of Algebra"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are crucial in understanding the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Countable sets",
+            "Bounded sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What role do 3D rotations play in the Banach-Tarski Paradox?",
+          "options": [
+            "They add mass to objects",
+            "They change the shape of objects completely",
+            "They help in reorienting parts to reconstruct objects",
+            "They simplify the decomposition process"
+          ],
+          "correct_answer": "They help in reorienting parts to reconstruct objects"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What concept demonstrates that infinite sets can lead to counterintuitive results?",
+          "options": [
+            "Infinity Paradox",
+            "Non-measurable Geometry Theory",
+            "Banach-Tarski Paradox",
+            "Finite Division Principle"
+          ],
+          "correct_answer": "Banach-Tarski Paradox"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why are non-measurable sets significant in the context of infinite sets?",
+          "options": [
+            "They can be assigned a finite volume",
+            "They cannot be measured using standard geometrical tools",
+            "They simplify the calculations in infinite set theory",
+            "They have real-world applications in physics"
+          ],
+          "correct_answer": "They cannot be measured using standard geometrical tools"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What key mathematical axiom allows seemingly impossible constructions in infinite set theory?",
+          "options": [
+            "Axiom of Congruence",
+            "Axiom of Measurability",
+            "Axiom of Choice",
+            "Axiom of Rotations"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following statements best describes the Banach-Tarski Paradox?",
+          "options": [
+            "Finite sets can be perfectly divided and reconstructed into identical shapes",
+            "It is possible to divide a sphere into a finite number of pieces and reassemble them into two identical spheres",
+            "It disproves the concept of infinity",
+            "It proves that 3D objects cannot be decomposed infinitely"
+          ],
+          "correct_answer": "It is possible to divide a sphere into a finite number of pieces and reassemble them into two identical spheres"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What abstraction is required to understand how infinite sets function in the Banach-Tarski Paradox?",
+          "options": [
+            "A flat 2D geometry",
+            "Abstract mathematical reasoning",
+            "Illustrative real-world applications",
+            "Simplified models of calculation"
+          ],
+          "correct_answer": "Abstract mathematical reasoning"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "In which field of mathematics does the Banach-Tarski Paradox primarily apply?",
+          "options": [
+            "Algebra",
+            "Geometry",
+            "Set Theory",
+            "Topology"
+          ],
+          "correct_answer": "Set Theory"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "ee693d2e-63e4-44ac-ae4e-24a2cdb013ad",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:08:48.575168",
+    "data": {
+      "title": "Infinite Sets and the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the Banach-Tarski Paradox primarily concerned with?",
+          "options": [
+            "Dividing a sphere into finite pieces",
+            "Decomposing and reconstructing objects using infinite sets",
+            "Measuring the volume of non-measurable sets",
+            "Rotating 2D shapes into 3D figures"
+          ],
+          "correct_answer": "Decomposing and reconstructing objects using infinite sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical principle is essential for understanding the Banach-Tarski Paradox?",
+          "options": [
+            "The Pythagorean Theorem",
+            "The Axiom of Choice",
+            "Euclidean Geometry",
+            "The Theory of Probability"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are involved in the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite sets",
+            "Bounded sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What concept plays a critical role in the seemingly impossible constructions in the Banach-Tarski Paradox?",
+          "options": [
+            "3D rotations",
+            "2D translations",
+            "Linear projections",
+            "Random sampling"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach-Tarski Paradox challenges our understanding of which type of sets?",
+          "options": [
+            "Finite sets",
+            "Infinite sets",
+            "Discrete sets",
+            "Open sets"
+          ],
+          "correct_answer": "Infinite sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which property allows the division of a solid sphere into parts that can form two identical spheres?",
+          "options": [
+            "Measurability",
+            "Infinity",
+            "Non-continuity",
+            "Axiomatic completeness"
+          ],
+          "correct_answer": "Infinity"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What field of mathematics provides the foundation for the Banach-Tarski Paradox?",
+          "options": [
+            "Number Theory",
+            "Set Theory",
+            "Calculus",
+            "Graph Theory"
+          ],
+          "correct_answer": "Set Theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why are non-measurable sets important in the Banach-Tarski Paradox?",
+          "options": [
+            "They can be uniquely measured",
+            "They allow splitting and combining in unconventional ways",
+            "They are finite and bounded",
+            "They simplify infinite construction"
+          ],
+          "correct_answer": "They allow splitting and combining in unconventional ways"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Axiom of Choice involves the ability to:",
+          "options": [
+            "Choose an element from each set in a collection",
+            "Measure the volume of infinite sets",
+            "Rotate objects infinitely",
+            "Construct finite figures from infinite sets"
+          ],
+          "correct_answer": "Choose an element from each set in a collection"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of transformations are critical in proving the Banach-Tarski Paradox?",
+          "options": [
+            "2D translations",
+            "3D rotations and group operations",
+            "Continuous projections",
+            "Linear transformations"
+          ],
+          "correct_answer": "3D rotations and group operations"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "bc42a234-5758-4531-b228-fa5b800da240",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "study_plan",
+    "createdAt": "2025-11-18T12:09:07.937797",
+    "data": {
+      "title": "math lesson",
+      "description": "Study Duration: 4 weeks",
+      "content": {
+        "title": "math lesson",
+        "description": "A structured 4-week study plan focused on understanding the Banach-Tarski Paradox and its underlying mathematical concepts.",
+        "duration": "4 weeks",
+        "overview": "This study plan provides an in-depth exploration of the Banach-Tarski Paradox, its foundational concepts (such as the Axiom of Choice and non-measurable sets), and its implications for our understanding of infinite sets and abstract mathematics. By the end of the plan, you’ll have a clear grasp of why this paradox exists, its mathematical underpinnings, and its significant insights.",
+        "weekly_schedule": [
+          {
+            "week": 1,
+            "theme": "Building the Foundation: Infinite Sets and Abstract Mathematics",
+            "description": "Focusing on the fundamental mathematical ideas that will help understand the Banach-Tarski Paradox, including infinite sets and the Axiom of Choice.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Introduction to Infinite Sets",
+                    "description": "Learn the basics of infinite sets and why their behavior defies normal intuition.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read about the nature of infinite sets and their counterintuitive properties.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Create flashcards with definitions and properties of infinite sets.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Exploring Non-Measurable Sets",
+                    "description": "Introduce the idea of sets that cannot be assigned a meaningful volume.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the concept of non-measurable sets and examples in abstract math.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Use the AI summarizer to condense the core concepts about non-measurable sets.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "topics": [
+                  {
+                    "title": "Understanding the Axiom of Choice",
+                    "description": "Learn the role of the Axiom of Choice in mathematics and its controversial nature.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read in-depth about the Axiom of Choice and its implications for infinite sets.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "mind maps",
+                        "description": "Use mind maps to visually organize concepts related to the Axiom of Choice.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 4,
+                "topics": [
+                  {
+                    "title": "Connecting Infinite Sets and the Axiom of Choice",
+                    "description": "Integrate your knowledge of infinite sets and the Axiom of Choice.",
+                    "activities": [
+                      {
+                        "type": "tool",
+                        "tool": "practice quizzes",
+                        "description": "Test your understanding of infinite sets and the Axiom of Choice by taking practice quizzes.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "voice notes",
+                        "description": "Record audio summaries of what you’ve learned so far.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 5,
+                "topics": [
+                  {
+                    "title": "Review and Reflect",
+                    "description": "Consolidate your understanding of the week's content through review and reflection.",
+                    "activities": [
+                      {
+                        "type": "review",
+                        "description": "Go over your flashcards, notes, and practice quizzes from earlier in the week.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI summarizer",
+                        "description": "Generate summaries of the week's key takeaways.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand what infinite sets are and why they defy normal intuition.",
+              "Learn the fundamental principles of non-measurable sets.",
+              "Grasp the concept of the Axiom of Choice and its role in abstract mathematics."
+            ],
+            "assessment": "Take a practice quiz combining all the week's key concepts."
+          },
+          {
+            "week": 2,
+            "theme": "Rotations in 3D: Uncovering the Geometry Behind the Paradox",
+            "description": "Focus on the mathematical properties of 3D rotations that are key to constructing non-measurable sets.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Introduction to 3D Rotations",
+                    "description": "Learn about the mathematical properties of 3D rotations.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the basics of 3D rotations and their unique properties.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Create flashcards summarizing the key properties of 3D rotations.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand the properties of 3D rotations and their mathematical significance.",
+              "Explore how 3D rotations contribute to the construction of non-measurable sets."
+            ],
+            "assessment": "Create a mind map connecting 3D rotations to the Banach-Tarski Paradox."
+          },
+          {
+            "week": 3,
+            "theme": "Dissecting the Paradox: The Pieces and the Process",
+            "description": "Delve into the paradox itself, focusing on the steps required to cut and reconstruct the sphere.",
+            "weekly_goals": [
+              "Learn the step-by-step process of the Banach-Tarski construction.",
+              "Understand the role of the five non-measurable pieces."
+            ],
+            "assessment": "Explain the process to a study partner or through a voice note recording."
+          },
+          {
+            "week": 4,
+            "theme": "Reflect and Explore: The Implications of the Banach-Tarski Paradox",
+            "description": "Consolidate your understanding of the Banach-Tarski Paradox and its implications for abstract math.",
+            "weekly_goals": [
+              "Summarize the key takeaways of the Banach-Tarski Paradox.",
+              "Explore the philosophical and mathematical implications of the paradox."
+            ],
+            "assessment": "Write a short essay summarizing the paradox and its significance."
+          }
+        ],
+        "study_techniques": [
+          {
+            "technique": "Active recall through flashcards",
+            "description": "Use flashcards to test your knowledge of key concepts like the Axiom of Choice, infinite sets, and non-measurable sets.",
+            "best_for": "Memorizing definitions and properties."
+          },
+          {
+            "technique": "Mind mapping",
+            "description": "Organize complex relationships between topics (e.g., 3D rotations and their role in the paradox) visually.",
+            "best_for": "Understanding connections between multiple concepts."
+          },
+          {
+            "technique": "Practice quizzes",
+            "description": "Reinforce your understanding by answering questions about each week’s core topics.",
+            "best_for": "Assessing comprehension and identifying gaps."
+          }
+        ],
+        "resources": [
+          {
+            "title": "Flashcard Generator",
+            "type": "tool",
+            "description": "Helpful for memorizing key terms like 'non-measurable sets' and 'Axiom of Choice'."
+          },
+          {
+            "title": "Practice Test Generator",
+            "type": "tool",
+            "description": "Allows you to create quizzes to solidify understanding of weekly concepts."
+          },
+          {
+            "title": "Mind Maps",
+            "type": "tool",
+            "description": "Great for visually connecting the relationships between abstract concepts like 3D rotations and non-measurable sets."
+          }
+        ]
+      },
+      "source_text": "✨ The Banach–Tarski Paradox (aka: how \nto duplicate a ball out of thin air) \nThis is one of the strangest results in all of mathematics. It basically says: \nYou can take a solid sphere, cut it into a finite number of pieces, rearrange \nthe pieces, and end up with two identical spheres of the same size as the \noriginal. \nYes.​\n Same size. Same volume. Made from the original ball. \nLike full-on duplicate the object with no stretching, no scaling, no filling in gaps.​\n Just: cut → shuffle → you now have two. \nThis is 100% mathematically valid… under a certain idea called the Axiom of Choice. \n \n🧠 Why this happens \nThe “pieces” you cut the ball into are not normal pieces. \nThey’re so “infinitely scrambled” that they can’t be measured.​\n Not like dust, not like fragments, but mathematical sets that defy volume altogether. \nThese pieces are called non-measurable sets. \nOnce you allow sets like that to exist, absolutely wild constructions become possible. \n \n🧩 The core ingredients \n1.​ A sphere​\n \n2.​ Rotations in 3D​\n There’s a deep property of these rotations that lets you create weirdly structured sets.​\n \n3.​ Axiom of Choice​\n Lets you pick one element from infinitely many “groups” even when they’re impossible to \n\ndescribe explicitly.​\n \n4.​ Five weird pieces​\n Yup. Five is enough.​\n \n \n📌 Why this doesn’t break physics \nBecause those pieces cannot exist in the physical world. \nYou can’t actually cut something into a “non-measurable set”.​\n Atoms ruin the party.​\n The paradox only works in pure abstract math land. \n \n💡 Why this is cool \nIt shows that: \n●​ Infinite sets can behave in ways that absolutely violate intuition​\n \n●​ Volume, when you break it down far enough, becomes meaningless​\n \n●​ Math isn’t always “real-world rules” — it’s whatever the axioms allow​\n \nIt’s one of the rare theorems where the conclusion feels like a magic trick. \n \n\n\n",
+      "tags": [],
+      "pdfs": [
+        "Untitled document (1).pdf"
+      ],
+      "duration_info": {
+        "duration": 4,
+        "unit": "weeks"
+      },
+      "updatedAt": null
+    }
+  },
+  {
+    "id": "f1b8a2b2-c399-4cc4-92ec-9a3affe9689a",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:09:33.148995",
+    "data": {
+      "title": "Week 1: Banach–Tarski Paradox and Infinite Set Concepts",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical concept does the Banach–Tarski Paradox primarily rely on?",
+          "options": [
+            "Non-measurable sets",
+            "Probability theory",
+            "Linear algebra",
+            "Calculus"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which axiom is critical for the Banach–Tarski Paradox?",
+          "options": [
+            "Axiom of Choice",
+            "Axiom of Equality",
+            "Axiom of Probability",
+            "Axiom of Continuity"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What characteristic of infinite sets allows the Banach–Tarski Paradox to occur?",
+          "options": [
+            "Infinite sets contain non-measurable subsets",
+            "Infinite sets are divisible into finite parts",
+            "Infinite sets are countable",
+            "Infinite sets obey the laws of addition strictly"
+          ],
+          "correct_answer": "Infinite sets contain non-measurable subsets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of geometric transformation is involved in the Banach–Tarski Paradox?",
+          "options": [
+            "2D translation",
+            "3D rotations",
+            "Scaling",
+            "Reflection"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach–Tarski Paradox demonstrates the counterintuitive nature of:",
+          "options": [
+            "Finite sets",
+            "Infinite sets",
+            "Real numbers",
+            "Complex numbers"
+          ],
+          "correct_answer": "Infinite sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following statements is true regarding non-measurable sets?",
+          "options": [
+            "They can be assigned a volume.",
+            "They cannot be assigned a finite or infinite measure.",
+            "They are always countable.",
+            "They are subsets of finite sets."
+          ],
+          "correct_answer": "They cannot be assigned a finite or infinite measure."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Axiom of Choice allows the construction of:",
+          "options": [
+            "Measurable sets only",
+            "Non-measurable sets",
+            "Countable sets",
+            "Finite sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What branch of mathematics does the Banach–Tarski Paradox belong to?",
+          "options": [
+            "Set theory",
+            "Number theory",
+            "Topology",
+            "Calculus"
+          ],
+          "correct_answer": "Set theory"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach–Tarski Paradox relies on splitting a ball into:",
+          "options": [
+            "Finite measurable parts",
+            "Infinite measurable parts",
+            "Non-measurable pieces",
+            "Countable pieces"
+          ],
+          "correct_answer": "Non-measurable pieces"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The abstract nature of the Banach–Tarski Paradox challenges intuition about:",
+          "options": [
+            "Physical shapes",
+            "Mathematical proofs",
+            "Logical reasoning",
+            "Infinite constructions"
+          ],
+          "correct_answer": "Infinite constructions"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "feecfb3c-544b-4980-bf6b-8da1993f2c77",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:09:42.562097",
+    "data": {
+      "title": "Understanding the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox state?",
+          "options": [
+            "A solid sphere can be split into an infinite number of pieces.",
+            "A solid sphere can be split into a finite number of pieces and rearranged to create two identical spheres of the same size.",
+            "A solid sphere can be doubled only under physical constraints.",
+            "A solid sphere can shrink to form infinitely many smaller spheres."
+          ],
+          "correct_answer": "A solid sphere can be split into a finite number of pieces and rearranged to create two identical spheres of the same size."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical concept is crucial for the Banach-Tarski Paradox?",
+          "options": [
+            "Pythagorean Theorem",
+            "Axiom of Choice",
+            "Theory of Relativity",
+            "Euler's Formula"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are used as 'pieces' in the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite sets",
+            "Countable sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How many 'pieces' are needed to duplicate a sphere in the Banach-Tarski Paradox?",
+          "options": [
+            "5",
+            "3",
+            "10",
+            "Infinite"
+          ],
+          "correct_answer": "5"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which property makes the rotations in 3D essential for the paradox?",
+          "options": [
+            "They preserve measurable volume.",
+            "They allow structured sets to be created.",
+            "They create infinite measurable particles.",
+            "They enforce physical constraints."
+          ],
+          "correct_answer": "They allow structured sets to be created."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why doesn’t the Banach-Tarski Paradox break the rules of physics?",
+          "options": [
+            "Atoms cannot be divided into non-measurable sets.",
+            "Physics allows infinite duplication of objects.",
+            "Non-measurable sets exist in the real world.",
+            "Mathematics and physics operate on the same rules."
+          ],
+          "correct_answer": "Atoms cannot be divided into non-measurable sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the paradox reveal about infinite sets?",
+          "options": [
+            "They behave intuitively like physical objects.",
+            "They behave in ways that violate intuition.",
+            "They always follow real-world rules.",
+            "They conform to basic measurable properties."
+          ],
+          "correct_answer": "They behave in ways that violate intuition."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What happens to volume when you use non-measurable sets?",
+          "options": [
+            "It becomes meaningless.",
+            "It increases infinitely.",
+            "It remains constant.",
+            "It decreases uniformly."
+          ],
+          "correct_answer": "It becomes meaningless."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Banach-Tarski Paradox considered mathematically valid?",
+          "options": [
+            "It uses measurable sets.",
+            "It relies on the Axiom of Choice.",
+            "It accounts for physical limitations.",
+            "It duplicates atoms."
+          ],
+          "correct_answer": "It relies on the Axiom of Choice."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Banach-Tarski Paradox considered 'cool' by mathematicians?",
+          "options": [
+            "It demonstrates real-world duplication of objects.",
+            "It combines physics and math in surprising ways.",
+            "It shows abstract mathematics can defy intuition.",
+            "It proves infinite sets can behave predictably."
+          ],
+          "correct_answer": "It shows abstract mathematics can defy intuition."
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "8031887b-f57b-44d9-a22c-419f7874d67b",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:09:52.820366",
+    "data": {
+      "title": "Understanding the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach–Tarski Paradox state?",
+          "options": [
+            "You can stretch a sphere to double its size.",
+            "You can duplicate a sphere by cutting it into pieces and rearranging them.",
+            "You can compress a sphere into a smaller structure.",
+            "You can create infinite spheres from one sphere."
+          ],
+          "correct_answer": "You can duplicate a sphere by cutting it into pieces and rearranging them."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the mathematical principle that allows the Banach-Tarski Paradox to work?",
+          "options": [
+            "Axiom of Reduction",
+            "Law of Infinite Geometry",
+            "Axiom of Choice",
+            "Principle of Volume Equivalence"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are the pieces in the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Fragments of matter",
+            "Non-measurable sets",
+            "Physical sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How many pieces are needed to duplicate a sphere in the Banach-Tarski Paradox?",
+          "options": [
+            "Three",
+            "Five",
+            "Seven",
+            "Ten"
+          ],
+          "correct_answer": "Five"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why can the Banach-Tarski Paradox not occur in the physical world?",
+          "options": [
+            "Atoms prevent the creation of non-measurable sets.",
+            "Spheres cannot be physically duplicated.",
+            "The paradox requires infinite energy.",
+            "Physical constraints void the Axiom of Choice."
+          ],
+          "correct_answer": "Atoms prevent the creation of non-measurable sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following is NOT a core ingredient of the Banach-Tarski Paradox?",
+          "options": [
+            "A solid sphere",
+            "Rotations in 3D",
+            "Axiom of Choice",
+            "Atoms and molecules"
+          ],
+          "correct_answer": "Atoms and molecules"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What property of rotations in 3D contributes to the paradox?",
+          "options": [
+            "They create uniformly measurable sets.",
+            "They produce weirdly structured sets.",
+            "They preserve measurable volume.",
+            "They simplify sphere duplication."
+          ],
+          "correct_answer": "They produce weirdly structured sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is one of the significant insights shown by the Banach-Tarski Paradox?",
+          "options": [
+            "Infinite sets behave intuitively.",
+            "Volume becomes meaningless at a fundamental level.",
+            "Physical rules always align with mathematical axioms.",
+            "Mathematics cannot describe infinite sets."
+          ],
+          "correct_answer": "Volume becomes meaningless at a fundamental level."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why can the Banach-Tarski Paradox be considered like a magic trick?",
+          "options": [
+            "It defies real-world logic and intuition.",
+            "It creates infinite balls from finite materials.",
+            "It requires magical properties of atoms.",
+            "It demonstrates physical phenomena."
+          ],
+          "correct_answer": "It defies real-world logic and intuition."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Axiom of Choice allow mathematicians to do?",
+          "options": [
+            "Reduce infinite sets to measurable volumes.",
+            "Pick an element from infinitely many groups, even without explicit descriptions.",
+            "Define measurable sets in physical terms.",
+            "Create finite sets with infinite volume."
+          ],
+          "correct_answer": "Pick an element from infinitely many groups, even without explicit descriptions."
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "d326f178-4160-4262-8418-560144ed0684",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:10:04.717102",
+    "data": {
+      "title": "The Banach-Tarski Paradox Quiz",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox state?",
+          "options": [
+            "A sphere can be divided into pieces and rearranged into a cube.",
+            "A solid sphere can be divided into a finite number of pieces and rearranged into two identical spheres.",
+            "A sphere can grow continuously when given infinite space.",
+            "A sphere's volume can change depending on its density."
+          ],
+          "correct_answer": "A solid sphere can be divided into a finite number of pieces and rearranged into two identical spheres."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical concept makes the Banach-Tarski Paradox possible?",
+          "options": [
+            "The Pythagorean Theorem",
+            "The Fundamental Theorem of Algebra",
+            "The Axiom of Choice",
+            "The Law of Large Numbers"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why do the pieces used in the Banach-Tarski Paradox defy measurement?",
+          "options": [
+            "They are composed of infinitely small atoms.",
+            "They are non-measurable sets.",
+            "They are microscopic fragments.",
+            "They are dust-like particles."
+          ],
+          "correct_answer": "They are non-measurable sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How many pieces are required to perform the Banach-Tarski Paradox on a solid sphere?",
+          "options": [
+            "Three",
+            "Four",
+            "Five",
+            "Ten"
+          ],
+          "correct_answer": "Five"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why does the Banach-Tarski Paradox not violate the laws of physics?",
+          "options": [
+            "Because it operates under abstract mathematical conditions that don't apply to physical objects.",
+            "Because atoms can be infinitely divided.",
+            "Because spheres in physical reality are not perfectly solid.",
+            "Because volume expands in real-world systems."
+          ],
+          "correct_answer": "Because it operates under abstract mathematical conditions that don't apply to physical objects."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What property of 3D rotations helps create non-measurable sets in the paradox?",
+          "options": [
+            "Symmetry in geometric transformations",
+            "A deep property unique to 3D rotations",
+            "Volume expansion during rotation",
+            "Scaling effects during rotation"
+          ],
+          "correct_answer": "A deep property unique to 3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox reveal about volume in mathematics?",
+          "options": [
+            "Volume is always preserved regardless of transformations.",
+            "Volume can behave in ways that defy intuition when broken down far enough.",
+            "Volume is a constant property in both physics and abstract math.",
+            "Volume depends entirely on the physical structure of objects."
+          ],
+          "correct_answer": "Volume can behave in ways that defy intuition when broken down far enough."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What type of sets are integral to the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite sets",
+            "Countably infinite sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why does the conclusion of the Banach-Tarski Paradox feel like a magic trick?",
+          "options": [
+            "Because it allows duplicating matter infinitely.",
+            "Because it defies intuition and uses abstract mathematical axioms.",
+            "Because it can be demonstrated using physical experiments.",
+            "Because it violates physical laws directly."
+          ],
+          "correct_answer": "Because it defies intuition and uses abstract mathematical axioms."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What general insight does the Banach-Tarski Paradox offer about infinite sets?",
+          "options": [
+            "Infinite sets always follow real-world rules.",
+            "Infinite sets can behave in ways that violate common intuition.",
+            "Infinite sets must always have measurable properties.",
+            "Infinite sets are irrelevant to abstract mathematics."
+          ],
+          "correct_answer": "Infinite sets can behave in ways that violate common intuition."
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "bc30151a-0ff9-4745-8946-a0e5cd4bfb38",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:10:15.017134",
+    "data": {
+      "title": "Understanding the Banach-Tarski Paradox",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox state?",
+          "options": [
+            "You can duplicate a solid sphere using physical tools.",
+            "You can cut a solid sphere into a finite number of pieces and rearrange them to create two identical spheres.",
+            "You can create spheres of different sizes from one original sphere.",
+            "You can stretch and scale a solid sphere into two spheres."
+          ],
+          "correct_answer": "You can cut a solid sphere into a finite number of pieces and rearrange them to create two identical spheres."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the key mathematical concept that makes the Banach-Tarski Paradox valid?",
+          "options": [
+            "Axiomatic deduction",
+            "The Axiom of Choice",
+            "Non-Euclidean geometry",
+            "Newton's laws"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What kind of sets are involved in the Banach-Tarski Paradox?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Fragments of spheres",
+            "Dust-like particles"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How many pieces are needed to perform the Banach-Tarski Paradox?",
+          "options": [
+            "Infinite pieces",
+            "Five pieces",
+            "Three pieces",
+            "Ten pieces"
+          ],
+          "correct_answer": "Five pieces"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why doesn't the Banach-Tarski Paradox work in the physical world?",
+          "options": [
+            "Atoms prevent cutting objects into non-measurable sets.",
+            "It requires infinite physical space.",
+            "Materials don't follow abstract mathematical rules.",
+            "Physical objects can't be rotated in 3D."
+          ],
+          "correct_answer": "Atoms prevent cutting objects into non-measurable sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following is NOT an ingredient in the Banach-Tarski Paradox?",
+          "options": [
+            "A sphere",
+            "Rotations in 3D",
+            "Axioms of physics",
+            "The Axiom of Choice"
+          ],
+          "correct_answer": "Axioms of physics"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What deep property of rotations in 3D allows the creation of weirdly structured sets in the Banach-Tarski Paradox?",
+          "options": [
+            "They conserve volume.",
+            "They allow infinite scrambling of sets.",
+            "They create measurable fragments.",
+            "They stretch objects into non-measurable pieces."
+          ],
+          "correct_answer": "They allow infinite scrambling of sets."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox reveal about infinite sets?",
+          "options": [
+            "Infinite sets are predictable and measurable.",
+            "Infinite sets can defy intuition and behave unexpectedly.",
+            "Infinite sets have real-world physical applications.",
+            "Infinite sets do not exist in pure mathematics."
+          ],
+          "correct_answer": "Infinite sets can defy intuition and behave unexpectedly."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What happens to the concept of volume in the Banach-Tarski Paradox?",
+          "options": [
+            "Volume is preserved for all measurable sets.",
+            "Volume becomes meaningless at certain levels.",
+            "Volume is stretched and scaled.",
+            "Volume merges infinite sets into measurable sizes."
+          ],
+          "correct_answer": "Volume becomes meaningless at certain levels."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Banach-Tarski Paradox considered fascinating or 'cool'?",
+          "options": [
+            "It demonstrates real-world applications of infinite sets.",
+            "It violates intuition and shows abstract mathematics can defy physical rules.",
+            "It simplifies the concept of infinite sets and axioms.",
+            "It provides methods for duplicating objects in physics."
+          ],
+          "correct_answer": "It violates intuition and shows abstract mathematics can defy physical rules."
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "e082513c-b34b-40e4-8bdb-52c580fa8aa7",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T12:10:24.697690",
+    "data": {
+      "title": "The Banach-Tarski Paradox and its Mathematical Foundations",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox demonstrate?",
+          "options": [
+            "You can stretch a sphere to create two identical spheres.",
+            "You can duplicate a sphere into two identical spheres using cutting and rearranging.",
+            "You can create two smaller spheres by dividing the original sphere into measurable pieces.",
+            "You can duplicate a sphere by filling in gaps with additional volume."
+          ],
+          "correct_answer": "You can duplicate a sphere into two identical spheres using cutting and rearranging."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which mathematical concept is fundamental to the Banach-Tarski Paradox?",
+          "options": [
+            "Pythagoras' Theorem",
+            "The Axiom of Choice",
+            "Euler's Number",
+            "The Power Rule"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why don't the pieces in the Banach-Tarski Paradox exist in the physical world?",
+          "options": [
+            "Because they are infinitely large.",
+            "Because they are non-measurable sets.",
+            "Because atoms create measurable limits.",
+            "Because they stretch beyond physical space."
+          ],
+          "correct_answer": "Because atoms create measurable limits."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What kind of sets are used in the Banach-Tarski Paradox to defy volume?",
+          "options": [
+            "Measurable sets",
+            "Non-measurable sets",
+            "Finite sets",
+            "Discrete sets"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "How many pieces are required for the sphere duplication in the Banach-Tarski Paradox?",
+          "options": [
+            "Three",
+            "Four",
+            "Five",
+            "Six"
+          ],
+          "correct_answer": "Five"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What property of 3D rotations contributes to the Banach-Tarski Paradox?",
+          "options": [
+            "They preserve measurable volume.",
+            "They allow for infinitely structured sets to form.",
+            "They create extra dimensions.",
+            "They eliminate the Axiom of Choice."
+          ],
+          "correct_answer": "They allow for infinitely structured sets to form."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox reveal about infinite sets?",
+          "options": [
+            "They are always intuitive and follow real-world rules.",
+            "They can behave in ways that violate intuition.",
+            "They are only hypothetical and cannot have physical implications.",
+            "They are measurable by standard tools."
+          ],
+          "correct_answer": "They can behave in ways that violate intuition."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following is NOT true about the Banach-Tarski Paradox?",
+          "options": [
+            "It relies on the Axiom of Choice.",
+            "It works only in abstract mathematics.",
+            "It can be physically demonstrated using atoms.",
+            "It involves dividing a sphere into non-measurable sets."
+          ],
+          "correct_answer": "It can be physically demonstrated using atoms."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What makes the Banach-Tarski Paradox feel like a 'magic trick'?",
+          "options": [
+            "Its conclusion aligns perfectly with real-world physics.",
+            "Its outcome defies intuition and violates common sense on volume and duplication.",
+            "It creates mathematical models for real-world applications.",
+            "It can be proven using simple physical experiments."
+          ],
+          "correct_answer": "Its outcome defies intuition and violates common sense on volume and duplication."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which principle allows us to select elements from infinitely many groups in the Banach-Tarski Paradox?",
+          "options": [
+            "The Principle of Relativity",
+            "The Law of Conservation of Energy",
+            "The Axiom of Choice",
+            "The Infinity Rule"
+          ],
+          "correct_answer": "The Axiom of Choice"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
+  },
+  {
+    "id": "126c2166-c2ea-438a-8520-8a027f01f936",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-18T23:46:07.019781",
+    "data": {
+      "title": "Understanding the Banach-Tarski Paradox and Related Mathematical Concepts",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What is the focus of the Week 1 study plan?",
+          "options": [
+            "Understanding calculus derivatives",
+            "Understanding the Banach-Tarski Paradox and abstract mathematical concepts",
+            "Learning about the history of mathematics",
+            "Studying prime number theorems"
+          ],
+          "correct_answer": "Understanding the Banach-Tarski Paradox and abstract mathematical concepts"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which paradox is central to the Week 1 study plan?",
+          "options": [
+            "Russell's Paradox",
+            "Banach-Tarski Paradox",
+            "Zeno's Paradox",
+            "Hilbert's Paradox"
+          ],
+          "correct_answer": "Banach-Tarski Paradox"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What concept involves dividing 3D objects into non-measurable sets?",
+          "options": [
+            "3D vector analysis",
+            "Non-measurable sets",
+            "Linear transformations",
+            "Non-Euclidean geometry"
+          ],
+          "correct_answer": "Non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What mathematical principle allows the Banach-Tarski Paradox to occur?",
+          "options": [
+            "Pythagorean theorem",
+            "Axiom of Choice",
+            "Euler's formula",
+            "Principle of mathematical induction"
+          ],
+          "correct_answer": "Axiom of Choice"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "The Banach-Tarski Paradox is a result of which kind of geometry?",
+          "options": [
+            "Euclidean geometry",
+            "3D rotations",
+            "Non-measurable geometry",
+            "Planar geometry"
+          ],
+          "correct_answer": "3D rotations"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is a key takeaway from studying infinite sets as per the Week 1 plan?",
+          "options": [
+            "Infinite sets can never be applied to real-world problems",
+            "They exhibit abstract and counterintuitive properties",
+            "Infinite sets are always measurable",
+            "They form the basis for calculus theorems"
+          ],
+          "correct_answer": "They exhibit abstract and counterintuitive properties"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the Banach-Tarski Paradox demonstrate about finite volume and shape?",
+          "options": [
+            "Volumes and shapes can be infinitely divided in finite time",
+            "An object with finite volume can be divided and reassembled into two identical copies",
+            "Shapes can never be reconstructed after division",
+            "Finite volume is always preserved during division"
+          ],
+          "correct_answer": "An object with finite volume can be divided and reassembled into two identical copies"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Why is the Axiom of Choice important in the Banach-Tarski Paradox?",
+          "options": [
+            "It ensures every equation has a solution",
+            "It allows the construction of non-measurable sets",
+            "It simplifies rotational transformations",
+            "It defines logical consistency in finite systems"
+          ],
+          "correct_answer": "It allows the construction of non-measurable sets"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is a non-measurable set?",
+          "options": [
+            "A set with undefined density",
+            "A set that cannot be assigned a volume or size in a standard way",
+            "A set larger than infinite sets",
+            "A set too small to be calculated"
+          ],
+          "correct_answer": "A set that cannot be assigned a volume or size in a standard way"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which of the following topics connects to the Banach-Tarski Paradox?",
+          "options": [
+            "Differential equations",
+            "3D rotations and infinite sets",
+            "Probability and statistics",
+            "Algebra and arithmetic sequences"
+          ],
+          "correct_answer": "3D rotations and infinite sets"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": []
+    }
   }
 ]

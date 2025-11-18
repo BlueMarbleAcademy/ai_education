@@ -537,6 +537,8 @@ async def create_study_plan(
                 "title": title,
                 "description": description if description else study_plan_data.get("description", ""),
                 "content": study_plan_data,
+                # store the raw extracted PDF text used to generate this plan
+                "source_text": all_text,
                 "tags": tag_list,
                 "pdfs": pdf_names,
                 "duration_info": duration_info,  # Save duration info in the document

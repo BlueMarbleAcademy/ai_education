@@ -24,6 +24,7 @@ import {
   getStudyPlan,
   updateStudyPlan,
   getQuizzes,
+  deleteStudyPlan,
 } from "../../../api/apiService";
 import { formatDistanceToNow } from "date-fns";
 
@@ -39,6 +40,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
   const [completedActivities, setCompletedActivities] = useState({});
   const [quizIds, setQuizIds] = useState([]);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   // New state for available quizzes
   const [availableQuizzes, setAvailableQuizzes] = useState([]);
   const [matchingQuizzes, setMatchingQuizzes] = useState([]);
@@ -250,6 +252,39 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
       console.error("Error updating study plan:", err);
       setError(err.message || "Failed to update study plan");
       setIsUpdating(false);
+    }
+  };
+
+  // Delete the study plan
+  const handleDeletePlan = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this study plan? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setIsDeleting(true);
+      setError("");
+      await deleteStudyPlan(plan.id);
+
+      // Optionally update planStatus in parent
+      if (typeof setPlanStatus === "function") {
+        try {
+          setPlanStatus((prev) => {
+            return { ...prev, lastAction: "deleted", planId: plan.id };
+          });
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      // Return to the planner view
+      onBack();
+    } catch (err) {
+      console.error("Error deleting study plan:", err);
+      setError(err.message || "Failed to delete study plan");
+      setIsDeleting(false);
     }
   };
 
@@ -835,6 +870,23 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                   <>
                     <RefreshCw className="h-4 w-4" />
                     Update Plan
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleDeletePlan}
+                disabled={isDeleting}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2 mt-3 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-4 w-4" />
+                    Delete Plan
                   </>
                 )}
               </button>
