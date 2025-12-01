@@ -14,276 +14,6 @@
     "contentType": "voice_note"
   },
   {
-    "id": "bdded97f-ba65-4315-a6e5-145c370e3023",
-    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
-    "contentType": "study_plan",
-    "createdAt": "2025-11-18T11:30:00.705117",
-    "data": {
-      "title": "math",
-      "description": "Study Duration: 4 weeks",
-      "content": {
-        "title": "math",
-        "description": "Explore the fascinating concept of the Banach–Tarski Paradox while learning about advanced mathematical constructs such as non-measurable sets, the Axiom of Choice, rotations in 3D space, and their implications.",
-        "duration": "4 weeks",
-        "overview": "This study plan focuses on understanding the Banach–Tarski Paradox, the underlying mathematical principles, and the abstract nature of infinite sets and axioms. By the end, students will grasp key concepts like non-measurable sets, 3D rotations, and the Axiom of Choice, as well as their role in creating seemingly impossible constructions.",
-        "weekly_schedule": [
-          {
-            "week": 1,
-            "theme": "Introduction to Infinite Sets and Foundation of Axiom of Choice",
-            "description": "Start with understanding infinite sets, their behavior, and the basics of the Axiom of Choice as the foundation for the Banach–Tarski Paradox.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Introduction to Infinite Sets",
-                    "description": "Learn what infinite sets are and how they defy conventional understanding.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read an article introducing infinite sets and their behavior.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "flashcards",
-                        "description": "Create flashcards for key terms such as 'infinite sets', 'countable infinity', and 'non-measurable sets'.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Understanding the Axiom of Choice",
-                    "description": "Explore the Axiom of Choice and its controversial yet crucial role in mathematics.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study an introductory summary on the Axiom of Choice and its implications.",
-                        "duration": "25 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "AI Summarizer",
-                        "description": "Summarize key points from the reading to break down the complexity of the concept.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 3,
-                "topics": [
-                  {
-                    "title": "Examples of Infinite Sets",
-                    "description": "Analyze examples to solidify understanding of infinite sets and their properties.",
-                    "activities": [
-                      {
-                        "type": "practice",
-                        "tool": "Practice Test Generator",
-                        "description": "Test your knowledge of infinite sets using multiple-choice questions.",
-                        "duration": "30 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 4,
-                "topics": [
-                  {
-                    "title": "Exploring Non-Measurable Sets",
-                    "description": "Learn the implications of sets that cannot be measured or described in conventional ways.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read a detailed explanation of non-measurable sets and their properties.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 5,
-                "topics": [
-                  {
-                    "title": "Week 1 Progress Assessment",
-                    "description": "Recap and test your understanding of infinite sets, the Axiom of Choice, and non-measurable sets.",
-                    "activities": [
-                      {
-                        "type": "practice",
-                        "tool": "Practice Test Generator",
-                        "description": "Generate a customized quiz covering Week 1 topics.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "discussion",
-                        "description": "Use Voice Notes to record reflections or questions on topics covered this week.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Develop a strong foundation in infinite sets and their properties.",
-              "Understand the significance and application of the Axiom of Choice.",
-              "Grasp the concept of non-measurable sets and their peculiar implications."
-            ],
-            "assessment": "Take a short multiple-choice quiz to test understanding and revisit confusing concepts using flashcards or AI Summarizer."
-          },
-          {
-            "week": 2,
-            "theme": "Delving into 3D Rotations and Non-Intuitive Math Constructions",
-            "description": "Study the peculiar properties of rotations in 3D space that allow abstract math constructions to occur.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Rotations in 3D Space",
-                    "description": "Learn how rotations contribute to mathematical constructions.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study a reference explaining rotations in 3D space and their mathematical properties.",
-                        "duration": "25 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "Mind Maps",
-                        "description": "Create a mind map illustrating how rotations enable the creation of structured sets.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Constructing Non-Measurable Sets",
-                    "description": "Explore how rotations and the Axiom of Choice help create non-measurable sets.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study an advanced article on creating non-measurable sets using 3D rotations and the Axiom of Choice.",
-                        "duration": "40 minutes",
-                        "priority": "high",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Understand the mechanics of 3D rotations and their role in abstract constructions.",
-              "Learn how the Axiom of Choice interacts with rotational mathematics."
-            ],
-            "assessment": "Generate a quiz to test understanding of the role of 3D rotations and non-measurable sets."
-          },
-          {
-            "week": 3,
-            "theme": "Banach–Tarski Paradox Demystified",
-            "description": "Focus on the components, formation, and implications of the Banach–Tarski Paradox.",
-            "weekly_goals": [
-              "Fully understand how the paradox arises from the components studied in previous weeks.",
-              "Break down the steps leading to constructing two identical spheres."
-            ],
-            "assessment": "Recap key concepts using flashcards and practice tests; review weak areas through voice notes or AI summarization."
-          },
-          {
-            "week": 4,
-            "theme": "Reflecting on Abstract Mathematics and Real-World Applications",
-            "description": "Conclude the study plan by reflecting on the ability of mathematics to create counterintuitive results, and understanding its philosophical implications.",
-            "weekly_goals": [
-              "Identify key lessons and philosophical points from the Banach–Tarski Paradox.",
-              "Reflect on the possibility and limits of abstract mathematics."
-            ],
-            "assessment": "Conduct a self-evaluation to determine understanding of abstract mathematics and revisit prior weak areas through tools."
-          }
-        ],
-        "study_techniques": [
-          {
-            "technique": "Flashcards",
-            "description": "Create flashcards using the Flashcard Generator to memorize key terms or concepts.",
-            "best_for": "Definitions, axioms, and properties."
-          },
-          {
-            "technique": "Mind Maps",
-            "description": "Use visual organizers to connect complex ideas and see their relationship.",
-            "best_for": "Linking components of the Banach–Tarski Paradox."
-          },
-          {
-            "technique": "Practice Quizzes",
-            "description": "Test understanding using questions generated by the Practice Test Generator.",
-            "best_for": "Assess knowledge and identify gaps in understanding."
-          },
-          {
-            "technique": "AI Summarizer",
-            "description": "Condense lengthy explanations into key takeaways.",
-            "best_for": "Breaking down difficult topics like the Axiom of Choice."
-          }
-        ],
-        "resources": [
-          {
-            "title": "Understanding Infinite Sets",
-            "type": "article",
-            "description": "Provides foundational knowledge on infinite sets and their significance in modern math."
-          },
-          {
-            "title": "Rotations in 3D",
-            "type": "video",
-            "description": "Explains how 3D rotations work and their mathematical importance."
-          },
-          {
-            "title": "Banach–Tarski Paradox Explained",
-            "type": "tool",
-            "description": "Generates summaries and quizzes based on the paradox's components."
-          }
-        ]
-      },
-      "tags": [],
-      "pdfs": [
-        "Untitled document (1).pdf"
-      ],
-      "duration_info": {
-        "duration": 4,
-        "unit": "weeks"
-      },
-      "updatedAt": null
-    }
-  },
-  {
     "id": "68d66f17-88f1-468c-b5ce-7f346b80f8b1",
     "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
     "contentType": "quiz",
@@ -1778,270 +1508,6 @@
     }
   },
   {
-    "id": "bc42a234-5758-4531-b228-fa5b800da240",
-    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
-    "contentType": "study_plan",
-    "createdAt": "2025-11-18T12:09:07.937797",
-    "data": {
-      "title": "math lesson",
-      "description": "Study Duration: 4 weeks",
-      "content": {
-        "title": "math lesson",
-        "description": "A structured 4-week study plan focused on understanding the Banach-Tarski Paradox and its underlying mathematical concepts.",
-        "duration": "4 weeks",
-        "overview": "This study plan provides an in-depth exploration of the Banach-Tarski Paradox, its foundational concepts (such as the Axiom of Choice and non-measurable sets), and its implications for our understanding of infinite sets and abstract mathematics. By the end of the plan, you’ll have a clear grasp of why this paradox exists, its mathematical underpinnings, and its significant insights.",
-        "weekly_schedule": [
-          {
-            "week": 1,
-            "theme": "Building the Foundation: Infinite Sets and Abstract Mathematics",
-            "description": "Focusing on the fundamental mathematical ideas that will help understand the Banach-Tarski Paradox, including infinite sets and the Axiom of Choice.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Introduction to Infinite Sets",
-                    "description": "Learn the basics of infinite sets and why their behavior defies normal intuition.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read about the nature of infinite sets and their counterintuitive properties.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "flashcards",
-                        "description": "Create flashcards with definitions and properties of infinite sets.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Exploring Non-Measurable Sets",
-                    "description": "Introduce the idea of sets that cannot be assigned a meaningful volume.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study the concept of non-measurable sets and examples in abstract math.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "AI Summarizer",
-                        "description": "Use the AI summarizer to condense the core concepts about non-measurable sets.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 3,
-                "topics": [
-                  {
-                    "title": "Understanding the Axiom of Choice",
-                    "description": "Learn the role of the Axiom of Choice in mathematics and its controversial nature.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read in-depth about the Axiom of Choice and its implications for infinite sets.",
-                        "duration": "40 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "mind maps",
-                        "description": "Use mind maps to visually organize concepts related to the Axiom of Choice.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 4,
-                "topics": [
-                  {
-                    "title": "Connecting Infinite Sets and the Axiom of Choice",
-                    "description": "Integrate your knowledge of infinite sets and the Axiom of Choice.",
-                    "activities": [
-                      {
-                        "type": "tool",
-                        "tool": "practice quizzes",
-                        "description": "Test your understanding of infinite sets and the Axiom of Choice by taking practice quizzes.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "voice notes",
-                        "description": "Record audio summaries of what you’ve learned so far.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 5,
-                "topics": [
-                  {
-                    "title": "Review and Reflect",
-                    "description": "Consolidate your understanding of the week's content through review and reflection.",
-                    "activities": [
-                      {
-                        "type": "review",
-                        "description": "Go over your flashcards, notes, and practice quizzes from earlier in the week.",
-                        "duration": "40 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "AI summarizer",
-                        "description": "Generate summaries of the week's key takeaways.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Understand what infinite sets are and why they defy normal intuition.",
-              "Learn the fundamental principles of non-measurable sets.",
-              "Grasp the concept of the Axiom of Choice and its role in abstract mathematics."
-            ],
-            "assessment": "Take a practice quiz combining all the week's key concepts."
-          },
-          {
-            "week": 2,
-            "theme": "Rotations in 3D: Uncovering the Geometry Behind the Paradox",
-            "description": "Focus on the mathematical properties of 3D rotations that are key to constructing non-measurable sets.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Introduction to 3D Rotations",
-                    "description": "Learn about the mathematical properties of 3D rotations.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study the basics of 3D rotations and their unique properties.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "flashcards",
-                        "description": "Create flashcards summarizing the key properties of 3D rotations.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Understand the properties of 3D rotations and their mathematical significance.",
-              "Explore how 3D rotations contribute to the construction of non-measurable sets."
-            ],
-            "assessment": "Create a mind map connecting 3D rotations to the Banach-Tarski Paradox."
-          },
-          {
-            "week": 3,
-            "theme": "Dissecting the Paradox: The Pieces and the Process",
-            "description": "Delve into the paradox itself, focusing on the steps required to cut and reconstruct the sphere.",
-            "weekly_goals": [
-              "Learn the step-by-step process of the Banach-Tarski construction.",
-              "Understand the role of the five non-measurable pieces."
-            ],
-            "assessment": "Explain the process to a study partner or through a voice note recording."
-          },
-          {
-            "week": 4,
-            "theme": "Reflect and Explore: The Implications of the Banach-Tarski Paradox",
-            "description": "Consolidate your understanding of the Banach-Tarski Paradox and its implications for abstract math.",
-            "weekly_goals": [
-              "Summarize the key takeaways of the Banach-Tarski Paradox.",
-              "Explore the philosophical and mathematical implications of the paradox."
-            ],
-            "assessment": "Write a short essay summarizing the paradox and its significance."
-          }
-        ],
-        "study_techniques": [
-          {
-            "technique": "Active recall through flashcards",
-            "description": "Use flashcards to test your knowledge of key concepts like the Axiom of Choice, infinite sets, and non-measurable sets.",
-            "best_for": "Memorizing definitions and properties."
-          },
-          {
-            "technique": "Mind mapping",
-            "description": "Organize complex relationships between topics (e.g., 3D rotations and their role in the paradox) visually.",
-            "best_for": "Understanding connections between multiple concepts."
-          },
-          {
-            "technique": "Practice quizzes",
-            "description": "Reinforce your understanding by answering questions about each week’s core topics.",
-            "best_for": "Assessing comprehension and identifying gaps."
-          }
-        ],
-        "resources": [
-          {
-            "title": "Flashcard Generator",
-            "type": "tool",
-            "description": "Helpful for memorizing key terms like 'non-measurable sets' and 'Axiom of Choice'."
-          },
-          {
-            "title": "Practice Test Generator",
-            "type": "tool",
-            "description": "Allows you to create quizzes to solidify understanding of weekly concepts."
-          },
-          {
-            "title": "Mind Maps",
-            "type": "tool",
-            "description": "Great for visually connecting the relationships between abstract concepts like 3D rotations and non-measurable sets."
-          }
-        ]
-      },
-      "source_text": "✨ The Banach–Tarski Paradox (aka: how \nto duplicate a ball out of thin air) \nThis is one of the strangest results in all of mathematics. It basically says: \nYou can take a solid sphere, cut it into a finite number of pieces, rearrange \nthe pieces, and end up with two identical spheres of the same size as the \noriginal. \nYes.​\n Same size. Same volume. Made from the original ball. \nLike full-on duplicate the object with no stretching, no scaling, no filling in gaps.​\n Just: cut → shuffle → you now have two. \nThis is 100% mathematically valid… under a certain idea called the Axiom of Choice. \n \n🧠 Why this happens \nThe “pieces” you cut the ball into are not normal pieces. \nThey’re so “infinitely scrambled” that they can’t be measured.​\n Not like dust, not like fragments, but mathematical sets that defy volume altogether. \nThese pieces are called non-measurable sets. \nOnce you allow sets like that to exist, absolutely wild constructions become possible. \n \n🧩 The core ingredients \n1.​ A sphere​\n \n2.​ Rotations in 3D​\n There’s a deep property of these rotations that lets you create weirdly structured sets.​\n \n3.​ Axiom of Choice​\n Lets you pick one element from infinitely many “groups” even when they’re impossible to \n\ndescribe explicitly.​\n \n4.​ Five weird pieces​\n Yup. Five is enough.​\n \n \n📌 Why this doesn’t break physics \nBecause those pieces cannot exist in the physical world. \nYou can’t actually cut something into a “non-measurable set”.​\n Atoms ruin the party.​\n The paradox only works in pure abstract math land. \n \n💡 Why this is cool \nIt shows that: \n●​ Infinite sets can behave in ways that absolutely violate intuition​\n \n●​ Volume, when you break it down far enough, becomes meaningless​\n \n●​ Math isn’t always “real-world rules” — it’s whatever the axioms allow​\n \nIt’s one of the rare theorems where the conclusion feels like a magic trick. \n \n\n\n",
-      "tags": [],
-      "pdfs": [
-        "Untitled document (1).pdf"
-      ],
-      "duration_info": {
-        "duration": 4,
-        "unit": "weeks"
-      },
-      "updatedAt": null
-    }
-  },
-  {
     "id": "f1b8a2b2-c399-4cc4-92ec-9a3affe9689a",
     "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
     "contentType": "quiz",
@@ -2977,6 +2443,1285 @@
         }
       },
       "attempts": []
+    }
+  },
+  {
+    "id": "9b69d9a8-4a1f-4cba-9f9e-dadad59d0183",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "quiz",
+    "createdAt": "2025-11-24T19:31:18.968322",
+    "data": {
+      "title": "Understanding Derivatives: A Math Lesson",
+      "questions": [
+        {
+          "type": "multiple_choice",
+          "question": "What does a derivative measure?",
+          "options": [
+            "The average rate of change over time",
+            "The instantaneous rate of change at an exact moment",
+            "The total distance traveled over time",
+            "The average position of an object at a given time"
+          ],
+          "correct_answer": "The instantaneous rate of change at an exact moment"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the derivative of f(x) = x^2?",
+          "options": [
+            "f'(x) = x",
+            "f'(x) = 2x",
+            "f'(x) = x^2",
+            "f'(x) = x + 2"
+          ],
+          "correct_answer": "f'(x) = 2x"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the derivative of f(x) = 3x^4 + 5x - 7?",
+          "options": [
+            "f'(x) = 3x^3 + 5",
+            "f'(x) = 12x^3 + 5",
+            "f'(x) = 12x^4 + 5",
+            "f'(x) = 12x^3 - 7"
+          ],
+          "correct_answer": "f'(x) = 12x^3 + 5"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the derivative represent graphically?",
+          "options": [
+            "The area under the graph",
+            "The slope of the tangent line at a point",
+            "The maximum value of the graph",
+            "The intersection of two functions"
+          ],
+          "correct_answer": "The slope of the tangent line at a point"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "If f(x) = x^2 - 4x + 3, at what x-value does the function reach its smallest point?",
+          "options": [
+            "x = 3",
+            "x = 2",
+            "x = 0",
+            "x = -1"
+          ],
+          "correct_answer": "x = 2"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What is the result of applying the chain rule to f(x) = (3x^2 + 1)^5?",
+          "options": [
+            "f'(x) = 5(3x^2 + 1)^4",
+            "f'(x) = 30x(3x^2 + 1)^4",
+            "f'(x) = 10x(3x^2 + 1)^5",
+            "f'(x) = 30x^2(3x^2 + 1)^3"
+          ],
+          "correct_answer": "f'(x) = 30x(3x^2 + 1)^4"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which statement describes why zero derivatives matter?",
+          "options": [
+            "They indicate points where the tangent line is steepest.",
+            "They are points of local maximum or minimum values.",
+            "They represent where the graph is undefined.",
+            "They measure the total change in a function."
+          ],
+          "correct_answer": "They are points of local maximum or minimum values."
+        },
+        {
+          "type": "multiple_choice",
+          "question": "Which rule is applied when differentiating composite functions?",
+          "options": [
+            "Product Rule",
+            "Quotient Rule",
+            "Chain Rule",
+            "Sum Rule"
+          ],
+          "correct_answer": "Chain Rule"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What real-world application heavily depends on the derivative concept?",
+          "options": [
+            "Position and velocity calculations in physics",
+            "Finding the prime factors of numbers",
+            "Calculating square roots of integers",
+            "Solving algebraic inequalities"
+          ],
+          "correct_answer": "Position and velocity calculations in physics"
+        },
+        {
+          "type": "multiple_choice",
+          "question": "What does the derivative represent in machine learning?",
+          "options": [
+            "The area under the curve",
+            "The gradient descent direction to minimize error",
+            "The accuracy of the AI model",
+            "The total change in data over time"
+          ],
+          "correct_answer": "The gradient descent direction to minimize error"
+        }
+      ],
+      "userAnswers": null,
+      "score": null,
+      "timeTaken": 0,
+      "resourceName": "task-for-quiz.txt",
+      "options": {
+        "numQuestions": 10,
+        "selectedTopics": [],
+        "customTopics": "",
+        "questionFormats": {
+          "multiple_choice": true
+        }
+      },
+      "attempts": [
+        {
+          "attemptId": "1cdf35d1-64d6-4985-9a8e-0d4f47279074",
+          "timestamp": "2025-11-24T19:31:33.453704",
+          "score": 30,
+          "timeTaken": 13,
+          "userAnswers": [
+            "The average rate of change over time",
+            "f'(x) = x + 2",
+            "f'(x) = 12x^4 + 5",
+            "The slope of the tangent line at a point",
+            "x = -1",
+            "f'(x) = 10x(3x^2 + 1)^5",
+            "They are points of local maximum or minimum values.",
+            "Sum Rule",
+            "Solving algebraic inequalities",
+            "The gradient descent direction to minimize error"
+          ],
+          "mode": "quiz"
+        }
+      ]
+    }
+  },
+  {
+    "id": "eee949ae-0cae-4deb-b4cc-38abc8bd7ad4",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "study_plan",
+    "createdAt": "2025-11-24T20:01:25.822259",
+    "data": {
+      "title": "math",
+      "description": "math\r\n\r\nStudy Duration: 4 weeks",
+      "content": {
+        "title": "math",
+        "description": "Learn derivatives step-by-step in this comprehensive 4-week study plan covering intuition, proofs, applications, and real-world examples.",
+        "duration": "4 weeks",
+        "overview": "This study plan focuses on understanding derivatives, their rules, graphical meaning, optimization, the chain rule, and real-world applications in physics, computer science, and machine learning.",
+        "weekly_schedule": [
+          {
+            "week": 1,
+            "theme": "Building Intuition for Derivatives",
+            "description": "Understand what derivatives represent, calculate basic derivatives, and grasp their real-world meaning.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "What is a Derivative?",
+                    "description": "Learn the fundamental concept of how derivatives measure the instantaneous rate of change.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read the section on 'What is a Derivative' from the provided content.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Summarize the key takeaways from the 'What is a Derivative' section.",
+                        "duration": "10 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Derivatives in Real-world Contexts",
+                    "description": "Connect the idea of derivatives to practical examples (e.g., car speeds).",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Review the example of f(x)=x^2 and how its derivative provides speed at a specific moment.",
+                        "duration": "25 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Practice Test Generator",
+                        "description": "Solve example problems to calculate simple derivatives.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "topics": [
+                  {
+                    "title": "Where Derivative Formulas Come From",
+                    "description": "Understand the foundational formula for derivatives and why it works.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the section 'Where the Formula Comes From' to learn the logic behind derivatives.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Mind Maps",
+                        "description": "Create a mind map to break down the concept and steps of the derivative formula.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 4,
+                "topics": [
+                  {
+                    "title": "Graphical Meaning of Derivatives",
+                    "description": "Interpret the geometric representation of derivatives as slopes of tangent lines.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read the section 'What Does a Derivative Mean Graphically?'",
+                        "duration": "25 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Flashcards",
+                        "description": "Create flashcards on positive, negative, and zero derivatives and their implications.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 5,
+                "topics": [
+                  {
+                    "title": "Application of the Formula",
+                    "description": "Practice deriving formulas using the foundational definition.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "description": "Solve example problems expanding f(x)=x^2 using the derivative formula.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand the basic concept and intuition of derivatives.",
+              "Learn how to calculate simple derivatives using the foundational formula.",
+              "Interpret derivatives graphically as the slope of a tangent line."
+            ],
+            "assessment": "Test understanding by solving problems and verifying with the Practice Test Generator."
+          },
+          {
+            "week": 2,
+            "theme": "Derivative Rules and Their Shortcuts",
+            "description": "Master common derivative shortcuts and practice their application.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Common Derivative Rules",
+                    "description": "Learn derivative rules for power, trigonometric, exponential, and logarithmic functions.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the 'Common Derivative Rules' section to memorize the formulas and logic.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Flashcards",
+                        "description": "Create flashcards summarizing each derivative rule.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Applying the Rules",
+                    "description": "Solve problems using derivative rules for combined functions.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "description": "Work through examples like f(x)=3x^4+5x−7.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Practice Test Generator",
+                        "description": "Generate a quiz to test mastery of derivative rules.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Memorize and understand major derivative shortcut rules.",
+              "Apply these rules in practical contexts for efficiency."
+            ],
+            "assessment": "Use the Practice Test Generator to evaluate understanding of specific rules."
+          },
+          {
+            "week": 3,
+            "theme": "Optimization and Critical Points",
+            "description": "Explore optimization problems and learn how to find maximum and minimum values using derivatives.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Critical Points and Optimization",
+                    "description": "Understand why zero derivatives indicate local maxima or minima.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read the section 'Why Zero Derivatives Matter'.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Mind Maps",
+                        "description": "Create a visual representation of critical points vs. function behavior.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Optimization Practice",
+                    "description": "Work through real-world optimization problems.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "description": "Solve example problems like f(x) = x^2 − 4x + 3 for optimization.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Practice Test Generator",
+                        "description": "Test your ability to identify critical points and justify them.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Identify critical points and distinguish between maxima and minima.",
+              "Apply derivatives to solve optimization problems in real contexts."
+            ],
+            "assessment": "Solve optimization problems and evaluate progress using tools like practice tests."
+          },
+          {
+            "week": 4,
+            "theme": "Advanced Concepts and Real-world Applications",
+            "description": "Understand the chain rule and explore advanced derivative applications in physics, game dev, and machine learning.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "The Chain Rule",
+                    "description": "Master derivatives of functions composed within other functions.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the section on the chain rule and understand its applications.",
+                        "duration": "35 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Mind Maps",
+                        "description": "Create a map to visualize the steps of applying the chain rule.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Real-world Derivative Applications",
+                    "description": "Explore how derivatives are used in machine learning, physics, and game dev.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Review the 'Real World Applications' section.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Master the chain rule for derivatives of complex functions.",
+              "Understand and articulate key derivative applications in the real world."
+            ],
+            "assessment": "Apply the chain rule in sample problems and explain its relevance in chosen applications."
+          }
+        ],
+        "study_techniques": [
+          {
+            "technique": "Flashcards",
+            "description": "Write out key formulas and derivative rules on flashcards for quick review.",
+            "best_for": "Memorizing rules and formulas."
+          },
+          {
+            "technique": "Mind Mapping",
+            "description": "Visually organize relationships between derivative concepts for better comprehension.",
+            "best_for": "Understanding connections and processes like the chain rule."
+          },
+          {
+            "technique": "Practice Problems",
+            "description": "Solve progressively more complex problems to build confidence and skill.",
+            "best_for": "Applying and reinforcing mathematical rules and ideas."
+          }
+        ],
+        "resources": [
+          {
+            "title": "AI Summarizer",
+            "type": "tool",
+            "description": "Use to condense lengthy math concepts and focus on key definitions and ideas."
+          },
+          {
+            "title": "Practice Test Generator",
+            "type": "tool",
+            "description": "Create custom practice tests to apply rules and verify understanding."
+          },
+          {
+            "title": "Flashcard Generator",
+            "type": "tool",
+            "description": "Quickly create flashcards for formulas and rules to aid in memorization."
+          }
+        ]
+      },
+      "source_text": "Alright, here’s a long, self-contained math lesson you can actually learn from. No fluff, just \nsolid intuition, examples, and structure. We’ll do: \nA full lesson on derivatives and why they matter, with intuition, proofs, and \napplications. \nThis is the backbone of calculus and shows up everywhere in computer science, physics, \nmachine learning, and game dev. \n \n1. What is a Derivative, Actually? \nA derivative answers one question: \nHow fast is something changing right now? \nNot on average, not over time, but at an exact moment. \nIf: \n●​ f(x) = position of a car​\n \n●​ x = time​\n \nThen: \n●​ f'(x) = speed at that exact moment.​\n \nExample: \nIf a car moves according to: \nf(x)=x2f(x) = x^2f(x)=x2 \nAnd you're at x = 3, what’s its speed? \nThe derivative is: \nf′(x)=2xf'(x) = 2xf′(x)=2x \nSo at x = 3: \n\nf′(3)=6f'(3) = 6f′(3)=6 \nMeaning the car’s speed at that moment is 6 units per time. \n \n2. Where the Formula Comes From (No Magic) \nWe don’t just guess derivatives. They come from this definition: \nf′(x)=lim⁡h→0f(x+h)−f(x)hf'(x) = \\lim_{h \\to 0} \\frac{f(x + h) - f(x)}{h}f′(x)=h→0lim​hf(x+h)−f(x)​ \nThis means:​\n “Take a tiny step h, measure how much the output changes, divide by how far you moved, then \nshrink h to nothing.” \nLet’s do it properly for f(x) = x^2 \n(x+h)2−x2h\\frac{(x+h)^2 - x^2}{h}h(x+h)2−x2​ \nExpand: \nx2+2xh+h2−x2h\\frac{x^2 + 2xh + h^2 - x^2}{h}hx2+2xh+h2−x2​ \nCancel: \n2xh+h2h\\frac{2xh + h^2}{h}h2xh+h2​ \nFactor: \n2x+h2x + h2x+h \nNow let h → 0: \n2x2x2x \nSo the derivative of x2x^2x2 is 2x2x2x. That’s not a rule someone invented. It’s pure logic. \n \n3. Common Derivative Rules \nOnce you understand the logic, here are the shortcuts: \nFunction \nDerivative \n\nxnx^nxn \nnxn−1n \nx^{n-1}nxn−1 \nsin⁡(x)\\sin(x)si\nn(x) \ncos⁡(x)\\cos(x)co\ns(x) \ncos⁡(x)\\cos(x)\ncos(x) \n−sin⁡(x)-\\sin(x)−\nsin(x) \nexe^xex \nexe^xex \nln⁡(x)\\ln(x)ln(x\n) \n1/x1/x1/x \nExample: \nf(x)=3x4+5x−7f(x) = 3x^4 + 5x - 7f(x)=3x4+5x−7 \nDerivative: \nf′(x)=12x3+5f'(x) = 12x^3 + 5f′(x)=12x3+5\n \n4. What Does a Derivative Mean Graphically? \nThe derivative is the slope of the tangent line. \nIf you draw a curve and put a ruler touching it at one point, the derivative is the slope of that \nruler. \nSo: \n●​ Positive derivative → graph is going up​\n \n●​ Negative derivative → going down​\n \n●​ Zero derivative → flat (important, these are critical points)​\n \n \n5. Why Zero Derivatives Matter (Optimization) \nThese are points where something is at a local max or min. \n\nExample: \nf(x)=x2−4x+3f(x) = x^2 - 4x + 3f(x)=x2−4x+3 \nTake derivative: \nf′(x)=2x−4f'(x) = 2x - 4f′(x)=2x−4 \nSet equal to zero: \n2x−4=02x - 4 = 02x−4=0 x=2x = 2x=2 \nPlug back: \nf(2)=4−8+3=−1f(2) = 4 - 8 + 3 = -1f(2)=4−8+3=−1 \nSo the smallest value is -1 at x = 2. \nThis is how: \n●​ Businesses maximize profits​\n \n●​ Games optimize physics​\n \n●​ AI minimizes loss functions​\n \n●​ You minimize exam suffering​\n \n \n6. Chain Rule (The Most Important Rule) \nUsed when functions are inside other functions. \nIf: \nf(g(x))f(g(x))f(g(x)) \nThen: \ndfdx=f′(g(x))⋅g′(x)\\frac{df}{dx} = f'(g(x)) \\cdot g'(x)dxdf​=f′(g(x))⋅g′(x) \nExample: \nf(x)=(3x2+1)5f(x) = (3x^2 + 1)^5f(x)=(3x2+1)5 \n\nOuter: u^5 → 5u^4​\n Inner: 3x^2 + 1 → 6x \nMultiply: \nf′(x)=5(3x2+1)4⋅6xf'(x) = 5(3x^2 + 1)^4 \\cdot 6xf′(x)=5(3x2+1)4⋅6x =30x(3x2+1)4= 30x(3x^2 + \n1)^4=30x(3x2+1)4\n \n7. Real World Applications \nPhysics \nPosition → Velocity → Acceleration​\n Each is a derivative of the last. \nComputer Graphics / Game Dev \nYou use derivatives for: \n●​ Movement smoothing​\n \n●​ Camera motion​\n \n●​ Animation curves​\n \n●​ Physics forces​\n \nMachine Learning \nGradient descent is literally: \nFollow the negative derivative until error is minimized. \nEvery AI model uses derivatives constantly. \n \n8. A Final Intuition \nThink of a derivative as: \nStanding on a mountain and asking, “Which direction is uphill, and how steep is it?” \n\nThe derivative gives you: \n●​ Direction of change​\n \n●​ Speed of change​\n \n●​ Where things peak or dip​\n \n●​ How to optimize complex systems​\n \nIt’s the math of change. \n \n\n\n",
+      "tags": [],
+      "pdfs": [
+        "Untitled document (2).pdf"
+      ],
+      "duration_info": {
+        "duration": 4,
+        "unit": "weeks"
+      },
+      "updatedAt": null
+    }
+  },
+  {
+    "id": "3115a981-185b-4e7e-96ed-b4181e7c5120",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "study_plan",
+    "createdAt": "2025-11-28T04:11:57.234626",
+    "data": {
+      "title": "testtt",
+      "description": "t\r\n\r\nStudy Duration: 4 weeks",
+      "content": {
+        "title": "testtt",
+        "description": "A structured, 4-week study plan focused on understanding derivatives, their applications, and mathematical intuitions.",
+        "duration": "4 weeks",
+        "overview": "This study plan is designed to help you master the concept of derivatives, their calculation, graphical meaning, and real-world applications in physics, machine learning, and game development. It spans from foundational basics to advanced concepts like the chain rule and optimization techniques.",
+        "weekly_schedule": [
+          {
+            "week": 1,
+            "theme": "Understanding Derivatives: The Basics",
+            "description": "Focus on the basic concept of derivatives, intuition, and foundational proofs.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "What is a Derivative, Actually?",
+                    "description": "Learn the definition and real-world meaning of derivatives.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read the section on 'What is a Derivative, Actually?'",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Create flashcards for key terms (e.g., position, velocity, speed).",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Where the Formula Comes From (No Magic)",
+                    "description": "Explore the mathematical logic behind derivative formulas.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the section 'Where the Formula Comes From' and try examples provided.",
+                        "duration": "45 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Use the AI Summarizer to condense key ideas.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "topics": [
+                  {
+                    "title": "Common Derivative Rules",
+                    "description": "Learn and practice common derivative rules, such as power, trigonometric, and exponential rules.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "tool": "Practice Test Generator",
+                        "description": "Generate a short quiz to test understanding of derivative rules.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Add derivative rules (e.g., power rule, chain rule) to flashcards.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 4,
+                "topics": [
+                  {
+                    "title": "Practice Using Formulas",
+                    "description": "Apply the formulas to find derivatives of given functions.",
+                    "activities": [
+                      {
+                        "type": "exercise",
+                        "description": "Solve example problems using derivative rules.",
+                        "duration": "45 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Voice Notes",
+                        "description": "Record audio notes explaining how derivative rules work.",
+                        "duration": "15 minutes",
+                        "priority": "low",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 5,
+                "topics": [
+                  {
+                    "title": "Basic Applications in Physics",
+                    "description": "Explore simple physics examples like position, velocity, and acceleration.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read 'Real World Applications' focusing on Physics examples.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "diagram",
+                        "tool": "Mind Maps",
+                        "description": "Create a diagram linking derivatives to physics concepts.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand the basic definition and intuition of derivatives.",
+              "Learn the foundational formula derivation.",
+              "Memorize and apply common derivative rules."
+            ],
+            "assessment": "Use the Practice Test Generator to complete a small test covering derivative basics and rules."
+          },
+          {
+            "week": 2,
+            "theme": "Graphical Understanding of Derivatives",
+            "description": "Learn how derivatives represent slopes, tangent lines, and critical points.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "What Does a Derivative Mean Graphically?",
+                    "description": "Explore the graphical meaning of derivatives as slopes.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study 'What Does a Derivative Mean Graphically?'",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "diagram",
+                        "tool": "Mind Maps",
+                        "description": "Visualize concepts of positive, negative, and zero slopes.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Why Zero Derivatives Matter (Optimization)",
+                    "description": "Learn how zero derivatives identify maximum and minimum points.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Review 'Why Zero Derivatives Matter' and example problems.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "exercise",
+                        "description": "Solve optimization problems provided in examples.",
+                        "duration": "40 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "topics": [
+                  {
+                    "title": "Derivative Behavior in Graphs",
+                    "description": "Analyze behavior of graphs at different derivative value points.",
+                    "activities": [
+                      {
+                        "type": "practice",
+                        "description": "Analyze graphs with tangent lines to identify derivative values.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Summarize graphical clues about derivatives.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Interpret derivatives graphically as slopes.",
+              "Learn the significance of zero derivatives in optimization contexts.",
+              "Analyze real-world graphs using derivative values."
+            ],
+            "assessment": "Complete graphical problem sets and summarize key findings using Voice Notes."
+          },
+          {
+            "week": 3,
+            "theme": "Advanced Derivatives: Optimization and Chain Rule",
+            "description": "Focus on advanced applications like the chain rule and optimization techniques.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Introduction to the Chain Rule",
+                    "description": "Understand the most important rule for derivatives: the chain rule.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study 'Chain Rule (The Most Important Rule)' section.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "exercise",
+                        "description": "Solve chain rule problems provided.",
+                        "duration": "40 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Using the Chain Rule in Real-Life Applications",
+                    "description": "Apply the chain rule to problems in machine learning and graphics.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Review 'Real World Applications' focusing on machine learning.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "practice",
+                        "description": "Generate example exercises that mimic real-world applications.",
+                        "duration": "40 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Master the chain rule and its mathematical application.",
+              "Apply derivatives to optimize machine learning gradients."
+            ],
+            "assessment": "Complete a set of chain rule questions and explain solutions using Voice Notes tools."
+          },
+          {
+            "week": 4,
+            "theme": "Real-World Applications of Derivatives",
+            "description": "Explore how derivatives are used in physics, computer graphics, and machine learning.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Physics Applications of Derivatives",
+                    "description": "Focus on applications in velocity, acceleration, and motion.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study 'Real World Applications' focusing on physics.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Mind Maps",
+                        "description": "Create diagrams linking derivatives to motion concepts.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Computer Graphics and Game Development Applications",
+                    "description": "Explore how derivatives enhance animations and smooth movements.",
+                    "activities": [
+                      {
+                        "type": "case study",
+                        "description": "Analyze motion smoothing examples in game development.",
+                        "duration": "40 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "Practice Test Generator",
+                        "description": "Test understanding with applied derivatives exercises.",
+                        "duration": "30 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Connect derivatives to real-world uses in physics and graphics.",
+              "Analyze how companies and developers use derivatives for optimization."
+            ],
+            "assessment": "Create a written summary or digital presentation on how derivatives solve real-world problems."
+          }
+        ],
+        "study_techniques": [
+          {
+            "technique": "Flashcards",
+            "description": "Use flashcards to memorize derivative rules, key terms, and formulas.",
+            "best_for": "Understanding common rules and definitions."
+          },
+          {
+            "technique": "Practice Quizzes",
+            "description": "Generate quizzes to test understanding after studying key sections.",
+            "best_for": "Application and problem-solving."
+          },
+          {
+            "technique": "Mind Maps",
+            "description": "Organize complex concepts visually to see connections.",
+            "best_for": "Graphical understanding and real-world applications."
+          },
+          {
+            "technique": "AI Summarizer",
+            "description": "Summarize large sections into concise overviews for quick revision.",
+            "best_for": "Condensing dense reading material."
+          },
+          {
+            "technique": "Voice Notes",
+            "description": "Record short reflections on problem-solving techniques and insights.",
+            "best_for": "Reinforcing understanding through verbal recall."
+          }
+        ],
+        "resources": [
+          {
+            "title": "Flashcards Generator",
+            "type": "tool",
+            "description": "Helps to memorize formulae and derivative rules effectively."
+          },
+          {
+            "title": "Practice Test Generator",
+            "type": "tool",
+            "description": "Allows testing understanding through customizable quizzes and assessments."
+          },
+          {
+            "title": "AI Summarizer",
+            "type": "tool",
+            "description": "Condenses complex sections into manageable reviews."
+          },
+          {
+            "title": "Mind Maps",
+            "type": "tool",
+            "description": "Visualize and connect concepts for deeper comprehension."
+          },
+          {
+            "title": "Voice Notes Recorder",
+            "type": "tool",
+            "description": "Reinforce learning using audio explanations of key concepts."
+          }
+        ]
+      },
+      "source_text": "Alright, here’s a long, self-contained math lesson you can actually learn from. No fluff, just \nsolid intuition, examples, and structure. We’ll do: \nA full lesson on derivatives and why they matter, with intuition, proofs, and \napplications. \nThis is the backbone of calculus and shows up everywhere in computer science, physics, \nmachine learning, and game dev. \n \n1. What is a Derivative, Actually? \nA derivative answers one question: \nHow fast is something changing right now? \nNot on average, not over time, but at an exact moment. \nIf: \n●​ f(x) = position of a car​\n \n●​ x = time​\n \nThen: \n●​ f'(x) = speed at that exact moment.​\n \nExample: \nIf a car moves according to: \nf(x)=x2f(x) = x^2f(x)=x2 \nAnd you're at x = 3, what’s its speed? \nThe derivative is: \nf′(x)=2xf'(x) = 2xf′(x)=2x \nSo at x = 3: \n\nf′(3)=6f'(3) = 6f′(3)=6 \nMeaning the car’s speed at that moment is 6 units per time. \n \n2. Where the Formula Comes From (No Magic) \nWe don’t just guess derivatives. They come from this definition: \nf′(x)=lim⁡h→0f(x+h)−f(x)hf'(x) = \\lim_{h \\to 0} \\frac{f(x + h) - f(x)}{h}f′(x)=h→0lim​hf(x+h)−f(x)​ \nThis means:​\n “Take a tiny step h, measure how much the output changes, divide by how far you moved, then \nshrink h to nothing.” \nLet’s do it properly for f(x) = x^2 \n(x+h)2−x2h\\frac{(x+h)^2 - x^2}{h}h(x+h)2−x2​ \nExpand: \nx2+2xh+h2−x2h\\frac{x^2 + 2xh + h^2 - x^2}{h}hx2+2xh+h2−x2​ \nCancel: \n2xh+h2h\\frac{2xh + h^2}{h}h2xh+h2​ \nFactor: \n2x+h2x + h2x+h \nNow let h → 0: \n2x2x2x \nSo the derivative of x2x^2x2 is 2x2x2x. That’s not a rule someone invented. It’s pure logic. \n \n3. Common Derivative Rules \nOnce you understand the logic, here are the shortcuts: \nFunction \nDerivative \n\nxnx^nxn \nnxn−1n \nx^{n-1}nxn−1 \nsin⁡(x)\\sin(x)si\nn(x) \ncos⁡(x)\\cos(x)co\ns(x) \ncos⁡(x)\\cos(x)\ncos(x) \n−sin⁡(x)-\\sin(x)−\nsin(x) \nexe^xex \nexe^xex \nln⁡(x)\\ln(x)ln(x\n) \n1/x1/x1/x \nExample: \nf(x)=3x4+5x−7f(x) = 3x^4 + 5x - 7f(x)=3x4+5x−7 \nDerivative: \nf′(x)=12x3+5f'(x) = 12x^3 + 5f′(x)=12x3+5\n \n4. What Does a Derivative Mean Graphically? \nThe derivative is the slope of the tangent line. \nIf you draw a curve and put a ruler touching it at one point, the derivative is the slope of that \nruler. \nSo: \n●​ Positive derivative → graph is going up​\n \n●​ Negative derivative → going down​\n \n●​ Zero derivative → flat (important, these are critical points)​\n \n \n5. Why Zero Derivatives Matter (Optimization) \nThese are points where something is at a local max or min. \n\nExample: \nf(x)=x2−4x+3f(x) = x^2 - 4x + 3f(x)=x2−4x+3 \nTake derivative: \nf′(x)=2x−4f'(x) = 2x - 4f′(x)=2x−4 \nSet equal to zero: \n2x−4=02x - 4 = 02x−4=0 x=2x = 2x=2 \nPlug back: \nf(2)=4−8+3=−1f(2) = 4 - 8 + 3 = -1f(2)=4−8+3=−1 \nSo the smallest value is -1 at x = 2. \nThis is how: \n●​ Businesses maximize profits​\n \n●​ Games optimize physics​\n \n●​ AI minimizes loss functions​\n \n●​ You minimize exam suffering​\n \n \n6. Chain Rule (The Most Important Rule) \nUsed when functions are inside other functions. \nIf: \nf(g(x))f(g(x))f(g(x)) \nThen: \ndfdx=f′(g(x))⋅g′(x)\\frac{df}{dx} = f'(g(x)) \\cdot g'(x)dxdf​=f′(g(x))⋅g′(x) \nExample: \nf(x)=(3x2+1)5f(x) = (3x^2 + 1)^5f(x)=(3x2+1)5 \n\nOuter: u^5 → 5u^4​\n Inner: 3x^2 + 1 → 6x \nMultiply: \nf′(x)=5(3x2+1)4⋅6xf'(x) = 5(3x^2 + 1)^4 \\cdot 6xf′(x)=5(3x2+1)4⋅6x =30x(3x2+1)4= 30x(3x^2 + \n1)^4=30x(3x2+1)4\n \n7. Real World Applications \nPhysics \nPosition → Velocity → Acceleration​\n Each is a derivative of the last. \nComputer Graphics / Game Dev \nYou use derivatives for: \n●​ Movement smoothing​\n \n●​ Camera motion​\n \n●​ Animation curves​\n \n●​ Physics forces​\n \nMachine Learning \nGradient descent is literally: \nFollow the negative derivative until error is minimized. \nEvery AI model uses derivatives constantly. \n \n8. A Final Intuition \nThink of a derivative as: \nStanding on a mountain and asking, “Which direction is uphill, and how steep is it?” \n\nThe derivative gives you: \n●​ Direction of change​\n \n●​ Speed of change​\n \n●​ Where things peak or dip​\n \n●​ How to optimize complex systems​\n \nIt’s the math of change. \n \n\n\n",
+      "tags": [],
+      "pdfs": [
+        "Untitled document (2).pdf"
+      ],
+      "duration_info": {
+        "duration": 4,
+        "unit": "weeks"
+      },
+      "updatedAt": null
+    }
+  },
+  {
+    "id": "eed390bc-91e9-4d79-baaf-f7239ecf67af",
+    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
+    "contentType": "study_plan",
+    "createdAt": "2025-11-28T04:13:36.521085",
+    "data": {
+      "title": "testttt",
+      "description": "Study Duration: 4 weeks",
+      "content": {
+        "title": "testttt",
+        "description": "This 4-week study plan is designed to build solid intuition, practice skills, and master derivatives. It combines key concepts, hands-on activities, and real-world applications for a deep understanding of calculus foundations.",
+        "duration": "4 weeks",
+        "overview": "This study plan covers the entire concept of derivatives, including intuition, proofs, computation techniques, graphical interpretations, optimization, chain rule applications, and real-world uses. The plan gradually progresses in difficulty and ends with real-world applications and advanced techniques.",
+        "weekly_schedule": [
+          {
+            "week": 1,
+            "theme": "Introduction to Derivatives and Their Importance",
+            "description": "Learn what derivatives mean, why they matter, and develop an intuitive understanding through examples and definitions.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "What is a Derivative?",
+                    "description": "Understand the concept of derivatives as a measure of instantaneous change.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read the introductory section covering 'What is a Derivative?' and study the car speed example.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Summarize key points from the section to reinforce understanding.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "Formula Derivation (No Magic)",
+                    "description": "Learn how derivative formulas are derived logically and rigorously.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the section on the formula derivation using limits.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Create flashcards for steps in formula derivation and key terms.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 3,
+                "topics": [
+                  {
+                    "title": "Common Derivative Rules",
+                    "description": "Memorize and practice common rules for calculating derivatives efficiently.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Learn the shortcut rules for common derivative functions.",
+                        "duration": "25 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "practice quizzes",
+                        "description": "Use practice quizzes to test understanding of derivative rules.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 4,
+                "topics": [
+                  {
+                    "title": "Graphical Meaning of Derivatives",
+                    "description": "Explore how derivatives relate to the slope of tangent lines using visuals.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the correlation between derivatives and slopes on graphs.",
+                        "duration": "30 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "mind maps",
+                        "description": "Create a visual representation linking tangent slopes to derivative values.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 5,
+                "topics": [
+                  {
+                    "title": "Review Week 1 Concepts",
+                    "description": "Consolidate learning and self-check progress.",
+                    "activities": [
+                      {
+                        "type": "review",
+                        "description": "Use flashcards and revisit practice quizzes to reinforce week 1 content.",
+                        "duration": "45 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "voice notes",
+                        "description": "Record voice notes summarizing key takeaways.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Develop a basic theoretical understanding of derivatives.",
+              "Practice common rules and graphical interpretations."
+            ],
+            "assessment": "Use practice quizzes and flashcards to test comprehension of the basics and derivative calculations."
+          },
+          {
+            "week": 2,
+            "theme": "Optimization and Important Rules",
+            "description": "Dive deeper into critical points, optimization, and the chain rule.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Critical Points and Optimization",
+                    "description": "Explore why zero derivatives are crucial for finding maxima, minima, and optimization problems.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Study the section on zero derivatives and optimization techniques.",
+                        "duration": "30 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "practice quizzes",
+                        "description": "Practice optimizing functions by finding critical points.",
+                        "duration": "25 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 2,
+                "topics": [
+                  {
+                    "title": "The Chain Rule",
+                    "description": "Master the chain rule for derivatives of nested functions.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Work through chain rule examples and the formula logic.",
+                        "duration": "35 minutes",
+                        "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Develop flashcards breaking down the chain rule into simple steps.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "day": 5,
+                "topics": [
+                  {
+                    "title": "Weekly Assessment",
+                    "description": "Review optimization and chain rule concepts through tests.",
+                    "activities": [
+                      {
+                        "type": "test",
+                        "description": "Take a practice test covering optimization problems and chain rule applications.",
+                        "duration": "1 hour",
+                        "priority": "high",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand optimization techniques using derivatives.",
+              "Become proficient in applying the chain rule to nested functions."
+            ],
+            "assessment": "Evaluate understanding of critical points, optimization, and chain rule applications through quizzes and tests."
+          },
+          {
+            "week": 3,
+            "theme": "Applications of Derivatives",
+            "description": "Explore real-world applications of derivatives in physics, computer graphics, and machine learning.",
+            "days": [],
+            "weekly_goals": [],
+            "assessment": "Assess how derivatives are applied in practical scenarios like physics, AI, and graphics."
+          },
+          {
+            "week": 4,
+            "theme": "Final Mastery and Review",
+            "description": "Conclude with assessments, reviews, and advanced derivative techniques.",
+            "days": [],
+            "weekly_goals": [],
+            "assessment": "Demonstrate mastery of derivatives through advanced exercises and final evaluations."
+          }
+        ],
+        "study_techniques": [
+          {
+            "technique": "Flashcards",
+            "description": "Use flashcards to memorize derivative rules, formulas, and concepts.",
+            "best_for": "Concept reinforcement and memorization."
+          },
+          {
+            "technique": "Practice Tests",
+            "description": "Assess understanding by solving problems under timed conditions.",
+            "best_for": "Testing progress and application of learned concepts."
+          },
+          {
+            "technique": "Mind Maps",
+            "description": "Organize derivative concepts visually to see connections and relationships.",
+            "best_for": "Understanding the big picture and interrelations of concepts."
+          }
+        ],
+        "resources": [
+          {
+            "title": "Derivative Basics",
+            "type": "article",
+            "description": "Provides foundational understanding of derivatives."
+          },
+          {
+            "title": "Practice Quiz Tool",
+            "type": "tool",
+            "description": "Offers quiz questions for practicing derivative calculations and applications."
+          },
+          {
+            "title": "AI Summarizer",
+            "type": "tool",
+            "description": "Helps condense and summarize derivative concepts quickly."
+          }
+        ]
+      },
+      "source_text": "Alright, here’s a long, self-contained math lesson you can actually learn from. No fluff, just \nsolid intuition, examples, and structure. We’ll do: \nA full lesson on derivatives and why they matter, with intuition, proofs, and \napplications. \nThis is the backbone of calculus and shows up everywhere in computer science, physics, \nmachine learning, and game dev. \n \n1. What is a Derivative, Actually? \nA derivative answers one question: \nHow fast is something changing right now? \nNot on average, not over time, but at an exact moment. \nIf: \n●​ f(x) = position of a car​\n \n●​ x = time​\n \nThen: \n●​ f'(x) = speed at that exact moment.​\n \nExample: \nIf a car moves according to: \nf(x)=x2f(x) = x^2f(x)=x2 \nAnd you're at x = 3, what’s its speed? \nThe derivative is: \nf′(x)=2xf'(x) = 2xf′(x)=2x \nSo at x = 3: \n\nf′(3)=6f'(3) = 6f′(3)=6 \nMeaning the car’s speed at that moment is 6 units per time. \n \n2. Where the Formula Comes From (No Magic) \nWe don’t just guess derivatives. They come from this definition: \nf′(x)=lim⁡h→0f(x+h)−f(x)hf'(x) = \\lim_{h \\to 0} \\frac{f(x + h) - f(x)}{h}f′(x)=h→0lim​hf(x+h)−f(x)​ \nThis means:​\n “Take a tiny step h, measure how much the output changes, divide by how far you moved, then \nshrink h to nothing.” \nLet’s do it properly for f(x) = x^2 \n(x+h)2−x2h\\frac{(x+h)^2 - x^2}{h}h(x+h)2−x2​ \nExpand: \nx2+2xh+h2−x2h\\frac{x^2 + 2xh + h^2 - x^2}{h}hx2+2xh+h2−x2​ \nCancel: \n2xh+h2h\\frac{2xh + h^2}{h}h2xh+h2​ \nFactor: \n2x+h2x + h2x+h \nNow let h → 0: \n2x2x2x \nSo the derivative of x2x^2x2 is 2x2x2x. That’s not a rule someone invented. It’s pure logic. \n \n3. Common Derivative Rules \nOnce you understand the logic, here are the shortcuts: \nFunction \nDerivative \n\nxnx^nxn \nnxn−1n \nx^{n-1}nxn−1 \nsin⁡(x)\\sin(x)si\nn(x) \ncos⁡(x)\\cos(x)co\ns(x) \ncos⁡(x)\\cos(x)\ncos(x) \n−sin⁡(x)-\\sin(x)−\nsin(x) \nexe^xex \nexe^xex \nln⁡(x)\\ln(x)ln(x\n) \n1/x1/x1/x \nExample: \nf(x)=3x4+5x−7f(x) = 3x^4 + 5x - 7f(x)=3x4+5x−7 \nDerivative: \nf′(x)=12x3+5f'(x) = 12x^3 + 5f′(x)=12x3+5\n \n4. What Does a Derivative Mean Graphically? \nThe derivative is the slope of the tangent line. \nIf you draw a curve and put a ruler touching it at one point, the derivative is the slope of that \nruler. \nSo: \n●​ Positive derivative → graph is going up​\n \n●​ Negative derivative → going down​\n \n●​ Zero derivative → flat (important, these are critical points)​\n \n \n5. Why Zero Derivatives Matter (Optimization) \nThese are points where something is at a local max or min. \n\nExample: \nf(x)=x2−4x+3f(x) = x^2 - 4x + 3f(x)=x2−4x+3 \nTake derivative: \nf′(x)=2x−4f'(x) = 2x - 4f′(x)=2x−4 \nSet equal to zero: \n2x−4=02x - 4 = 02x−4=0 x=2x = 2x=2 \nPlug back: \nf(2)=4−8+3=−1f(2) = 4 - 8 + 3 = -1f(2)=4−8+3=−1 \nSo the smallest value is -1 at x = 2. \nThis is how: \n●​ Businesses maximize profits​\n \n●​ Games optimize physics​\n \n●​ AI minimizes loss functions​\n \n●​ You minimize exam suffering​\n \n \n6. Chain Rule (The Most Important Rule) \nUsed when functions are inside other functions. \nIf: \nf(g(x))f(g(x))f(g(x)) \nThen: \ndfdx=f′(g(x))⋅g′(x)\\frac{df}{dx} = f'(g(x)) \\cdot g'(x)dxdf​=f′(g(x))⋅g′(x) \nExample: \nf(x)=(3x2+1)5f(x) = (3x^2 + 1)^5f(x)=(3x2+1)5 \n\nOuter: u^5 → 5u^4​\n Inner: 3x^2 + 1 → 6x \nMultiply: \nf′(x)=5(3x2+1)4⋅6xf'(x) = 5(3x^2 + 1)^4 \\cdot 6xf′(x)=5(3x2+1)4⋅6x =30x(3x2+1)4= 30x(3x^2 + \n1)^4=30x(3x2+1)4\n \n7. Real World Applications \nPhysics \nPosition → Velocity → Acceleration​\n Each is a derivative of the last. \nComputer Graphics / Game Dev \nYou use derivatives for: \n●​ Movement smoothing​\n \n●​ Camera motion​\n \n●​ Animation curves​\n \n●​ Physics forces​\n \nMachine Learning \nGradient descent is literally: \nFollow the negative derivative until error is minimized. \nEvery AI model uses derivatives constantly. \n \n8. A Final Intuition \nThink of a derivative as: \nStanding on a mountain and asking, “Which direction is uphill, and how steep is it?” \n\nThe derivative gives you: \n●​ Direction of change​\n \n●​ Speed of change​\n \n●​ Where things peak or dip​\n \n●​ How to optimize complex systems​\n \nIt’s the math of change. \n \n\n\n",
+      "tags": [],
+      "pdfs": [
+        "Untitled document (2).pdf"
+      ],
+      "duration_info": {
+        "duration": 4,
+        "unit": "weeks"
+      },
+      "updatedAt": null
     }
   }
 ]

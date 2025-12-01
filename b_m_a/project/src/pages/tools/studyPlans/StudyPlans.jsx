@@ -69,6 +69,11 @@ const StudyPlans = () => {
   // derived UI state
   const today = new Date();
 
+  // Calendar month and selection state (must be declared before functions that use setSelectedDate)
+  const [currentMonth, setCurrentMonth] = useState(startOfMonth(today));
+  const [selectedDate, setSelectedDate] = useState(null);
+  const navigate = useNavigate();
+
   const { instance, accounts } = useMsal();
   const { generateQuiz } = useQuizData();
 
@@ -192,6 +197,7 @@ const StudyPlans = () => {
           if (!content || !content.weekly_schedule) continue;
 
           // Iterate weeks/days/topics/activities in order and collect tasks
+          // Only include tasks that fall on today (current calendar day).
           // Map plan days to calendar dates using a weekly offset so that
           // week N maps to baseDate + (N-1)*7 days + dayIndex within that week.
           const baseDate = p.createdAt ? new Date(p.createdAt) : new Date();
@@ -202,6 +208,8 @@ const StudyPlans = () => {
             for (let di = 0; di < days.length; di++) {
               const day = days[di];
               const dayDate = addDays(baseDate, wi * 7 + di);
+              // Only include tasks scheduled for today
+              if (!isSameDay(dayDate, today)) continue;
               for (const topic of day.topics || []) {
                 for (const activity of topic.activities || []) {
                   tasks.push({
@@ -306,6 +314,70 @@ const StudyPlans = () => {
     }
   };
 
+  // Deterministic per-plan color: derive a vivid hex color from plan id using HSL
+  const hslToHex = (h, s, l) => {
+    // h in [0,360], s,l in [0,100]
+    s /= 100;
+    l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const hh = h / 60;
+    const x = c * (1 - Math.abs((hh % 2) - 1));
+    let r1 = 0, g1 = 0, b1 = 0;
+    if (hh >= 0 && hh < 1) { r1 = c; g1 = x; b1 = 0; }
+    else if (hh >= 1 && hh < 2) { r1 = x; g1 = c; b1 = 0; }
+    else if (hh >= 2 && hh < 3) { r1 = 0; g1 = c; b1 = x; }
+    else if (hh >= 3 && hh < 4) { r1 = 0; g1 = x; b1 = c; }
+    else if (hh >= 4 && hh < 5) { r1 = x; g1 = 0; b1 = c; }
+    else { r1 = c; g1 = 0; b1 = x; }
+    const m = l - c / 2;
+    const r = Math.round((r1 + m) * 255);
+    const g = Math.round((g1 + m) * 255);
+    const b = Math.round((b1 + m) * 255);
+    const toHex = (v) => ('0' + (v & 0xff).toString(16)).slice(-2);
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
+
+  const getPlanColor = (planId) => {
+    if (!planId) return '#7c3aed';
+    // simple hash to deterministically derive a hue
+    let hash = 0;
+    for (let i = 0; i < planId.length; i++) {
+      hash = planId.charCodeAt(i) + ((hash << 5) - hash);
+      hash = hash & hash;
+    }
+    const hue = Math.abs(hash) % 360;
+    // choose high saturation and medium lightness for vivid colors
+    const saturation = 72; // percent
+    const lightness = 48; // percent
+    return hslToHex(hue, saturation, lightness);
+  };
+
+  const hexToRgb = (hex) => {
+    const h = hex.replace('#', '');
+    const bigint = parseInt(h, 16);
+    if (h.length === 6) {
+      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+    }
+    // fallback
+    return [124, 58, 237];
+  };
+
+  const rgbaFromHex = (hex, alpha = 0.08) => {
+    try {
+      const [r, g, b] = hexToRgb(hex);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    } catch (e) {
+      return `rgba(124,58,237,${alpha})`;
+    }
+  };
+
+  const getContrastTextColor = (hex) => {
+    const [r, g, b] = hexToRgb(hex);
+    // luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? '#000000' : '#ffffff';
+  };
+
 
   // Build a comprehensive task list for calendar rendering from all plans (limit to first 20 plans)
   useEffect(() => {
@@ -389,11 +461,45 @@ const StudyPlans = () => {
     return studyPlans.slice().sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt)).slice(0, 5);
   }, [studyPlans]);
 
+  // Objectives view state: 'daily' | 'weekly' | 'monthly'
+  const [objectivesView, setObjectivesView] = useState('weekly');
+
+  // Daily goals: tasks scheduled for today (use upcomingTasks which was limited to today tasks)
+  const dailyGoals = useMemo(() => {
+    if (!upcomingTasks) return [];
+    return upcomingTasks.filter((t) => isSameDay(new Date(t.date), today));
+  }, [upcomingTasks]);
+
+  // Weekly tasks: tasks scheduled for the current week
+  const weekTasks = useMemo(() => {
+    const start = startOfWeek(today);
+    const end = endOfWeek(today);
+    return (allPlanTasks || []).filter((t) => t.date && isWithinInterval(new Date(t.date), { start, end }));
+  }, [allPlanTasks]);
+
+  // Monthly tasks: tasks scheduled for the current calendar month
+  const monthTasks = useMemo(() => {
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    return (allPlanTasks || []).filter((t) => t.date && isWithinInterval(new Date(t.date), { start, end }));
+  }, [allPlanTasks, currentMonth]);
+
+
+  // Monthly goals: plans created/updated this month or recent plans if none
+  const monthlyGoals = useMemo(() => {
+    if (!studyPlans || studyPlans.length === 0) return [];
+    const inMonth = studyPlans.filter((p) => {
+      const d = p.updatedAt || p.createdAt;
+      if (!d) return false;
+      return isSameMonth(new Date(d), currentMonth);
+    });
+    if (inMonth.length > 0) return inMonth;
+    return studyPlans.slice().sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt)).slice(0, 5);
+  }, [studyPlans, currentMonth]);
+
   // Calendar days for current month and mark days with any plan activity
   // interactive calendar state
-  const [currentMonth, setCurrentMonth] = useState(startOfMonth(today));
-  const [selectedDate, setSelectedDate] = useState(null);
-  const navigate = useNavigate();
+  
 
   // compute calendar matrix for current month (includes previous/next month padding)
   const calendarMatrix = useMemo(() => {
@@ -522,8 +628,10 @@ const StudyPlans = () => {
               ) : (
                 upcomingTasks.map((t) => {
                   const priority = t.activity.priority || "default";
+                  const planColor = getPlanColor(t.planId);
+                  const bgColor = rgbaFromHex(planColor, 0.08);
                   return (
-                  <label key={t.id} className={`flex items-center justify-between p-3 rounded-md shadow-sm ${getPriorityBgClass(priority)} ${getPriorityBorderClass(priority)}`}>
+                  <label key={t.id} className={`flex items-center justify-between p-3 rounded-md shadow-sm`} style={{ backgroundColor: bgColor, borderLeft: `4px solid ${planColor}` }}>
                     <div className="flex items-start gap-3 min-w-0">
                       <input type="checkbox" className="mt-1 h-4 w-4 text-sky-600" />
                       <div className="flex-1 min-w-0">
@@ -554,7 +662,7 @@ const StudyPlans = () => {
                           <>
                             {isSummarize ? (
                               <button
-                                onClick={() => navigate('/tools/summarizer', { state: { summarizeText: `ADD MORE DETAILS TO THIS AND EXPAND TO MAKE IT GOOD FOR STUDYING:\n\n${t.activity.description || t.activity.title}\n\nPlan Overview:\n${t.planOverview || ''}\n\nSource Document Text:\n${t.planSourceText || ''}` } })}
+                                onClick={() => navigate('/tools/summarizer', { state: { summarizeText: t.planSourceText || '' } })}
                                 className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 text-white hover:bg-amber-600"
                               >
                                 Summarize
@@ -568,7 +676,7 @@ const StudyPlans = () => {
                                 onClick={async () => {
                                   try {
                                     // Build combined text for quiz generation
-                                    const text = `Create a quiz from the following content:\n\n${t.activity.description || t.activity.title}\n\nPlan Overview:\n${t.planOverview || ''}\n\nSource Document Text:\n${t.planSourceText || ''}`;
+                                    const text = t.planSourceText || '';
                                     const file = new File([text], 'task-for-quiz.txt', { type: 'text/plain' });
                                     // default parameters
                                     const numQuestions = 10;
@@ -611,25 +719,195 @@ const StudyPlans = () => {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-lg">Objectives and Tasks</h3>
               <div className="flex items-center gap-2">
-                <button className="px-2 py-1 text-xs rounded-md bg-gray-100">Daily</button>
-                <button className="px-2 py-1 text-xs rounded-md bg-sky-100 text-sky-700 font-medium">Weekly</button>
-                <button className="px-2 py-1 text-xs rounded-md bg-gray-100">Monthly</button>
+                <button
+                  onClick={() => setObjectivesView('daily')}
+                  className={`px-2 py-1 text-xs rounded-md ${objectivesView === 'daily' ? 'bg-sky-100 text-sky-700 font-medium' : 'bg-gray-100 text-gray-700'}`}>
+                  Daily
+                </button>
+                <button
+                  onClick={() => setObjectivesView('weekly')}
+                  className={`px-2 py-1 text-xs rounded-md ${objectivesView === 'weekly' ? 'bg-sky-100 text-sky-700 font-medium' : 'bg-gray-100 text-gray-700'}`}>
+                  Weekly
+                </button>
+                <button
+                  onClick={() => setObjectivesView('monthly')}
+                  className={`px-2 py-1 text-xs rounded-md ${objectivesView === 'monthly' ? 'bg-sky-100 text-sky-700 font-medium' : 'bg-gray-100 text-gray-700'}`}>
+                  Monthly
+                </button>
               </div>
             </div>
 
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">This Week's Goals</h4>
               <div className="space-y-3">
-                {thisWeeksGoals.length === 0 ? (
-                  <div className="text-gray-500 text-sm">No recent goals — create a plan to generate weekly goals.</div>
+                {objectivesView === 'daily' ? (
+                  (dailyGoals.length === 0) ? (
+                    <div className="text-gray-500 text-sm">No daily tasks — create or schedule activities to get suggestions.</div>
+                  ) : (
+                    dailyGoals.map((t) => (
+                      <div key={t.id} className="bg-white p-4 rounded-md border border-gray-100">
+                        <div className="font-medium text-gray-800">{t.activity.title || t.activity.description || t.planTitle}</div>
+                        <div className="text-xs text-gray-500 mt-1">Plan: {t.planTitle} • Week {t.week} • Day {t.day}</div>
+                        <div className="text-xs text-gray-400 mt-2">Tip: Try spending focused time on this activity today.</div>
+                      </div>
+                    ))
+                  )
+                ) : objectivesView === 'monthly' ? (
+                  (monthTasks.length === 0) ? (
+                    <div className="text-gray-500 text-sm">No tasks this month — create or schedule activities to get suggestions.</div>
+                  ) : (
+                    monthTasks.map((t) => {
+                      const priority = t.activity.priority || "default";
+                      const planColor = getPlanColor(t.planId);
+                      const bgColor = rgbaFromHex(planColor, 0.08);
+                      return (
+                        <label key={t.id} className={`flex items-center justify-between p-3 rounded-md shadow-sm`} style={{ backgroundColor: bgColor, borderLeft: `4px solid ${planColor}` }}>
+                          <div className="flex items-start gap-3 min-w-0">
+                            <input type="checkbox" className="mt-1 h-4 w-4 text-sky-600" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`flex-shrink-0 p-1 rounded ${getPriorityColorClass(priority)} text-white`}>
+                                  {getActivityIcon(t.activity.type, t.activity.tool)}
+                                </span>
+                                <div className="font-medium text-gray-800 truncate">
+                                  {t.activity.title || t.activity.description || `${t.activity.type}`}
+                                </div>
+                              </div>
+                              {t.activity.description && (
+                                <div className="text-xs text-gray-500 mt-1 whitespace-normal break-words">{t.activity.description}</div>
+                              )}
+                              <div className="text-xs text-gray-400 mt-1">Plan: {t.planTitle} • Week {t.week} • Day {t.day}</div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 ml-3 flex flex-col items-end gap-2">
+                            <button onClick={() => handleSelectPlan({ id: t.planId })} className="text-primary-600 text-sm">Open Plan</button>
+                            {(() => {
+                              const title = (t.activity && t.activity.title) || "";
+                              const desc = (t.activity && t.activity.description) || "";
+                              const tool = (t.activity && t.activity.tool) || "";
+                              const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
+                              const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              return (
+                                <>
+                                  {isSummarize ? (
+                                    <button
+                                      onClick={() => navigate('/tools/summarizer', { state: { summarizeText: t.planSourceText || '' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 text-white hover:bg-amber-600"
+                                    >
+                                      Summarize
+                                    </button>
+                                  ) : (
+                                    <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                                  )}
+
+                                  {isQuizLike && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-quiz.txt', { type: 'text/plain' });
+                                          const numQuestions = 10;
+                                          const selectedTopics = [];
+                                          const customTopics = '';
+                                          const questionFormats = { multiple_choice: true };
+                                          const quizData = await generateQuiz(file, numQuestions, selectedTopics, customTopics, questionFormats);
+                                          navigate('/tools/practice-tests', { state: { generatedQuiz: quizData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate quiz from task', err);
+                                          alert('Failed to generate quiz: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                                    >
+                                      Test your knowledge
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </label>
+                      );
+                    })
+                  )
                 ) : (
-                  thisWeeksGoals.map((p) => (
-                    <div key={p.id} className="bg-sky-50 p-4 rounded-md border border-sky-100">
-                      <div className="font-medium text-gray-800">{p.title}</div>
-                      <div className="text-xs text-sky-500 mt-1">{p.tags && p.tags.length > 0 ? p.tags.join(', ') : 'No tags'}</div>
-                      <div className="text-xs text-gray-400 mt-2">Tip: Spend focused time on the highlighted topic each day.</div>
-                    </div>
-                  ))
+                  (weekTasks.length === 0) ? (
+                    <div className="text-gray-500 text-sm">No tasks this week — create or schedule activities to get suggestions.</div>
+                  ) : (
+                    weekTasks.map((t) => {
+                      const priority = t.activity.priority || "default";
+                      const planColor = getPlanColor(t.planId);
+                      const bgColor = rgbaFromHex(planColor, 0.08);
+                      return (
+                        <label key={t.id} className={`flex items-center justify-between p-3 rounded-md shadow-sm`} style={{ backgroundColor: bgColor, borderLeft: `4px solid ${planColor}` }}>
+                          <div className="flex items-start gap-3 min-w-0">
+                            <input type="checkbox" className="mt-1 h-4 w-4 text-sky-600" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`flex-shrink-0 p-1 rounded ${getPriorityColorClass(priority)} text-white`}>
+                                  {getActivityIcon(t.activity.type, t.activity.tool)}
+                                </span>
+                                <div className="font-medium text-gray-800 truncate">
+                                  {t.activity.title || t.activity.description || `${t.activity.type}`}
+                                </div>
+                              </div>
+                              {t.activity.description && (
+                                <div className="text-xs text-gray-500 mt-1 whitespace-normal break-words">{t.activity.description}</div>
+                              )}
+                              <div className="text-xs text-gray-400 mt-1">Plan: {t.planTitle} • Week {t.week} • Day {t.day}</div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 ml-3 flex flex-col items-end gap-2">
+                            <button onClick={() => handleSelectPlan({ id: t.planId })} className="text-primary-600 text-sm">Open Plan</button>
+                            {(() => {
+                              const title = (t.activity && t.activity.title) || "";
+                              const desc = (t.activity && t.activity.description) || "";
+                              const tool = (t.activity && t.activity.tool) || "";
+                              const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
+                              const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              return (
+                                <>
+                                  {isSummarize ? (
+                                    <button
+                                      onClick={() => navigate('/tools/summarizer', { state: { summarizeText: t.planSourceText || '' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 text-white hover:bg-amber-600"
+                                    >
+                                      Summarize
+                                    </button>
+                                  ) : (
+                                    <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                                  )}
+
+                                  {isQuizLike && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-quiz.txt', { type: 'text/plain' });
+                                          const numQuestions = 10;
+                                          const selectedTopics = [];
+                                          const customTopics = '';
+                                          const questionFormats = { multiple_choice: true };
+                                          const quizData = await generateQuiz(file, numQuestions, selectedTopics, customTopics, questionFormats);
+                                          navigate('/tools/practice-tests', { state: { generatedQuiz: quizData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate quiz from task', err);
+                                          alert('Failed to generate quiz: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                                    >
+                                      Test your knowledge
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </label>
+                      );
+                    })
+                  )
                 )}
               </div>
             </div>
@@ -666,16 +944,21 @@ const StudyPlans = () => {
               {studyPlans.length === 0 ? (
                 <div className="text-gray-500">No saved plans</div>
               ) : (
-                studyPlans.slice(0, 6).map((p) => (
+                studyPlans.slice(0, 6).map((p) => {
+                  const planColor = getPlanColor(p.id);
+                  const bg = rgbaFromHex(planColor, 0.12);
+                  const textColor = getContrastTextColor(planColor);
+                  return (
                   <button
                     key={p.id}
                     onClick={() => handleSelectPlan(p)}
-                    className="w-full text-left flex items-center justify-between p-2 rounded hover:bg-gray-50"
+                    className="w-full text-left flex items-center justify-between p-2 rounded hover:opacity-95"
+                    style={{ backgroundColor: bg, color: '#000000', border: '1px solid rgba(0,0,0,0.04)' }}
                   >
                     <div className="truncate">{p.title}</div>
                     <div className="text-xs text-gray-400">{p.updatedAt ? format(new Date(p.updatedAt), 'MMM d') : (p.createdAt ? format(new Date(p.createdAt),'MMM d') : '')}</div>
                   </button>
-                ))
+                )})
               )}
             </div>
           </div>
@@ -758,10 +1041,10 @@ const StudyPlans = () => {
                     <div className="text-gray-500">No tasks on this date</div>
                   ) : (
                     tasksForDate(selectedDate).map((t) => (
-                      <div key={t.id} className="p-3 bg-white rounded flex items-start gap-3 min-w-0">
-                          <div className={`p-2 rounded ${getPriorityBgClass(t.activity.priority || 'default')}`}>
-                            <span className={`flex-shrink-0 ${getPriorityColorClass(t.activity.priority || 'default')} text-white p-1 rounded`}>{getActivityIcon(t.activity.type, t.activity.tool)}</span>
-                          </div>
+                      <div key={t.id} className="p-3 rounded flex items-start gap-3 min-w-0" style={{ backgroundColor: rgbaFromHex(getPlanColor(t.planId), 0.08), borderLeft: `4px solid ${getPlanColor(t.planId)}` }}>
+                            <div className={`p-2 rounded`}>
+                              <span className={`flex-shrink-0 ${getPriorityColorClass(t.activity.priority || 'default')} text-white p-1 rounded`}>{getActivityIcon(t.activity.type, t.activity.tool)}</span>
+                            </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-3">
                               <div className="font-medium text-sm truncate min-w-0 overflow-hidden">{t.activity.title || t.activity.description || t.planTitle}</div>
@@ -782,18 +1065,18 @@ const StudyPlans = () => {
                                 <>
                                   {isSummarize ? (
                                     <button
-                                      onClick={() => navigate('/tools/summarizer', { state: { summarizeText: `ADD MORE DETAILS TO THIS AND EXPAND TO MAKE IT GOOD FOR STUDYING:\n\n${t.activity.description || t.activity.title}\n\nPlan Overview:\n${t.planOverview || ''}\n\nSource Document Text:\n${t.planSourceText || ''}` } })}
-                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-transparent bg-sky-50 text-sky-700 hover:bg-sky-100"
-                                    >
-                                      Summarize
-                                    </button>
+                                        onClick={() => navigate('/tools/summarizer', { state: { summarizeText: t.planSourceText || '' } })}
+                                        className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-transparent bg-sky-50 text-sky-700 hover:bg-sky-100"
+                                      >
+                                        Summarize
+                                      </button>
                                   ) : null}
 
                                   {isQuizLike && (
                                     <button
                                       onClick={async () => {
                                         try {
-                                          const text = `Create a quiz from the following content:\n\n${t.activity.description || t.activity.title}\n\nPlan Overview:\n${t.planOverview || ''}\n\nSource Document Text:\n${t.planSourceText || ''}`;
+                                          const text = t.planSourceText || '';
                                           const file = new File([text], 'task-for-quiz.txt', { type: 'text/plain' });
                                           const numQuestions = 10;
                                           const selectedTopics = [];

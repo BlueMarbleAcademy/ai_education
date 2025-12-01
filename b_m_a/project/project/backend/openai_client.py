@@ -16,7 +16,7 @@ summarizer_client = AzureOpenAI(
 )
 SUMMARIZER_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_QUIZ_GENERATOR_DEPLOYMENT_NAME")
 
-def summarize_text(text: str, style: str = "high", format: str = "bullet") -> str:
+def summarize_text(text: str, style: str = "detailed", format: str = "bullet") -> str:
     """
     Summarize text using Azure OpenAI GPT model via the chat completions API.
 
@@ -36,15 +36,18 @@ def summarize_text(text: str, style: str = "high", format: str = "bullet") -> st
                 "Avoid repetition and unnecessary elaboration. Use a clear, professional tone."
                 
             ),
-            "detailed": (
-                "You are a summarization expert. Generate in-depth summaries that retain the structure and meaning of the original content. "
-                "Include all key points while staying accurate and well-organized. Avoid personal opinions or markdown formatting."
-            )
+            "detailed": {
+                "system": "You are a helpful study assistant. When given course or document content, produce an expanded, study-friendly summary that explains key concepts, why they matter, and how to remember them. Include short examples or analogies for each major concept and suggest 2-3 concrete study activities or practice questions. Use clear section headings for readability.",
+                "max_tokens": 1200,
+                "temperature": 0.6
+            },
+                )
         }
         system_prompt = system_prompts.get(style, system_prompts["high"])
 
         # Output length optimization
-        max_tokens = 350 if style == "high" else 900
+        # For detailed summaries allow more tokens; concise summaries remain shorter
+        max_tokens = 350 if style == "high" else 1200
 
         # User prompt templates - stripped markdown, tightened instructions
         format_prompts = { 
@@ -53,6 +56,7 @@ def summarize_text(text: str, style: str = "high", format: str = "bullet") -> st
                 "Instructions:\n"
                 "- Use as many bullet points as needed to fully cover the main ideas without repetition.\n"
                 "- Start each bullet with a KEY TERM in all caps or Title Case, followed by a clear explanation.\n"
+                "- Include examples or brief analogies where helpful to illustrate the concept.\n"
                 "- Avoid markdown symbols or special formatting.\n"
                 "- Separate each point with a line break for readability.\n"
                 "- Use an educational tone appropriate for students.\n\n"
@@ -65,6 +69,7 @@ def summarize_text(text: str, style: str = "high", format: str = "bullet") -> st
                 "Read the text and extract the most important sentences that capture the key insights.\n\n"
                 "Instructions:\n"
                 "- Select only the most essential sentences for understanding.\n"
+                "- Include an example sentence where appropriate to clarify a key point.\n"
                 "- Number them, and use ALL CAPS or Title Case to highlight important terms.\n"
                 "- Do not use markdown or special characters.\n\n"
                 "Format:\n"
@@ -76,6 +81,7 @@ def summarize_text(text: str, style: str = "high", format: str = "bullet") -> st
             "Generate question-and-answer pairs based on the text to help with studying.\n\n"
             "Instructions:\n"
             "- Include as many pairs as needed to cover major points.\n"
+            "- Where useful, include a short example or context sentence after an answer to show application.\n"
             "- Label with Q: and A: (do not use markdown or symbols).\n"
             "- Highlight important terms using ALL CAPS or quotation marks.\n"
             "- Add line breaks between each pair.\n\n"
@@ -96,7 +102,7 @@ def summarize_text(text: str, style: str = "high", format: str = "bullet") -> st
                 {"role": "user", "content": user_prompt}
             ],
             max_tokens=max_tokens,
-            temperature=0.3,  # More deterministic
+            temperature=0.6,  # slightly higher to allow richer expansions
         )
 
         raw_output = response.choices[0].message.content.strip()

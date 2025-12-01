@@ -33,7 +33,7 @@ function App() {
           <Route path="/tools/voice-notes" element={<VoiceNotes />} />
           <Route path="/tools/mind-maps" element={<MindMaps />} />
           <Route path="/tools/practice-tests" element={<PracticeTests />} />
-          <Route path="/tools/study-planner" element={<StudyPlans />} />
+          <Route path="/tools/study-planner" element={<ErrorBoundary><StudyPlans /></ErrorBoundary>} />
           <Route path="/tools/summarizer" element={<Summarizer />} />
           <Route path="/workspace" element={<Workspace />} />
           <Route path="/workspace/folder/:id" element={<FolderView />} />
