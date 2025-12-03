@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useMsal } from "@azure/msal-react";
 import { msalInstance } from "../../../authConfig";
@@ -60,6 +60,8 @@ const StudyPlans = () => {
   // State for search and filtering
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTag, setFilterTag] = useState("");
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchInputRef = useRef(null);
 
   // State for study plans
   const [studyPlans, setStudyPlans] = useState([]);
@@ -152,18 +154,51 @@ const StudyPlans = () => {
     setShowPlanner(false);
   };
 
-  // Filter study plans based on search and tag
-  const filteredPlans = studyPlans.filter((plan) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      plan.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      plan.description.toLowerCase().includes(searchQuery.toLowerCase());
+  // Filter and rank study plans based on search and tag
+  const filteredPlans = useMemo(() => {
+    if (!studyPlans || studyPlans.length === 0) return [];
+    const q = (searchQuery || "").trim().toLowerCase();
 
-    const matchesTag =
-      filterTag === "" || (plan.tags && plan.tags.includes(filterTag));
+    // If no query and no tag filter, return all plans
+    if (!q && !filterTag) return studyPlans;
 
-    return matchesSearch && matchesTag;
-  });
+    const scored = studyPlans.map((plan) => {
+      const title = (plan.title || "").toLowerCase();
+      const desc = (plan.description || "").toLowerCase();
+      const tags = (plan.tags || []).map((t) => (t || "").toLowerCase());
+
+      let score = 0;
+      if (!q) {
+        // If only filtering by tag
+        if (!filterTag) score = 1;
+        else if (tags.includes(filterTag.toLowerCase())) score = 50;
+      } else {
+        // Prioritize startsWith matches so results align with typed word
+        if (title.startsWith(q)) score += 100;
+        else if (title.split(/\s+/).some((w) => w.startsWith(q))) score += 80;
+        else if (title.includes(q)) score += 50;
+
+        if (desc.startsWith(q)) score += 40;
+        else if (desc.includes(q)) score += 20;
+
+        if (tags.some((t) => t.startsWith(q))) score += 60;
+        else if (tags.some((t) => t.includes(q))) score += 30;
+      }
+
+      // Tag filter must match if provided
+      const tagMatch = !filterTag || tags.includes(filterTag.toLowerCase());
+
+      return { plan, score, tagMatch };
+    });
+
+    // Keep only plans that match the tag filter and have a positive score (or keep all if query empty)
+    const filtered = scored
+      .filter((s) => s.tagMatch && (q ? s.score > 0 : true))
+      .sort((a, b) => b.score - a.score)
+      .map((s) => s.plan);
+
+    return filtered;
+  }, [studyPlans, searchQuery, filterTag]);
 
   // Get all unique tags from study plans
   const getAllTags = () => {
@@ -463,6 +498,7 @@ const StudyPlans = () => {
 
   // Objectives view state: 'daily' | 'weekly' | 'monthly'
   const [objectivesView, setObjectivesView] = useState('weekly');
+  const [selectedPlanFilterId, setSelectedPlanFilterId] = useState(null);
 
   // Daily goals: tasks scheduled for today (use upcomingTasks which was limited to today tasks)
   const dailyGoals = useMemo(() => {
@@ -483,6 +519,29 @@ const StudyPlans = () => {
     const end = endOfMonth(currentMonth);
     return (allPlanTasks || []).filter((t) => t.date && isWithinInterval(new Date(t.date), { start, end }));
   }, [allPlanTasks, currentMonth]);
+
+  // Default selected plan filter: set to first plan when plans load
+  useEffect(() => {
+    if ((!selectedPlanFilterId || selectedPlanFilterId === '') && studyPlans && studyPlans.length > 0) {
+      setSelectedPlanFilterId(studyPlans[0].id);
+    }
+  }, [studyPlans]);
+
+  // Apply plan filter to task lists when a plan is selected
+  const filteredDailyGoals = useMemo(() => {
+    if (!selectedPlanFilterId) return dailyGoals;
+    return dailyGoals.filter((t) => t.planId === selectedPlanFilterId);
+  }, [dailyGoals, selectedPlanFilterId]);
+
+  const filteredWeekTasks = useMemo(() => {
+    if (!selectedPlanFilterId) return weekTasks;
+    return weekTasks.filter((t) => t.planId === selectedPlanFilterId);
+  }, [weekTasks, selectedPlanFilterId]);
+
+  const filteredMonthTasks = useMemo(() => {
+    if (!selectedPlanFilterId) return monthTasks;
+    return monthTasks.filter((t) => t.planId === selectedPlanFilterId);
+  }, [monthTasks, selectedPlanFilterId]);
 
 
   // Monthly goals: plans created/updated this month or recent plans if none
@@ -557,28 +616,34 @@ const StudyPlans = () => {
           <div className="bg-white p-4 rounded-lg shadow-sm">
             <div className="flex items-center gap-3 text-sky-700 font-bold">
               <span className="text-2xl">📚</span>
-              <span>AI Study Tools</span>
+              <span>My Plans</span>
             </div>
           </div>
 
-          <nav className="bg-white p-4 rounded-lg shadow-sm space-y-2">
-            <button className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-50">
-              <Book className="h-4 w-4 text-gray-600" />
-              AI Tutor
-            </button>
-            <button className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-50">
-              <FileText className="h-4 w-4 text-gray-600" />
-              Smart Notes
-            </button>
-            <button className="w-full text-left flex items-center gap-3 p-2 rounded-md bg-sky-50 text-sky-700 font-semibold border-l-4 border-sky-300">
-              <Calendar className="h-4 w-4" />
-              Study Planner
-            </button>
-            <button className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-50">
-              <Menu className="h-4 w-4 text-gray-600" />
-              Study Tips
-            </button>
-          </nav>
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <h4 className="text-sm font-semibold">Your Plans</h4>
+            <div className="mt-2 space-y-2 text-sm">
+              {studyPlans.length === 0 ? (
+                <div className="text-gray-500">No saved plans</div>
+              ) : (
+                studyPlans.slice(0, 8).map((p) => {
+                  const planColor = getPlanColor(p.id);
+                  const bg = rgbaFromHex(planColor, 0.12);
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => handleSelectPlan(p)}
+                      className="w-full text-left flex items-center justify-between p-2 rounded hover:opacity-95"
+                      style={{ backgroundColor: bg, color: '#000000', border: '1px solid rgba(0,0,0,0.04)' }}
+                    >
+                      <div className="truncate">{p.title}</div>
+                      <div className="text-xs text-gray-400">{p.updatedAt ? format(new Date(p.updatedAt), 'MMM d') : (p.createdAt ? format(new Date(p.createdAt),'MMM d') : '')}</div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -591,15 +656,45 @@ const StudyPlans = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block">
+            <div className="hidden sm:block relative">
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search plans..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setShowSearchDropdown(true); }}
+                onFocus={() => setShowSearchDropdown(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const first = (filteredPlans && filteredPlans[0]) || null;
+                    if (first) {
+                      handleSelectPlan(first);
+                      setSearchQuery('');
+                      setShowSearchDropdown(false);
+                    }
+                  } else if (e.key === 'Escape') {
+                    setShowSearchDropdown(false);
+                  }
+                }}
                 className="pl-9 pr-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-primary-500"
               />
-              <Search className="absolute ml-3 mt-2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2 h-4 w-4 text-gray-400" />
+
+              {showSearchDropdown && searchQuery && filteredPlans && filteredPlans.length > 0 && (
+                <div className="absolute left-0 mt-1 w-96 max-h-60 overflow-auto bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                  {filteredPlans.slice(0, 8).map((p) => (
+                    <button
+                      key={p.id}
+                      onMouseDown={(ev) => { ev.preventDefault(); /* prevent input blur */ }}
+                      onClick={() => { handleSelectPlan(p); setSearchQuery(''); setShowSearchDropdown(false); }}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center justify-between"
+                    >
+                      <div className="truncate text-sm">{p.title}</div>
+                      <div className="text-xs text-gray-400 ml-2">{p.updatedAt ? format(new Date(p.updatedAt), 'MMM d') : ''}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button
               onClick={handleCreatePlan}
@@ -624,7 +719,11 @@ const StudyPlans = () => {
 
             <div className="space-y-3">
               {(!upcomingTasks || upcomingTasks.length === 0) ? (
-                <div className="text-sky-500">No tasks yet. Create a plan to get suggested tasks.</div>
+                (studyPlans && studyPlans.length > 0) ? (
+                  <div className="text-sky-500">No tasks for the day.</div>
+                ) : (
+                  <div className="text-sky-500">No tasks yet. Create a plan to get suggested tasks.</div>
+                )
               ) : (
                 upcomingTasks.map((t) => {
                   const priority = t.activity.priority || "default";
@@ -740,23 +839,112 @@ const StudyPlans = () => {
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">This Week's Goals</h4>
               <div className="space-y-3">
+                {/* Plan filter buttons */}
+                <div className="mb-3 flex items-center gap-2 overflow-x-auto">
+                  {studyPlans && studyPlans.length > 0 ? (
+                    studyPlans.slice(0, 8).map((p) => {
+                      const planColor = getPlanColor(p.id);
+                      const bg = rgbaFromHex(planColor, 0.14);
+                      const textColor = getContrastTextColor(planColor);
+                      const selected = selectedPlanFilterId === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => setSelectedPlanFilterId(p.id)}
+                          className={`px-3 py-1 rounded-full text-sm font-medium border ${selected ? 'ring-2 ring-sky-300' : 'hover:opacity-90'}`}
+                          style={{ backgroundColor: bg, color: '#000000', borderColor: 'rgba(0,0,0,0.04)' }}
+                        >
+                          {p.title}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="text-gray-400 text-sm">No plans to filter</div>
+                  )}
+                </div>
                 {objectivesView === 'daily' ? (
-                  (dailyGoals.length === 0) ? (
+                  (filteredDailyGoals.length === 0) ? (
                     <div className="text-gray-500 text-sm">No daily tasks — create or schedule activities to get suggestions.</div>
                   ) : (
-                    dailyGoals.map((t) => (
-                      <div key={t.id} className="bg-white p-4 rounded-md border border-gray-100">
-                        <div className="font-medium text-gray-800">{t.activity.title || t.activity.description || t.planTitle}</div>
-                        <div className="text-xs text-gray-500 mt-1">Plan: {t.planTitle} • Week {t.week} • Day {t.day}</div>
-                        <div className="text-xs text-gray-400 mt-2">Tip: Try spending focused time on this activity today.</div>
-                      </div>
-                    ))
+                    filteredDailyGoals.map((t) => {
+                      const priority = t.activity.priority || "default";
+                      const planColor = getPlanColor(t.planId);
+                      const bgColor = rgbaFromHex(planColor, 0.08);
+                      return (
+                        <label key={t.id} className={`flex items-center justify-between p-3 rounded-md shadow-sm`} style={{ backgroundColor: bgColor, borderLeft: `4px solid ${planColor}` }}>
+                          <div className="flex items-start gap-3 min-w-0">
+                            <input type="checkbox" className="mt-1 h-4 w-4 text-sky-600" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`flex-shrink-0 p-1 rounded ${getPriorityColorClass(priority)} text-white`}>
+                                  {getActivityIcon(t.activity.type, t.activity.tool)}
+                                </span>
+                                <div className="font-medium text-gray-800 truncate">
+                                  {t.activity.title || t.activity.description || `${t.activity.type}`}
+                                </div>
+                              </div>
+                              {t.activity.description && (
+                                <div className="text-xs text-gray-500 mt-1 whitespace-normal break-words">{t.activity.description}</div>
+                              )}
+                              <div className="text-xs text-gray-400 mt-1">Plan: {t.planTitle} • Week {t.week} • Day {t.day}</div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 ml-3 flex flex-col items-end gap-2">
+                            <button onClick={() => handleSelectPlan({ id: t.planId })} className="text-primary-600 text-sm">Open Plan</button>
+                            {(() => {
+                              const title = (t.activity && t.activity.title) || "";
+                              const desc = (t.activity && t.activity.description) || "";
+                              const tool = (t.activity && t.activity.tool) || "";
+                              const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
+                              const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              return (
+                                <>
+                                  {isSummarize ? (
+                                    <button
+                                      onClick={() => navigate('/tools/summarizer', { state: { summarizeText: t.planSourceText || '' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 text-white hover:bg-amber-600"
+                                    >
+                                      Summarize
+                                    </button>
+                                  ) : (
+                                    <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                                  )}
+
+                                  {isQuizLike && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-quiz.txt', { type: 'text/plain' });
+                                          const numQuestions = 10;
+                                          const selectedTopics = [];
+                                          const customTopics = '';
+                                          const questionFormats = { multiple_choice: true };
+                                          const quizData = await generateQuiz(file, numQuestions, selectedTopics, customTopics, questionFormats);
+                                          navigate('/tools/practice-tests', { state: { generatedQuiz: quizData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate quiz from task', err);
+                                          alert('Failed to generate quiz: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                                    >
+                                      Test your knowledge
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </label>
+                      );
+                    })
                   )
                 ) : objectivesView === 'monthly' ? (
-                  (monthTasks.length === 0) ? (
+                  (filteredMonthTasks.length === 0) ? (
                     <div className="text-gray-500 text-sm">No tasks this month — create or schedule activities to get suggestions.</div>
                   ) : (
-                    monthTasks.map((t) => {
+                    filteredMonthTasks.map((t) => {
                       const priority = t.activity.priority || "default";
                       const planColor = getPlanColor(t.planId);
                       const bgColor = rgbaFromHex(planColor, 0.08);
@@ -831,10 +1019,10 @@ const StudyPlans = () => {
                     })
                   )
                 ) : (
-                  (weekTasks.length === 0) ? (
+                  (filteredWeekTasks.length === 0) ? (
                     <div className="text-gray-500 text-sm">No tasks this week — create or schedule activities to get suggestions.</div>
                   ) : (
-                    weekTasks.map((t) => {
+                    filteredWeekTasks.map((t) => {
                       const priority = t.activity.priority || "default";
                       const planColor = getPlanColor(t.planId);
                       const bgColor = rgbaFromHex(planColor, 0.08);
@@ -923,45 +1111,7 @@ const StudyPlans = () => {
       {/* Right column: quick access */}
       <aside className="col-span-12 lg:col-span-3">
         <div className="sticky top-6 space-y-4">
-          <div className="bg-gradient-to-b from-sky-600 to-sky-500 text-white p-4 rounded-lg shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <h4 className="text-sm font-semibold">Previous Quizzes</h4>
-                <div className="text-xs mt-2">Review your past quiz attempts and track progress</div>
-              </div>
-              <div className="text-2xl">🎯</div>
-            </div>
-            <div className="mt-3">
-              <button className="w-full text-center bg-white text-sky-600 font-semibold py-2 rounded-md">Access Quizzes</button>
-            </div>
-          </div>
-
-
-
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h4 className="text-sm font-semibold">Your Plans</h4>
-            <div className="mt-2 space-y-2 text-sm">
-              {studyPlans.length === 0 ? (
-                <div className="text-gray-500">No saved plans</div>
-              ) : (
-                studyPlans.slice(0, 6).map((p) => {
-                  const planColor = getPlanColor(p.id);
-                  const bg = rgbaFromHex(planColor, 0.12);
-                  const textColor = getContrastTextColor(planColor);
-                  return (
-                  <button
-                    key={p.id}
-                    onClick={() => handleSelectPlan(p)}
-                    className="w-full text-left flex items-center justify-between p-2 rounded hover:opacity-95"
-                    style={{ backgroundColor: bg, color: '#000000', border: '1px solid rgba(0,0,0,0.04)' }}
-                  >
-                    <div className="truncate">{p.title}</div>
-                    <div className="text-xs text-gray-400">{p.updatedAt ? format(new Date(p.updatedAt), 'MMM d') : (p.createdAt ? format(new Date(p.createdAt),'MMM d') : '')}</div>
-                  </button>
-                )})
-              )}
-            </div>
-          </div>
+          {/* Right column now shows only Recent Activity for quick access */}
 
           <div className="bg-white p-4 rounded-lg shadow-sm">
             <h4 className="text-sm font-semibold">Recent Activity</h4>

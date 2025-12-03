@@ -2600,43 +2600,43 @@
     }
   },
   {
-    "id": "eee949ae-0cae-4deb-b4cc-38abc8bd7ad4",
+    "id": "c251c08e-c581-4a56-8f73-205d6a9cbb6a",
     "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
     "contentType": "study_plan",
-    "createdAt": "2025-11-24T20:01:25.822259",
+    "createdAt": "2025-12-03T05:40:39.394375",
     "data": {
       "title": "math",
-      "description": "math\r\n\r\nStudy Duration: 4 weeks",
+      "description": "Study Duration: 4 weeks",
       "content": {
         "title": "math",
-        "description": "Learn derivatives step-by-step in this comprehensive 4-week study plan covering intuition, proofs, applications, and real-world examples.",
+        "description": "Master the fundamentals of derivatives, their real-world applications, and rules through structured and comprehensive learning over four weeks.",
         "duration": "4 weeks",
-        "overview": "This study plan focuses on understanding derivatives, their rules, graphical meaning, optimization, the chain rule, and real-world applications in physics, computer science, and machine learning.",
+        "overview": "This study plan covers the concept of derivatives, including their foundations, formulas, graphical interpretation, optimization, chain rule, and real-world applications. It ensures understanding and provides practical tools for learning, utilizing active study techniques and assessments to reinforce concepts.",
         "weekly_schedule": [
           {
             "week": 1,
-            "theme": "Building Intuition for Derivatives",
-            "description": "Understand what derivatives represent, calculate basic derivatives, and grasp their real-world meaning.",
+            "theme": "Foundations of Derivatives",
+            "description": "Establish a conceptual and mathematical understanding of derivatives to grasp their core principles.",
             "days": [
               {
                 "day": 1,
                 "topics": [
                   {
                     "title": "What is a Derivative?",
-                    "description": "Learn the fundamental concept of how derivatives measure the instantaneous rate of change.",
+                    "description": "Understand the definition of derivatives and their real-world understanding (e.g., rate of change).",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Read the section on 'What is a Derivative' from the provided content.",
+                        "description": "Read the section on 'What is a Derivative, Actually?' from the provided content.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "AI Summarizer",
-                        "description": "Summarize the key takeaways from the 'What is a Derivative' section.",
-                        "duration": "10 minutes",
+                        "tool": "flashcards",
+                        "description": "Create flashcards for key concepts and definitions such as 'derivative,' 'rate of change,' and 'instantaneous speed'.",
+                        "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
                       }
@@ -2648,21 +2648,21 @@
                 "day": 2,
                 "topics": [
                   {
-                    "title": "Derivatives in Real-world Contexts",
-                    "description": "Connect the idea of derivatives to practical examples (e.g., car speeds).",
+                    "title": "Examples of Derivatives",
+                    "description": "Practice with examples to calculate derivatives manually.",
                     "activities": [
                       {
-                        "type": "reading",
-                        "description": "Review the example of f(x)=x^2 and how its derivative provides speed at a specific moment.",
-                        "duration": "25 minutes",
+                        "type": "practice",
+                        "description": "Solve derivative examples provided (e.g., f(x)=x^2, f'(x)=2x).",
+                        "duration": "40 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "Practice Test Generator",
-                        "description": "Solve example problems to calculate simple derivatives.",
-                        "duration": "15 minutes",
+                        "tool": "practice test generator",
+                        "description": "Generate practice problems for simple derivatives calculations.",
+                        "duration": "30 minutes",
                         "priority": "medium",
                         "completed": false
                       }
@@ -2674,20 +2674,20 @@
                 "day": 3,
                 "topics": [
                   {
-                    "title": "Where Derivative Formulas Come From",
-                    "description": "Understand the foundational formula for derivatives and why it works.",
+                    "title": "Where the Formula Comes From",
+                    "description": "Learn the foundational formula (limit definition of derivative) and its derivation.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Study the section 'Where the Formula Comes From' to learn the logic behind derivatives.",
+                        "description": "Study the section 'Where the Formula Comes From' and understand the logical derivation.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "Mind Maps",
-                        "description": "Create a mind map to break down the concept and steps of the derivative formula.",
+                        "tool": "voice notes",
+                        "description": "Create concise audio summaries explaining the formula derivation for personal review.",
                         "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
@@ -2700,21 +2700,21 @@
                 "day": 4,
                 "topics": [
                   {
-                    "title": "Graphical Meaning of Derivatives",
-                    "description": "Interpret the geometric representation of derivatives as slopes of tangent lines.",
+                    "title": "Practice Limit Definition Problems",
+                    "description": "Apply the limit definition to derive equations.",
                     "activities": [
                       {
-                        "type": "reading",
-                        "description": "Read the section 'What Does a Derivative Mean Graphically?'",
-                        "duration": "25 minutes",
+                        "type": "practice",
+                        "description": "Expand and solve derivative formulas step by step (as shown in the x^2 example).",
+                        "duration": "40 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "Flashcards",
-                        "description": "Create flashcards on positive, negative, and zero derivatives and their implications.",
-                        "duration": "15 minutes",
+                        "tool": "practice test generator",
+                        "description": "Generate practice problems focusing on limit definitions.",
+                        "duration": "30 minutes",
                         "priority": "medium",
                         "completed": false
                       }
@@ -2725,116 +2725,64 @@
               {
                 "day": 5,
                 "topics": [
+                  "Review concepts and prepare for a short weekly assessment."
+                ],
+                "activities": [
                   {
-                    "title": "Application of the Formula",
-                    "description": "Practice deriving formulas using the foundational definition.",
-                    "activities": [
-                      {
-                        "type": "practice",
-                        "description": "Solve example problems expanding f(x)=x^2 using the derivative formula.",
-                        "duration": "40 minutes",
-                        "priority": "high",
-                        "completed": false
-                      }
-                    ]
+                    "type": "revision",
+                    "description": "Revisit flashcards and voice notes to consolidate foundational understanding.",
+                    "duration": "40 minutes",
+                    "priority": "high",
+                    "completed": false
+                  }
+                ]
+              },
+              {
+                "day": 6,
+                "topics": [
+                  "Weekly Practice Assessment"
+                ],
+                "activities": [
+                  {
+                    "type": "assessment",
+                    "description": "Complete a quiz on derivative foundations and limit formulas using the practice test generator.",
+                    "duration": "1 hour",
+                    "priority": "medium",
+                    "completed": false
                   }
                 ]
               }
             ],
             "weekly_goals": [
-              "Understand the basic concept and intuition of derivatives.",
-              "Learn how to calculate simple derivatives using the foundational formula.",
-              "Interpret derivatives graphically as the slope of a tangent line."
+              "Understand the basic concept of derivatives and their real-world application.",
+              "Learn the mathematical derivation of the limit definition.",
+              "Develop problem-solving skills using basic formulas."
             ],
-            "assessment": "Test understanding by solving problems and verifying with the Practice Test Generator."
+            "assessment": "Complete a 10-question quiz focusing on conceptual understanding and formula implementation for derivatives."
           },
           {
             "week": 2,
-            "theme": "Derivative Rules and Their Shortcuts",
-            "description": "Master common derivative shortcuts and practice their application.",
+            "theme": "Derivative Rules and Graphical Meaning",
+            "description": "Dive into shortcuts for derivatives and their graphical interpretation.",
             "days": [
               {
                 "day": 1,
                 "topics": [
                   {
                     "title": "Common Derivative Rules",
-                    "description": "Learn derivative rules for power, trigonometric, exponential, and logarithmic functions.",
+                    "description": "Understand commonly used derivatives (e.g., power rule, trigonometric functions).",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Study the 'Common Derivative Rules' section to memorize the formulas and logic.",
+                        "description": "Study the section 'Common Derivative Rules' and memorize key derivative formulas.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "Flashcards",
-                        "description": "Create flashcards summarizing each derivative rule.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Applying the Rules",
-                    "description": "Solve problems using derivative rules for combined functions.",
-                    "activities": [
-                      {
-                        "type": "practice",
-                        "description": "Work through examples like f(x)=3x^4+5x−7.",
-                        "duration": "40 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "Practice Test Generator",
-                        "description": "Generate a quiz to test mastery of derivative rules.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Memorize and understand major derivative shortcut rules.",
-              "Apply these rules in practical contexts for efficiency."
-            ],
-            "assessment": "Use the Practice Test Generator to evaluate understanding of specific rules."
-          },
-          {
-            "week": 3,
-            "theme": "Optimization and Critical Points",
-            "description": "Explore optimization problems and learn how to find maximum and minimum values using derivatives.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Critical Points and Optimization",
-                    "description": "Understand why zero derivatives indicate local maxima or minima.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read the section 'Why Zero Derivatives Matter'.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "Mind Maps",
-                        "description": "Create a visual representation of critical points vs. function behavior.",
+                        "tool": "flashcards",
+                        "description": "Create flashcards for derivative rules such as x^n, sin(x), cos(x), and ln(x).",
                         "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
@@ -2847,59 +2795,21 @@
                 "day": 2,
                 "topics": [
                   {
-                    "title": "Optimization Practice",
-                    "description": "Work through real-world optimization problems.",
-                    "activities": [
-                      {
-                        "type": "practice",
-                        "description": "Solve example problems like f(x) = x^2 − 4x + 3 for optimization.",
-                        "duration": "40 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "Practice Test Generator",
-                        "description": "Test your ability to identify critical points and justify them.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Identify critical points and distinguish between maxima and minima.",
-              "Apply derivatives to solve optimization problems in real contexts."
-            ],
-            "assessment": "Solve optimization problems and evaluate progress using tools like practice tests."
-          },
-          {
-            "week": 4,
-            "theme": "Advanced Concepts and Real-world Applications",
-            "description": "Understand the chain rule and explore advanced derivative applications in physics, game dev, and machine learning.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "The Chain Rule",
-                    "description": "Master derivatives of functions composed within other functions.",
+                    "title": "Graphical Interpretation",
+                    "description": "Explore how derivatives determine slopes via tangent lines and critical points.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Study the section on the chain rule and understand its applications.",
-                        "duration": "35 minutes",
+                        "description": "Study the section 'What Does a Derivative Mean Graphically?'.",
+                        "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "Mind Maps",
-                        "description": "Create a map to visualize the steps of applying the chain rule.",
-                        "duration": "15 minutes",
+                        "tool": "mind maps",
+                        "description": "Draw visual mind maps for positive, negative, and zero derivatives.",
+                        "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
                       }
@@ -2908,17 +2818,25 @@
                 ]
               },
               {
-                "day": 2,
+                "day": 3,
                 "topics": [
                   {
-                    "title": "Real-world Derivative Applications",
-                    "description": "Explore how derivatives are used in machine learning, physics, and game dev.",
+                    "title": "Optimization and Zero Derivatives",
+                    "description": "Learn the importance of zero derivatives in finding local maxima and minima.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Review the 'Real World Applications' section.",
+                        "description": "Read the 'Why Zero Derivatives Matter' section and study how to calculate local extrema.",
                         "duration": "30 minutes",
                         "priority": "high",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Summarize optimization process steps in flashcards for review.",
+                        "duration": "20 minutes",
+                        "priority": "medium",
                         "completed": false
                       }
                     ]
@@ -2927,44 +2845,45 @@
               }
             ],
             "weekly_goals": [
-              "Master the chain rule for derivatives of complex functions.",
-              "Understand and articulate key derivative applications in the real world."
+              "Memorize key derivative rules.",
+              "Understand the graphical interpretation of derivatives.",
+              "Explore optimization concepts."
             ],
-            "assessment": "Apply the chain rule in sample problems and explain its relevance in chosen applications."
+            "assessment": "Graph and calculate derivatives of different functions to identify critical points."
           }
         ],
         "study_techniques": [
           {
             "technique": "Flashcards",
-            "description": "Write out key formulas and derivative rules on flashcards for quick review.",
-            "best_for": "Memorizing rules and formulas."
-          },
-          {
-            "technique": "Mind Mapping",
-            "description": "Visually organize relationships between derivative concepts for better comprehension.",
-            "best_for": "Understanding connections and processes like the chain rule."
+            "description": "Create cards for formulas, definitions, and rules to reinforce memory.",
+            "best_for": "Memorizing derivative rules, key terms, and steps."
           },
           {
             "technique": "Practice Problems",
-            "description": "Solve progressively more complex problems to build confidence and skill.",
-            "best_for": "Applying and reinforcing mathematical rules and ideas."
+            "description": "Solve derivative examples and apply rules to strengthen problem-solving skills.",
+            "best_for": "Calculations and numerical applications."
+          },
+          {
+            "technique": "Mind Maps",
+            "description": "Visually map relationships between rules and concepts for clarity.",
+            "best_for": "Complex systems and graphical interpretations."
           }
         ],
         "resources": [
           {
-            "title": "AI Summarizer",
-            "type": "tool",
-            "description": "Use to condense lengthy math concepts and focus on key definitions and ideas."
-          },
-          {
             "title": "Practice Test Generator",
             "type": "tool",
-            "description": "Create custom practice tests to apply rules and verify understanding."
+            "description": "Generate quizzes to assess understanding of derivatives and their applications."
+          },
+          {
+            "title": "AI Summarizer",
+            "type": "tool",
+            "description": "Condense complex explanations into concise summaries for quick review."
           },
           {
             "title": "Flashcard Generator",
             "type": "tool",
-            "description": "Quickly create flashcards for formulas and rules to aid in memorization."
+            "description": "Create digital flashcards for reinforcing key concepts and rules."
           }
         ]
       },
@@ -2981,34 +2900,34 @@
     }
   },
   {
-    "id": "3115a981-185b-4e7e-96ed-b4181e7c5120",
+    "id": "ffe16e0e-d8f7-46cc-820b-d089121dc8a4",
     "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
     "contentType": "study_plan",
-    "createdAt": "2025-11-28T04:11:57.234626",
+    "createdAt": "2025-12-03T07:19:57.800172",
     "data": {
-      "title": "testtt",
-      "description": "t\r\n\r\nStudy Duration: 4 weeks",
+      "title": "testt",
+      "description": "Study Duration: 4 weeks",
       "content": {
-        "title": "testtt",
-        "description": "A structured, 4-week study plan focused on understanding derivatives, their applications, and mathematical intuitions.",
+        "title": "testt",
+        "description": "A guided 4-week study plan to master derivatives in calculus, including their intuition, rules, proofs, graph interpretation, optimization, chain rule, and real-world applications.",
         "duration": "4 weeks",
-        "overview": "This study plan is designed to help you master the concept of derivatives, their calculation, graphical meaning, and real-world applications in physics, machine learning, and game development. It spans from foundational basics to advanced concepts like the chain rule and optimization techniques.",
+        "overview": "This study plan provides a comprehensive understanding of derivatives, making them intuitive, practical, and applicable to real-world scenarios such as physics, computer science, machine learning, and game development.",
         "weekly_schedule": [
           {
             "week": 1,
-            "theme": "Understanding Derivatives: The Basics",
-            "description": "Focus on the basic concept of derivatives, intuition, and foundational proofs.",
+            "theme": "Understanding the Basics of Derivatives",
+            "description": "Build foundational intuition about derivatives, their meaning, and basic computation through examples and proofs.",
             "days": [
               {
                 "day": 1,
                 "topics": [
                   {
-                    "title": "What is a Derivative, Actually?",
-                    "description": "Learn the definition and real-world meaning of derivatives.",
+                    "title": "What is a Derivative?",
+                    "description": "Understand what derivatives measure and how to compute them at specific points.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Read the section on 'What is a Derivative, Actually?'",
+                        "description": "Read 'What is a Derivative, Actually?' section and practice examples provided.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
@@ -3016,7 +2935,7 @@
                       {
                         "type": "tool",
                         "tool": "flashcards",
-                        "description": "Create flashcards for key terms (e.g., position, velocity, speed).",
+                        "description": "Create flashcards for terms like derivative, slope, tangent, and f'(x).",
                         "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
@@ -3030,19 +2949,19 @@
                 "topics": [
                   {
                     "title": "Where the Formula Comes From (No Magic)",
-                    "description": "Explore the mathematical logic behind derivative formulas.",
+                    "description": "Understand the definition of a derivative and learn how the formula is derived.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Study the section 'Where the Formula Comes From' and try examples provided.",
-                        "duration": "45 minutes",
+                        "description": "Read 'Where the Formula Comes From (No Magic)' section and work through the expansion steps.",
+                        "duration": "40 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
                         "tool": "AI Summarizer",
-                        "description": "Use the AI Summarizer to condense key ideas.",
+                        "description": "Summarize the derivation steps for clear retention.",
                         "duration": "15 minutes",
                         "priority": "medium",
                         "completed": false
@@ -3055,39 +2974,13 @@
                 "day": 3,
                 "topics": [
                   {
-                    "title": "Common Derivative Rules",
-                    "description": "Learn and practice common derivative rules, such as power, trigonometric, and exponential rules.",
+                    "title": "Practice Understanding the Formula",
+                    "description": "Use problems to solidify your knowledge of formula derivation and practical computation.",
                     "activities": [
-                      {
-                        "type": "practice",
-                        "tool": "Practice Test Generator",
-                        "description": "Generate a short quiz to test understanding of derivative rules.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
                       {
                         "type": "tool",
-                        "tool": "flashcards",
-                        "description": "Add derivative rules (e.g., power rule, chain rule) to flashcards.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 4,
-                "topics": [
-                  {
-                    "title": "Practice Using Formulas",
-                    "description": "Apply the formulas to find derivatives of given functions.",
-                    "activities": [
-                      {
-                        "type": "exercise",
-                        "description": "Solve example problems using derivative rules.",
+                        "tool": "Practice Test Generator",
+                        "description": "Generate problems where you derive formulas from scratch.",
                         "duration": "45 minutes",
                         "priority": "high",
                         "completed": false
@@ -3095,34 +2988,8 @@
                       {
                         "type": "tool",
                         "tool": "Voice Notes",
-                        "description": "Record audio notes explaining how derivative rules work.",
+                        "description": "Record verbal explanations for derivative logic.",
                         "duration": "15 minutes",
-                        "priority": "low",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 5,
-                "topics": [
-                  {
-                    "title": "Basic Applications in Physics",
-                    "description": "Explore simple physics examples like position, velocity, and acceleration.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read 'Real World Applications' focusing on Physics examples.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "diagram",
-                        "tool": "Mind Maps",
-                        "description": "Create a diagram linking derivatives to physics concepts.",
-                        "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
                       }
@@ -3132,35 +2999,34 @@
               }
             ],
             "weekly_goals": [
-              "Understand the basic definition and intuition of derivatives.",
-              "Learn the foundational formula derivation.",
-              "Memorize and apply common derivative rules."
+              "Understand what derivatives measure and how to compute them.",
+              "Learn and practice deriving the formula for a derivative using logical steps."
             ],
-            "assessment": "Use the Practice Test Generator to complete a small test covering derivative basics and rules."
+            "assessment": "Solve a mix of basic derivative problems and explain how the derivative formula is derived."
           },
           {
             "week": 2,
-            "theme": "Graphical Understanding of Derivatives",
-            "description": "Learn how derivatives represent slopes, tangent lines, and critical points.",
+            "theme": "Common Derivative Rules and Graphical Interpretations",
+            "description": "Understand shortcuts for derivatives and link them to graphical interpretations including slope and tangent.",
             "days": [
               {
                 "day": 1,
                 "topics": [
                   {
-                    "title": "What Does a Derivative Mean Graphically?",
-                    "description": "Explore the graphical meaning of derivatives as slopes.",
+                    "title": "Common Derivative Rules",
+                    "description": "Learn rules such as power, sine, cosine, and exponential derivatives.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Study 'What Does a Derivative Mean Graphically?'",
+                        "description": "Read 'Common Derivative Rules' section and understand applied examples.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
-                        "type": "diagram",
-                        "tool": "Mind Maps",
-                        "description": "Visualize concepts of positive, negative, and zero slopes.",
+                        "type": "tool",
+                        "tool": "flashcards",
+                        "description": "Create flashcards for shortcut rules and their examples.",
                         "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
@@ -3173,46 +3039,21 @@
                 "day": 2,
                 "topics": [
                   {
-                    "title": "Why Zero Derivatives Matter (Optimization)",
-                    "description": "Learn how zero derivatives identify maximum and minimum points.",
+                    "title": "What Derivatives Mean Graphically",
+                    "description": "Learn graphical interpretations and identify slopes of tangent lines.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Review 'Why Zero Derivatives Matter' and example problems.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "exercise",
-                        "description": "Solve optimization problems provided in examples.",
-                        "duration": "40 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 3,
-                "topics": [
-                  {
-                    "title": "Derivative Behavior in Graphs",
-                    "description": "Analyze behavior of graphs at different derivative value points.",
-                    "activities": [
-                      {
-                        "type": "practice",
-                        "description": "Analyze graphs with tangent lines to identify derivative values.",
+                        "description": "Read 'What Does a Derivative Mean Graphically?' and study graph-based examples.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "AI Summarizer",
-                        "description": "Summarize graphical clues about derivatives.",
-                        "duration": "15 minutes",
+                        "tool": "Mind Maps",
+                        "description": "Visualize concepts like tangent slopes, positive/negative derivatives, and critical points.",
+                        "duration": "25 minutes",
                         "priority": "medium",
                         "completed": false
                       }
@@ -3222,115 +3063,26 @@
               }
             ],
             "weekly_goals": [
-              "Interpret derivatives graphically as slopes.",
-              "Learn the significance of zero derivatives in optimization contexts.",
-              "Analyze real-world graphs using derivative values."
+              "Memorize common derivative rules for functions.",
+              "Understand visual meaning of derivatives as tangent slopes."
             ],
-            "assessment": "Complete graphical problem sets and summarize key findings using Voice Notes."
+            "assessment": "Create sample graphs and identify tangent slopes, critical points, and employ shortcut derivative rules in examples."
           },
           {
             "week": 3,
-            "theme": "Advanced Derivatives: Optimization and Chain Rule",
-            "description": "Focus on advanced applications like the chain rule and optimization techniques.",
+            "theme": "Optimization and Advanced Applications",
+            "description": "Learn how derivatives are used for optimization and solve real-world applications.",
             "days": [
               {
                 "day": 1,
                 "topics": [
                   {
-                    "title": "Introduction to the Chain Rule",
-                    "description": "Understand the most important rule for derivatives: the chain rule.",
+                    "title": "Zero Derivatives and Optimization",
+                    "description": "Understand how zero derivatives relate to maxima, minima, and optimization problems.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Study 'Chain Rule (The Most Important Rule)' section.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "exercise",
-                        "description": "Solve chain rule problems provided.",
-                        "duration": "40 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Using the Chain Rule in Real-Life Applications",
-                    "description": "Apply the chain rule to problems in machine learning and graphics.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Review 'Real World Applications' focusing on machine learning.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "practice",
-                        "description": "Generate example exercises that mimic real-world applications.",
-                        "duration": "40 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Master the chain rule and its mathematical application.",
-              "Apply derivatives to optimize machine learning gradients."
-            ],
-            "assessment": "Complete a set of chain rule questions and explain solutions using Voice Notes tools."
-          },
-          {
-            "week": 4,
-            "theme": "Real-World Applications of Derivatives",
-            "description": "Explore how derivatives are used in physics, computer graphics, and machine learning.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Physics Applications of Derivatives",
-                    "description": "Focus on applications in velocity, acceleration, and motion.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study 'Real World Applications' focusing on physics.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "Mind Maps",
-                        "description": "Create diagrams linking derivatives to motion concepts.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Computer Graphics and Game Development Applications",
-                    "description": "Explore how derivatives enhance animations and smooth movements.",
-                    "activities": [
-                      {
-                        "type": "case study",
-                        "description": "Analyze motion smoothing examples in game development.",
+                        "description": "Study 'Why Zero Derivatives Matter' section and its examples.",
                         "duration": "40 minutes",
                         "priority": "high",
                         "completed": false
@@ -3338,155 +3090,9 @@
                       {
                         "type": "tool",
                         "tool": "Practice Test Generator",
-                        "description": "Test understanding with applied derivatives exercises.",
-                        "duration": "30 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Connect derivatives to real-world uses in physics and graphics.",
-              "Analyze how companies and developers use derivatives for optimization."
-            ],
-            "assessment": "Create a written summary or digital presentation on how derivatives solve real-world problems."
-          }
-        ],
-        "study_techniques": [
-          {
-            "technique": "Flashcards",
-            "description": "Use flashcards to memorize derivative rules, key terms, and formulas.",
-            "best_for": "Understanding common rules and definitions."
-          },
-          {
-            "technique": "Practice Quizzes",
-            "description": "Generate quizzes to test understanding after studying key sections.",
-            "best_for": "Application and problem-solving."
-          },
-          {
-            "technique": "Mind Maps",
-            "description": "Organize complex concepts visually to see connections.",
-            "best_for": "Graphical understanding and real-world applications."
-          },
-          {
-            "technique": "AI Summarizer",
-            "description": "Summarize large sections into concise overviews for quick revision.",
-            "best_for": "Condensing dense reading material."
-          },
-          {
-            "technique": "Voice Notes",
-            "description": "Record short reflections on problem-solving techniques and insights.",
-            "best_for": "Reinforcing understanding through verbal recall."
-          }
-        ],
-        "resources": [
-          {
-            "title": "Flashcards Generator",
-            "type": "tool",
-            "description": "Helps to memorize formulae and derivative rules effectively."
-          },
-          {
-            "title": "Practice Test Generator",
-            "type": "tool",
-            "description": "Allows testing understanding through customizable quizzes and assessments."
-          },
-          {
-            "title": "AI Summarizer",
-            "type": "tool",
-            "description": "Condenses complex sections into manageable reviews."
-          },
-          {
-            "title": "Mind Maps",
-            "type": "tool",
-            "description": "Visualize and connect concepts for deeper comprehension."
-          },
-          {
-            "title": "Voice Notes Recorder",
-            "type": "tool",
-            "description": "Reinforce learning using audio explanations of key concepts."
-          }
-        ]
-      },
-      "source_text": "Alright, here’s a long, self-contained math lesson you can actually learn from. No fluff, just \nsolid intuition, examples, and structure. We’ll do: \nA full lesson on derivatives and why they matter, with intuition, proofs, and \napplications. \nThis is the backbone of calculus and shows up everywhere in computer science, physics, \nmachine learning, and game dev. \n \n1. What is a Derivative, Actually? \nA derivative answers one question: \nHow fast is something changing right now? \nNot on average, not over time, but at an exact moment. \nIf: \n●​ f(x) = position of a car​\n \n●​ x = time​\n \nThen: \n●​ f'(x) = speed at that exact moment.​\n \nExample: \nIf a car moves according to: \nf(x)=x2f(x) = x^2f(x)=x2 \nAnd you're at x = 3, what’s its speed? \nThe derivative is: \nf′(x)=2xf'(x) = 2xf′(x)=2x \nSo at x = 3: \n\nf′(3)=6f'(3) = 6f′(3)=6 \nMeaning the car’s speed at that moment is 6 units per time. \n \n2. Where the Formula Comes From (No Magic) \nWe don’t just guess derivatives. They come from this definition: \nf′(x)=lim⁡h→0f(x+h)−f(x)hf'(x) = \\lim_{h \\to 0} \\frac{f(x + h) - f(x)}{h}f′(x)=h→0lim​hf(x+h)−f(x)​ \nThis means:​\n “Take a tiny step h, measure how much the output changes, divide by how far you moved, then \nshrink h to nothing.” \nLet’s do it properly for f(x) = x^2 \n(x+h)2−x2h\\frac{(x+h)^2 - x^2}{h}h(x+h)2−x2​ \nExpand: \nx2+2xh+h2−x2h\\frac{x^2 + 2xh + h^2 - x^2}{h}hx2+2xh+h2−x2​ \nCancel: \n2xh+h2h\\frac{2xh + h^2}{h}h2xh+h2​ \nFactor: \n2x+h2x + h2x+h \nNow let h → 0: \n2x2x2x \nSo the derivative of x2x^2x2 is 2x2x2x. That’s not a rule someone invented. It’s pure logic. \n \n3. Common Derivative Rules \nOnce you understand the logic, here are the shortcuts: \nFunction \nDerivative \n\nxnx^nxn \nnxn−1n \nx^{n-1}nxn−1 \nsin⁡(x)\\sin(x)si\nn(x) \ncos⁡(x)\\cos(x)co\ns(x) \ncos⁡(x)\\cos(x)\ncos(x) \n−sin⁡(x)-\\sin(x)−\nsin(x) \nexe^xex \nexe^xex \nln⁡(x)\\ln(x)ln(x\n) \n1/x1/x1/x \nExample: \nf(x)=3x4+5x−7f(x) = 3x^4 + 5x - 7f(x)=3x4+5x−7 \nDerivative: \nf′(x)=12x3+5f'(x) = 12x^3 + 5f′(x)=12x3+5\n \n4. What Does a Derivative Mean Graphically? \nThe derivative is the slope of the tangent line. \nIf you draw a curve and put a ruler touching it at one point, the derivative is the slope of that \nruler. \nSo: \n●​ Positive derivative → graph is going up​\n \n●​ Negative derivative → going down​\n \n●​ Zero derivative → flat (important, these are critical points)​\n \n \n5. Why Zero Derivatives Matter (Optimization) \nThese are points where something is at a local max or min. \n\nExample: \nf(x)=x2−4x+3f(x) = x^2 - 4x + 3f(x)=x2−4x+3 \nTake derivative: \nf′(x)=2x−4f'(x) = 2x - 4f′(x)=2x−4 \nSet equal to zero: \n2x−4=02x - 4 = 02x−4=0 x=2x = 2x=2 \nPlug back: \nf(2)=4−8+3=−1f(2) = 4 - 8 + 3 = -1f(2)=4−8+3=−1 \nSo the smallest value is -1 at x = 2. \nThis is how: \n●​ Businesses maximize profits​\n \n●​ Games optimize physics​\n \n●​ AI minimizes loss functions​\n \n●​ You minimize exam suffering​\n \n \n6. Chain Rule (The Most Important Rule) \nUsed when functions are inside other functions. \nIf: \nf(g(x))f(g(x))f(g(x)) \nThen: \ndfdx=f′(g(x))⋅g′(x)\\frac{df}{dx} = f'(g(x)) \\cdot g'(x)dxdf​=f′(g(x))⋅g′(x) \nExample: \nf(x)=(3x2+1)5f(x) = (3x^2 + 1)^5f(x)=(3x2+1)5 \n\nOuter: u^5 → 5u^4​\n Inner: 3x^2 + 1 → 6x \nMultiply: \nf′(x)=5(3x2+1)4⋅6xf'(x) = 5(3x^2 + 1)^4 \\cdot 6xf′(x)=5(3x2+1)4⋅6x =30x(3x2+1)4= 30x(3x^2 + \n1)^4=30x(3x2+1)4\n \n7. Real World Applications \nPhysics \nPosition → Velocity → Acceleration​\n Each is a derivative of the last. \nComputer Graphics / Game Dev \nYou use derivatives for: \n●​ Movement smoothing​\n \n●​ Camera motion​\n \n●​ Animation curves​\n \n●​ Physics forces​\n \nMachine Learning \nGradient descent is literally: \nFollow the negative derivative until error is minimized. \nEvery AI model uses derivatives constantly. \n \n8. A Final Intuition \nThink of a derivative as: \nStanding on a mountain and asking, “Which direction is uphill, and how steep is it?” \n\nThe derivative gives you: \n●​ Direction of change​\n \n●​ Speed of change​\n \n●​ Where things peak or dip​\n \n●​ How to optimize complex systems​\n \nIt’s the math of change. \n \n\n\n",
-      "tags": [],
-      "pdfs": [
-        "Untitled document (2).pdf"
-      ],
-      "duration_info": {
-        "duration": 4,
-        "unit": "weeks"
-      },
-      "updatedAt": null
-    }
-  },
-  {
-    "id": "eed390bc-91e9-4d79-baaf-f7239ecf67af",
-    "userId": "c921ac38-3b69-450f-b1c1-bfe4066845b7",
-    "contentType": "study_plan",
-    "createdAt": "2025-11-28T04:13:36.521085",
-    "data": {
-      "title": "testttt",
-      "description": "Study Duration: 4 weeks",
-      "content": {
-        "title": "testttt",
-        "description": "This 4-week study plan is designed to build solid intuition, practice skills, and master derivatives. It combines key concepts, hands-on activities, and real-world applications for a deep understanding of calculus foundations.",
-        "duration": "4 weeks",
-        "overview": "This study plan covers the entire concept of derivatives, including intuition, proofs, computation techniques, graphical interpretations, optimization, chain rule applications, and real-world uses. The plan gradually progresses in difficulty and ends with real-world applications and advanced techniques.",
-        "weekly_schedule": [
-          {
-            "week": 1,
-            "theme": "Introduction to Derivatives and Their Importance",
-            "description": "Learn what derivatives mean, why they matter, and develop an intuitive understanding through examples and definitions.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "What is a Derivative?",
-                    "description": "Understand the concept of derivatives as a measure of instantaneous change.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Read the introductory section covering 'What is a Derivative?' and study the car speed example.",
+                        "description": "Generate problems about finding max/min points using derivatives.",
                         "duration": "30 minutes",
                         "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "AI Summarizer",
-                        "description": "Summarize key points from the section to reinforce understanding.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "Formula Derivation (No Magic)",
-                    "description": "Learn how derivative formulas are derived logically and rigorously.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study the section on the formula derivation using limits.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "flashcards",
-                        "description": "Create flashcards for steps in formula derivation and key terms.",
-                        "duration": "20 minutes",
-                        "priority": "medium",
                         "completed": false
                       }
                     ]
@@ -3497,20 +3103,58 @@
                 "day": 3,
                 "topics": [
                   {
-                    "title": "Common Derivative Rules",
-                    "description": "Memorize and practice common rules for calculating derivatives efficiently.",
+                    "title": "Real World Applications",
+                    "description": "Discover how derivatives are used in physics, game dev, and machine learning.",
                     "activities": [
                       {
                         "type": "reading",
-                        "description": "Learn the shortcut rules for common derivative functions.",
-                        "duration": "25 minutes",
+                        "description": "Read 'Real World Applications' section and summarize the scenarios provided.",
+                        "duration": "30 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      },
+                      {
+                        "type": "tool",
+                        "tool": "AI Summarizer",
+                        "description": "Summarize each application (physics, ML, game dev) briefly.",
+                        "duration": "15 minutes",
+                        "priority": "medium",
+                        "completed": false
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "weekly_goals": [
+              "Understand and solve optimization problems using derivatives.",
+              "Learn how derivatives are applied in real-world scenarios like physics and machine learning."
+            ],
+            "assessment": "Complete optimization problem sets and write about one real-world application of derivatives."
+          },
+          {
+            "week": 4,
+            "theme": "Mastering the Chain Rule",
+            "description": "Understand the chain rule, its importance, and practice advanced derivative computations.",
+            "days": [
+              {
+                "day": 1,
+                "topics": [
+                  {
+                    "title": "Understanding the Chain Rule",
+                    "description": "Learn and practice the chain rule for nested functions.",
+                    "activities": [
+                      {
+                        "type": "reading",
+                        "description": "Read 'Chain Rule' section and work through all examples step-by-step.",
+                        "duration": "40 minutes",
                         "priority": "high",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "practice quizzes",
-                        "description": "Use practice quizzes to test understanding of derivative rules.",
+                        "tool": "Practice Test Generator",
+                        "description": "Generate chain rule problems and solve them.",
                         "duration": "30 minutes",
                         "priority": "high",
                         "completed": false
@@ -3520,23 +3164,24 @@
                 ]
               },
               {
-                "day": 4,
+                "day": 3,
                 "topics": [
                   {
-                    "title": "Graphical Meaning of Derivatives",
-                    "description": "Explore how derivatives relate to the slope of tangent lines using visuals.",
+                    "title": "Final Review and Real World Examples",
+                    "description": "Tie together all concepts studied and apply to real-world applications.",
                     "activities": [
                       {
-                        "type": "reading",
-                        "description": "Study the correlation between derivatives and slopes on graphs.",
-                        "duration": "30 minutes",
+                        "type": "tool",
+                        "tool": "Mind Maps",
+                        "description": "Create a comprehensive visual map connecting rules, applications, and techniques.",
+                        "duration": "40 minutes",
                         "priority": "medium",
                         "completed": false
                       },
                       {
                         "type": "tool",
-                        "tool": "mind maps",
-                        "description": "Create a visual representation linking tangent slopes to derivative values.",
+                        "tool": "Voice Notes",
+                        "description": "Record final reflections and summaries of key derivative concepts.",
                         "duration": "20 minutes",
                         "priority": "medium",
                         "completed": false
@@ -3544,171 +3189,67 @@
                     ]
                   }
                 ]
-              },
-              {
-                "day": 5,
-                "topics": [
-                  {
-                    "title": "Review Week 1 Concepts",
-                    "description": "Consolidate learning and self-check progress.",
-                    "activities": [
-                      {
-                        "type": "review",
-                        "description": "Use flashcards and revisit practice quizzes to reinforce week 1 content.",
-                        "duration": "45 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "voice notes",
-                        "description": "Record voice notes summarizing key takeaways.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
               }
             ],
             "weekly_goals": [
-              "Develop a basic theoretical understanding of derivatives.",
-              "Practice common rules and graphical interpretations."
+              "Master the chain rule and solve advanced derivative problems.",
+              "Review all derivative basics and connect them to applications studied."
             ],
-            "assessment": "Use practice quizzes and flashcards to test comprehension of the basics and derivative calculations."
-          },
-          {
-            "week": 2,
-            "theme": "Optimization and Important Rules",
-            "description": "Dive deeper into critical points, optimization, and the chain rule.",
-            "days": [
-              {
-                "day": 1,
-                "topics": [
-                  {
-                    "title": "Critical Points and Optimization",
-                    "description": "Explore why zero derivatives are crucial for finding maxima, minima, and optimization problems.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Study the section on zero derivatives and optimization techniques.",
-                        "duration": "30 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "practice quizzes",
-                        "description": "Practice optimizing functions by finding critical points.",
-                        "duration": "25 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 2,
-                "topics": [
-                  {
-                    "title": "The Chain Rule",
-                    "description": "Master the chain rule for derivatives of nested functions.",
-                    "activities": [
-                      {
-                        "type": "reading",
-                        "description": "Work through chain rule examples and the formula logic.",
-                        "duration": "35 minutes",
-                        "priority": "high",
-                        "completed": false
-                      },
-                      {
-                        "type": "tool",
-                        "tool": "flashcards",
-                        "description": "Develop flashcards breaking down the chain rule into simple steps.",
-                        "duration": "15 minutes",
-                        "priority": "medium",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "day": 5,
-                "topics": [
-                  {
-                    "title": "Weekly Assessment",
-                    "description": "Review optimization and chain rule concepts through tests.",
-                    "activities": [
-                      {
-                        "type": "test",
-                        "description": "Take a practice test covering optimization problems and chain rule applications.",
-                        "duration": "1 hour",
-                        "priority": "high",
-                        "completed": false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "weekly_goals": [
-              "Understand optimization techniques using derivatives.",
-              "Become proficient in applying the chain rule to nested functions."
-            ],
-            "assessment": "Evaluate understanding of critical points, optimization, and chain rule applications through quizzes and tests."
-          },
-          {
-            "week": 3,
-            "theme": "Applications of Derivatives",
-            "description": "Explore real-world applications of derivatives in physics, computer graphics, and machine learning.",
-            "days": [],
-            "weekly_goals": [],
-            "assessment": "Assess how derivatives are applied in practical scenarios like physics, AI, and graphics."
-          },
-          {
-            "week": 4,
-            "theme": "Final Mastery and Review",
-            "description": "Conclude with assessments, reviews, and advanced derivative techniques.",
-            "days": [],
-            "weekly_goals": [],
-            "assessment": "Demonstrate mastery of derivatives through advanced exercises and final evaluations."
+            "assessment": "Solve advanced derivative problems featuring chain rule and create mind maps summarizing the course."
           }
         ],
         "study_techniques": [
           {
             "technique": "Flashcards",
-            "description": "Use flashcards to memorize derivative rules, formulas, and concepts.",
-            "best_for": "Concept reinforcement and memorization."
+            "description": "Use these to memorize common derivative rules and concepts efficiently.",
+            "best_for": "Shortcut formulas and terminology"
           },
           {
             "technique": "Practice Tests",
-            "description": "Assess understanding by solving problems under timed conditions.",
-            "best_for": "Testing progress and application of learned concepts."
+            "description": "Apply knowledge by solving problems to gain practical mastery.",
+            "best_for": "Calculations and formula derivation"
           },
           {
             "technique": "Mind Maps",
-            "description": "Organize derivative concepts visually to see connections and relationships.",
-            "best_for": "Understanding the big picture and interrelations of concepts."
+            "description": "Visually organize concepts for deeper understanding and connection.",
+            "best_for": "Graphical interpretations and application scenarios"
+          },
+          {
+            "technique": "AI Summarizer",
+            "description": "Condense complex sections into shorter, focused notes.",
+            "best_for": "Reviewing proofs and real-world applications"
+          },
+          {
+            "technique": "Voice Notes",
+            "description": "Record reflections and explanations to strengthen retention.",
+            "best_for": "Personal explanations for deeper understanding"
           }
         ],
         "resources": [
           {
-            "title": "Derivative Basics",
+            "title": "Derivatives: Intuition and Applications",
             "type": "article",
-            "description": "Provides foundational understanding of derivatives."
+            "description": "An intuitive guide to understanding derivatives with examples and real-world contexts."
           },
           {
-            "title": "Practice Quiz Tool",
+            "title": "Mathematical Proofs Simplified",
             "type": "tool",
-            "description": "Offers quiz questions for practicing derivative calculations and applications."
+            "description": "Use AI Summarizer for simplifying complex proofs like derivative calculations."
           },
           {
-            "title": "AI Summarizer",
+            "title": "Flashcard Generator",
             "type": "tool",
-            "description": "Helps condense and summarize derivative concepts quickly."
+            "description": "Memorize formulas and rules effectively."
+          },
+          {
+            "title": "Practice Test Generator",
+            "type": "tool",
+            "description": "Sharpen skills by solving targeted derivative problems."
+          },
+          {
+            "title": "Mind Maps Tool",
+            "type": "tool",
+            "description": "Visualize and connect concepts studied in this plan."
           }
         ]
       },

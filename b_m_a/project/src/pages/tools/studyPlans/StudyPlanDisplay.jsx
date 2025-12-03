@@ -500,7 +500,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                 Weekly Plan Overview
               </h3>
               <div className="space-y-3">
-                {content.weekly_schedule.map((week) => (
+                {(content.weekly_schedule || []).map((week) => (
                   <div
                     key={`overview-week-${week.week}`}
                     className="border border-gray-200 p-3 rounded-md"
@@ -523,7 +523,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
             </h2>
 
             <div className="space-y-4">
-              {content.weekly_schedule.map((week) => (
+              {(content.weekly_schedule || []).map((week) => (
                 <div
                   key={`week-${week.week}`}
                   className="border border-gray-200 rounded-lg overflow-hidden"
@@ -555,7 +555,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                           Weekly Goals:
                         </h4>
                         <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
-                          {week.weekly_goals.map((goal, index) => (
+                          {(week.weekly_goals || []).map((goal, index) => (
                             <li key={index}>{goal}</li>
                           ))}
                         </ul>
@@ -563,7 +563,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
 
                       {/* Daily schedule */}
                       <div className="space-y-3">
-                        {week.days.map((day) => (
+                        {(week.days || []).map((day) => (
                           <div
                             key={`day-${week.week}-${day.day}`}
                             className="border border-gray-200 rounded-md overflow-hidden"
@@ -590,7 +590,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                               `week-${week.week}-day-${day.day}`
                             ] && (
                               <div className="p-3">
-                                {day.topics.map((topic, topicIndex) => (
+                                {(day.topics || []).map((topic, topicIndex) => (
                                   <div
                                     key={`topic-${week.week}-${day.day}-${topicIndex}`}
                                     className="mb-4"
@@ -603,7 +603,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                                     </p>
 
                                     <div className="space-y-2 pl-2">
-                                      {topic.activities.map(
+                                      {(topic.activities || []).map(
                                         (activity, activityIndex) => (
                                           <div
                                             key={`activity-${week.week}-${day.day}-${topicIndex}-${activityIndex}`}
