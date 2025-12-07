@@ -936,6 +936,7 @@ async def create_study_plan(
     description: str = Form(""),
     tags: str = Form(""),
     duration_metadata: Optional[str] = Form(None),
+    schedule_metadata: Optional[str] = Form(None),
     user_claims: dict = Depends(validate_token)
 ):
     try:
@@ -973,6 +974,13 @@ async def create_study_plan(
                 duration_info = json.loads(duration_metadata)
             except json.JSONDecodeError:
                 pass
+        schedule_info = None
+        if schedule_metadata:
+            try:
+                schedule_info = json.loads(schedule_metadata)
+            except json.JSONDecodeError:
+                # ignore invalid schedule metadata
+                schedule_info = None
 
         try:
             study_plan_json = generate_study_plan(
@@ -1004,6 +1012,7 @@ async def create_study_plan(
                 "tags": tag_list,
                 "pdfs": pdf_names,
                 "duration_info": duration_info,
+                "schedule_info": schedule_info,
                 "updatedAt": None
             }
         }
@@ -1198,6 +1207,71 @@ async def summarize_file(
     except Exception as e:
         print(f"❌ Error during processing: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate-flashcard")
+async def generate_flashcard_route(
+    file: UploadFile = None,
+    text: str = Form(None),
+    num_flashcards: Optional[int] = Form(10),
+    user_claims: dict = Depends(validate_token)
+):
+    """
+    Generate flashcards from an uploaded PDF or directly from provided text.
+    Accepts either a PDF upload (`file`) or raw `text` in the form body.
+    Returns the parsed JSON produced by the OpenAI flashcard generator.
+    """
+    try:
+        if not file and not text:
+            raise HTTPException(status_code=400, detail="Please provide a PDF file or text to generate flashcards from.")
+
+        extracted_text = ""
+        # If a file was provided, accept PDFs or plain text files
+        if file:
+            filename = file.filename or "uploaded"
+            # allow PDF or plain text uploads
+            allowed = ["application/pdf", "text/plain"]
+            if file.content_type not in allowed:
+                raise HTTPException(status_code=400, detail="Invalid file type. Provide a PDF or plain text file.")
+
+            file_path = f"./temp_{filename}"
+            try:
+                with open(file_path, "wb") as f:
+                    f.write(await file.read())
+
+                if file.content_type == "application/pdf" or filename.lower().endswith(".pdf"):
+                    extracted_text = extract_text_from_pdf(file_path)
+                else:
+                    # read text file
+                    with open(file_path, "r", encoding="utf-8") as tf:
+                        extracted_text = tf.read()
+            finally:
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except Exception:
+                        pass
+        else:
+            extracted_text = text
+
+        if not extracted_text or not extracted_text.strip():
+            raise HTTPException(status_code=422, detail="No text available to generate flashcards")
+
+        # Call the OpenAI helper that generates flashcards from text
+        flashcards_json = openai_generate_flashcard(extracted_text, num_flashcards or 10)
+        try:
+            parsed = json.loads(flashcards_json)
+        except Exception:
+            # If the model returned non-JSON, return raw string
+            parsed = {"raw": flashcards_json}
+
+        # Persisting a FlashcardDocument could be added here if desired
+        return parsed
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error generating flashcards: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate flashcard: {str(e)}")
 
 # ----- Quiz Performance Analysis -----
 class QuizPerformanceRequest(BaseModel):

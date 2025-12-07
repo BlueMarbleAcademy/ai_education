@@ -173,7 +173,8 @@ export const generateStudyPlan = async (
   title,
   description = "",
   tags = "",
-  durationMetadata = ""
+  durationMetadata = "",
+  scheduleMetadata = null
 ) => {
   const endpoint = "http://localhost:8000/generate-study-plan";
 
@@ -207,6 +208,11 @@ export const generateStudyPlan = async (
   // Add duration metadata if provided
   if (durationMetadata) {
     formData.append("duration_metadata", durationMetadata);
+  }
+
+  // Add schedule metadata if provided (JSON string)
+  if (scheduleMetadata) {
+    formData.append("schedule_metadata", scheduleMetadata);
   }
 
   try {

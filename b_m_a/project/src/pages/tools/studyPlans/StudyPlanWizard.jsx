@@ -33,6 +33,8 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
   // New state for study duration
   const [duration, setDuration] = useState(4);
   const [durationUnit, setDurationUnit] = useState("weeks");
+  // New state for schedule preferences
+  const [selectedDays, setSelectedDays] = useState([]); // store weekday numbers 0(Sun)-6(Sat)
 
   // Handle file selection
   const handleFileSelect = (event) => {
@@ -127,12 +129,16 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
         : `Study Duration: ${duration} ${durationUnit}`;
 
       // Call API to generate study plan with duration metadata
+      // Build schedule metadata
+      const scheduleInfo = selectedDays && selectedDays.length > 0 ? { selectedDays } : null;
+
       const result = await generateStudyPlan(
         files,
         title,
         enhancedDescription,
         tagsString,
-        JSON.stringify(durationInfo) // Pass duration as metadata
+        JSON.stringify(durationInfo), // Pass duration as metadata
+        scheduleInfo ? JSON.stringify(scheduleInfo) : null // Pass schedule metadata if provided
       );
 
       setGeneratedPlan(result);
@@ -290,6 +296,32 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
             <p className="text-xs text-gray-500 mt-1">
               This helps the AI create a more personalized study schedule
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Preferred Study Days
+            </label>
+            <p className="text-xs text-gray-500 mb-2">Select the days of the week you'd like to study. The schedule will map plan activities onto these weekdays.</p>
+            <div className="flex gap-2 flex-wrap">
+              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, idx) => {
+                const active = selectedDays.includes(idx);
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => {
+                      if (selectedDays.includes(idx)) setSelectedDays(selectedDays.filter(s => s !== idx));
+                      else setSelectedDays([...selectedDays, idx].sort());
+                    }}
+                    className={`px-3 py-1 rounded-full border ${active ? 'bg-primary-600 text-white' : 'bg-white text-gray-700'} hover:opacity-90`}
+                  >
+                    {d}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Tip: Choose 2-5 days for a sustainable routine.</p>
           </div>
 
           <div>

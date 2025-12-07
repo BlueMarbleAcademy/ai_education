@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
   Calendar,
@@ -26,12 +27,18 @@ import {
   getQuizzes,
   deleteStudyPlan,
 } from "../../../api/apiService";
-import { formatDistanceToNow } from "date-fns";
+import { useQuizData } from "../PracticeTests/hooks";
+import { useDeckData } from "../AIFlashcards/hooks";
+import { formatDistanceToNow, format, startOfWeek, addDays } from "date-fns";
 
 /**
  * Component to display a study plan and allow updating it
  */
 const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
+  const navigate = useNavigate();
+  const { generateQuiz } = useQuizData();
+  const { generateFlashcards } = useDeckData();
+  
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
   const [loading, setLoading] = useState(false);
@@ -174,6 +181,30 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
     }
   };
 
+  // Helper function to calculate the actual date for a day slot in a week
+  // based on the plan's selected preferred weekdays (if any)
+  const getActualDateForDay = (weekIndex, dayIndex) => {
+    if (!studyPlan?.data?.schedule_info?.selectedDays) {
+      // If no preferred days, just offset from plan creation date
+      const baseDate = plan.createdAt ? new Date(plan.createdAt) : new Date();
+      return addDays(baseDate, weekIndex * 7 + dayIndex);
+    }
+
+    const preferred = studyPlan.data.schedule_info.selectedDays;
+    if (!Array.isArray(preferred) || preferred.length === 0) {
+      const baseDate = plan.createdAt ? new Date(plan.createdAt) : new Date();
+      return addDays(baseDate, weekIndex * 7 + dayIndex);
+    }
+
+    // Map day slot to the corresponding preferred weekday (cycling if more days than preferred)
+    const baseDate = plan.createdAt ? new Date(plan.createdAt) : new Date();
+    const baseWeekStart = startOfWeek(baseDate);
+    const weekday = preferred[dayIndex % preferred.length];
+    const baseWeekday = baseWeekStart.getDay();
+    const daysUntilTarget = (weekday - baseWeekday + 7) % 7;
+    return addDays(baseWeekStart, weekIndex * 7 + daysUntilTarget);
+  };
+
   // Toggle completion status of an activity
   const toggleActivityComplete = (
     weekNum,
@@ -194,6 +225,84 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
 
       return newState;
     });
+  };
+
+  // Helper to generate action buttons for an activity
+  const renderActivityButtons = (activity) => {
+    if (!studyPlan?.data?.source_text) return null;
+
+    const title = (activity?.title || "").toLowerCase();
+    const desc = (activity?.description || "").toLowerCase();
+    const tool = (activity?.tool || "").toLowerCase();
+
+    const isSummarize = (tool === 'summarizer') || /summarize/.test(title) || /summarize/.test(desc);
+    const isQuizLike = (tool === 'quiz' || tool === 'practice_test') || /test|quiz|practice/.test(`${title} ${desc}`);
+    const isFlashcards = (tool === 'flashcards') || /flashcard|flash cards|create flash/.test(`${title} ${desc}`);
+    const isRecord = (tool === 'voice_notes') || /record|voice note|audio note/.test(`${title} ${desc}`);
+
+    return (
+      <div className="flex gap-2 mt-2 flex-wrap">
+        {isSummarize && (
+          <button
+            onClick={() => navigate('/tools/summarizer', { state: { summarizeText: studyPlan.data.source_text || '' } })}
+            className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 text-white hover:bg-amber-600"
+          >
+            <Zap className="h-3 w-3" />
+            Summarize
+          </button>
+        )}
+
+        {isRecord && (
+          <button
+            onClick={() => navigate('/tools/voice-notes', { state: { noteTitle: activity?.title || 'Voice Note' } })}
+            className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 bg-white text-red-700 hover:bg-red-50"
+          >
+            <Mic className="h-3 w-3" />
+            Record
+          </button>
+        )}
+
+        {isQuizLike && (
+          <button
+            onClick={async () => {
+              try {
+                const text = studyPlan.data.source_text || '';
+                const file = new File([text], 'plan-for-quiz.txt', { type: 'text/plain' });
+                const quizData = await generateQuiz(file, 10, [], '', { multiple_choice: true });
+                navigate('/tools/practice-tests', { state: { generatedQuiz: quizData } });
+              } catch (err) {
+                console.error('Failed to generate quiz', err);
+                alert('Failed to generate quiz: ' + (err.message || err));
+              }
+            }}
+            className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+          >
+            <BookMarked className="h-3 w-3" />
+            Test your knowledge
+          </button>
+        )}
+
+        {isFlashcards && (
+          <button
+            onClick={async () => {
+              try {
+                const text = studyPlan.data.source_text || '';
+                const file = new File([text], 'plan-for-flashcards.txt', { type: 'text/plain' });
+                const flashData = await generateFlashcards(file, 10);
+                navigate('/tools/ai-flashcards', { state: { generatedDeck: flashData } });
+              } catch (err) {
+                console.error('Failed to generate flashcards', err);
+                alert('Failed to generate flashcards: ' + (err.message || err));
+              }
+            }}
+            className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-purple-200 bg-white text-purple-700 hover:bg-purple-50"
+          >
+            <BrainCircuit className="h-3 w-3" />
+            Create flash cards
+          </button>
+        )}
+      </div>
+    );
   };
 
   // Save completed activities to the backend
@@ -563,32 +672,38 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
 
                       {/* Daily schedule */}
                       <div className="space-y-3">
-                        {(week.days || []).map((day) => (
-                          <div
-                            key={`day-${week.week}-${day.day}`}
-                            className="border border-gray-200 rounded-md overflow-hidden"
-                          >
-                            <button
-                              onClick={() =>
-                                toggleDay(`week-${week.week}-day-${day.day}`)
-                              }
-                              className="w-full flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100"
+                        {(week.days || []).map((day, dayIndex) => {
+                          const actualDate = getActualDateForDay(
+                            week.week - 1,
+                            dayIndex
+                          );
+                          const dateString = format(actualDate, "EEE, MMM d");
+                          return (
+                            <div
+                              key={`day-${week.week}-${day.day}`}
+                              className="border border-gray-200 rounded-md overflow-hidden"
                             >
-                              <h4 className="font-medium text-gray-800">
-                                Day {day.day}
-                              </h4>
+                              <button
+                                onClick={() =>
+                                  toggleDay(`week-${week.week}-day-${day.day}`)
+                                }
+                                className="w-full flex justify-between items-center p-3 bg-gray-50 hover:bg-gray-100"
+                              >
+                                <h4 className="font-medium text-gray-800">
+                                  {dateString}
+                                </h4>
+                                {expandedDays[
+                                  `week-${week.week}-day-${day.day}`
+                                ] ? (
+                                  <ChevronUp className="h-4 w-4 text-gray-500" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                                )}
+                              </button>
+
                               {expandedDays[
                                 `week-${week.week}-day-${day.day}`
-                              ] ? (
-                                <ChevronUp className="h-4 w-4 text-gray-500" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4 text-gray-500" />
-                              )}
-                            </button>
-
-                            {expandedDays[
-                              `week-${week.week}-day-${day.day}`
-                            ] && (
+                              ] && (
                               <div className="p-3">
                                 {(day.topics || []).map((topic, topicIndex) => (
                                   <div
@@ -668,6 +783,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                                               <p className="text-sm text-gray-600 mt-1">
                                                 {activity.description}
                                               </p>
+                                              {renderActivityButtons(activity)}
                                             </div>
                                           </div>
                                         )
@@ -677,8 +793,9 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
                                 ))}
                               </div>
                             )}
-                          </div>
-                        ))}
+                            </div>
+                          );
+                        })}
                       </div>
 
                       {/* Assessment */}

@@ -1,5 +1,6 @@
 // VoiceNotes.jsx — tags instead of folders, now with Pause/Resume while recording
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, Save, Trash2, Download, Share2, Tag as TagIcon, AudioWaveform as Waveform, PauseCircle, PlayCircle } from 'lucide-react';
@@ -18,6 +19,7 @@ const getUserId = () => {
 axios.defaults.headers.common['X-User-Id'] = getUserId();
 
 const VoiceNotes = () => {
+  const location = useLocation();
   const [notes, setNotes] = useState([]);
   const [allTags, setAllTags] = useState([]);
   const [selectedTagFilter, setSelectedTagFilter] = useState('');
@@ -42,6 +44,13 @@ const VoiceNotes = () => {
   const animationRef = useRef(null);
 
   const { transcript, resetTranscript } = useSpeechRecognition();
+
+  // Set note title from navigation state if provided
+  useEffect(() => {
+    if (location.state?.noteTitle) {
+      setNoteTitle(location.state.noteTitle);
+    }
+  }, [location.state]);
 
   const fetchNotes = async () => {
     try {

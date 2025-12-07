@@ -25,9 +25,11 @@ import {
   AlertCircle,
   Square,
   CheckSquare,
+  Loader2,
 } from "lucide-react";
 import { getStudyPlans, getStudyPlan } from "../../../api/apiService";
 import { useQuizData } from "../PracticeTests/hooks";
+import { useDeckData } from "../AIFlashcards/hooks";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
 import SavedStudyPlansList from "./SavedStudyPlansList";
@@ -67,6 +69,7 @@ const StudyPlans = () => {
   const [studyPlans, setStudyPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loadingQuizTaskId, setLoadingQuizTaskId] = useState(null);
 
   // derived UI state
   const today = new Date();
@@ -78,6 +81,7 @@ const StudyPlans = () => {
 
   const { instance, accounts } = useMsal();
   const { generateQuiz } = useQuizData();
+  const { generateFlashcards } = useDeckData();
 
   // Fetch saved study plans when planner is visible and user is authenticated.
   // Use both the React MSAL `accounts` array and the msal instance cache as cues —
@@ -236,13 +240,26 @@ const StudyPlans = () => {
           // Map plan days to calendar dates using a weekly offset so that
           // week N maps to baseDate + (N-1)*7 days + dayIndex within that week.
           const baseDate = p.createdAt ? new Date(p.createdAt) : new Date();
+          const baseWeekStart = startOfWeek(baseDate);
           const weeks = content.weekly_schedule || [];
           for (let wi = 0; wi < weeks.length; wi++) {
             const week = weeks[wi];
             const days = week.days || [];
             for (let di = 0; di < days.length; di++) {
               const day = days[di];
-              const dayDate = addDays(baseDate, wi * 7 + di);
+              // If the plan includes schedule_info.selectedDays, map the day slot
+              // to the user's preferred weekday. selectedDays is expected to be
+              // an array of weekday numbers 0(Sun)-6(Sat).
+              const preferred = full?.data?.schedule_info?.selectedDays;
+              let dayDate;
+              if (preferred && Array.isArray(preferred) && preferred.length > 0) {
+                const weekday = preferred[di % preferred.length];
+                // compute offset from the base week start to the preferred weekday
+                const offset = (weekday - baseWeekStart.getDay() + 7) % 7;
+                dayDate = addDays(baseWeekStart, wi * 7 + offset);
+              } else {
+                dayDate = addDays(baseDate, wi * 7 + di);
+              }
               // Only include tasks scheduled for today
               if (!isSameDay(dayDate, today)) continue;
               for (const topic of day.topics || []) {
@@ -443,16 +460,26 @@ const StudyPlans = () => {
         const content = full?.data?.content;
         if (!content || !content.weekly_schedule) continue;
 
-        // Map plan days to calendar dates using a weekly offset so that
-        // week N maps to baseDate + (N-1)*7 days + dayIndex within that week.
+        // Map plan days to calendar dates. If the user provided schedule_info.selectedDays
+        // (array of weekday numbers 0-6), map day slots into those weekdays each week.
         const baseDate = p.createdAt ? new Date(p.createdAt) : new Date();
+        const preferred = full?.data?.schedule_info?.selectedDays;
         const weeks = content.weekly_schedule || [];
         for (let wi = 0; wi < weeks.length; wi++) {
           const week = weeks[wi];
           const days = week.days || [];
           for (let di = 0; di < days.length; di++) {
             const day = days[di];
-            const dayDate = addDays(baseDate, wi * 7 + di);
+            let dayDate;
+            if (preferred && Array.isArray(preferred) && preferred.length > 0) {
+              const weekday = preferred[di % preferred.length];
+              const baseWeekStart = startOfWeek(baseDate);
+              const baseWeekday = baseWeekStart.getDay();
+              const daysUntilTarget = (weekday - baseWeekday + 7) % 7;
+              dayDate = addDays(baseWeekStart, wi * 7 + daysUntilTarget);
+            } else {
+              dayDate = addDays(baseDate, wi * 7 + di);
+            }
             for (const topic of day.topics || []) {
               for (const activity of topic.activities || []) {
                 tasks.push({
@@ -522,24 +549,32 @@ const StudyPlans = () => {
 
   // Default selected plan filter: set to first plan when plans load
   useEffect(() => {
+    // Only auto-select if we have plans and no selection yet
     if ((!selectedPlanFilterId || selectedPlanFilterId === '') && studyPlans && studyPlans.length > 0) {
       setSelectedPlanFilterId(studyPlans[0].id);
     }
-  }, [studyPlans]);
+  }, [studyPlans, selectedPlanFilterId]);
 
   // Apply plan filter to task lists when a plan is selected
   const filteredDailyGoals = useMemo(() => {
-    if (!selectedPlanFilterId) return dailyGoals;
+    // If no plan is selected, show tasks from all plans; otherwise filter by selected plan
+    if (!selectedPlanFilterId || selectedPlanFilterId === '') {
+      return dailyGoals;
+    }
     return dailyGoals.filter((t) => t.planId === selectedPlanFilterId);
   }, [dailyGoals, selectedPlanFilterId]);
 
   const filteredWeekTasks = useMemo(() => {
-    if (!selectedPlanFilterId) return weekTasks;
+    if (!selectedPlanFilterId || selectedPlanFilterId === '') {
+      return weekTasks;
+    }
     return weekTasks.filter((t) => t.planId === selectedPlanFilterId);
   }, [weekTasks, selectedPlanFilterId]);
 
   const filteredMonthTasks = useMemo(() => {
-    if (!selectedPlanFilterId) return monthTasks;
+    if (!selectedPlanFilterId || selectedPlanFilterId === '') {
+      return monthTasks;
+    }
     return monthTasks.filter((t) => t.planId === selectedPlanFilterId);
   }, [monthTasks, selectedPlanFilterId]);
 
@@ -750,12 +785,14 @@ const StudyPlans = () => {
                     </div>
                       <div className="flex-shrink-0 ml-3 flex flex-col items-end gap-2">
                       <button onClick={() => handleSelectPlan({ id: t.planId })} className="text-primary-600 text-sm">Open Plan</button>
-                      {(() => {
+                        {(() => {
                         const title = (t.activity && t.activity.title) || "";
                         const desc = (t.activity && t.activity.description) || "";
                         const tool = (t.activity && t.activity.tool) || "";
                         const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
                         const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                        const isFlashcards = (tool && tool.toLowerCase() === 'flashcards') || /flashcard|flash cards|create flash/i.test(`${title} ${desc}`);
+                        const isRecord = (tool && tool.toLowerCase() === 'voice_notes') || /record|voice note|audio note/i.test(`${title} ${desc}`);
 
                         return (
                           <>
@@ -768,6 +805,15 @@ const StudyPlans = () => {
                               </button>
                             ) : (
                               <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                            )}
+
+                            {isRecord && (
+                              <button
+                                onClick={() => navigate('/tools/voice-notes', { state: { noteTitle: t.activity.title || t.activity.description || 'Voice Note' } })}
+                                className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 bg-white text-red-700 hover:bg-red-50"
+                              >
+                                Record
+                              </button>
                             )}
 
                             {isQuizLike && (
@@ -794,6 +840,26 @@ const StudyPlans = () => {
                                 className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
                               >
                                 Test your knowledge
+                              </button>
+                            )}
+
+                            {isFlashcards && (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const text = t.planSourceText || '';
+                                    const file = new File([text], 'task-for-flashcards.txt', { type: 'text/plain' });
+                                    const numCards = 10;
+                                    const flashData = await generateFlashcards(file, numCards);
+                                    navigate('/tools/ai-flashcards', { state: { generatedDeck: flashData } });
+                                  } catch (err) {
+                                    console.error('Failed to generate flashcards from task', err);
+                                    alert('Failed to generate flashcards: ' + (err.message || err));
+                                  }
+                                }}
+                                className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-purple-200 bg-white text-purple-700 hover:bg-purple-50"
+                              >
+                                Create flash cards
                               </button>
                             )}
                           </>
@@ -897,6 +963,8 @@ const StudyPlans = () => {
                               const tool = (t.activity && t.activity.tool) || "";
                               const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
                               const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              const isFlashcards = (tool && tool.toLowerCase() === 'flashcards') || /flashcard|flash cards|create flash/i.test(`${title} ${desc}`);
+                              const isRecord = (tool && tool.toLowerCase() === 'voice_notes') || /record|voice note|audio note/i.test(`${title} ${desc}`);
                               return (
                                 <>
                                   {isSummarize ? (
@@ -908,6 +976,15 @@ const StudyPlans = () => {
                                     </button>
                                   ) : (
                                     <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                                  )}
+
+                                  {isRecord && (
+                                    <button
+                                      onClick={() => navigate('/tools/voice-notes', { state: { noteTitle: t.activity.title || t.activity.description || 'Voice Note' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 bg-white text-red-700 hover:bg-red-50"
+                                    >
+                                      Record
+                                    </button>
                                   )}
 
                                   {isQuizLike && (
@@ -930,6 +1007,26 @@ const StudyPlans = () => {
                                       className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
                                     >
                                       Test your knowledge
+                                    </button>
+                                  )}
+
+                                  {isFlashcards && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-flashcards.txt', { type: 'text/plain' });
+                                          const numCards = 10;
+                                          const flashData = await generateFlashcards(file, numCards);
+                                          navigate('/tools/ai-flashcards', { state: { generatedDeck: flashData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate flashcards from task', err);
+                                          alert('Failed to generate flashcards: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-purple-200 bg-white text-purple-700 hover:bg-purple-50"
+                                    >
+                                      Create flash cards
                                     </button>
                                   )}
                                 </>
@@ -975,6 +1072,8 @@ const StudyPlans = () => {
                               const tool = (t.activity && t.activity.tool) || "";
                               const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
                               const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              const isFlashcards = (tool && tool.toLowerCase() === 'flashcards') || /flashcard|flash cards|create flash/i.test(`${title} ${desc}`);
+                              const isRecord = (tool && tool.toLowerCase() === 'voice_notes') || /record|voice note|audio note/i.test(`${title} ${desc}`);
                               return (
                                 <>
                                   {isSummarize ? (
@@ -986,6 +1085,15 @@ const StudyPlans = () => {
                                     </button>
                                   ) : (
                                     <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                                  )}
+
+                                  {isRecord && (
+                                    <button
+                                      onClick={() => navigate('/tools/voice-notes', { state: { noteTitle: t.activity.title || t.activity.description || 'Voice Note' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 bg-white text-red-700 hover:bg-red-50"
+                                    >
+                                      Record
+                                    </button>
                                   )}
 
                                   {isQuizLike && (
@@ -1008,6 +1116,26 @@ const StudyPlans = () => {
                                       className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
                                     >
                                       Test your knowledge
+                                    </button>
+                                  )}
+
+                                  {isFlashcards && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-flashcards.txt', { type: 'text/plain' });
+                                          const numCards = 10;
+                                          const flashData = await generateFlashcards(file, numCards);
+                                          navigate('/tools/ai-flashcards', { state: { generatedDeck: flashData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate flashcards from task', err);
+                                          alert('Failed to generate flashcards: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-purple-200 bg-white text-purple-700 hover:bg-purple-50"
+                                    >
+                                      Create flash cards
                                     </button>
                                   )}
                                 </>
@@ -1053,6 +1181,8 @@ const StudyPlans = () => {
                               const tool = (t.activity && t.activity.tool) || "";
                               const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
                               const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              const isFlashcards = (tool && tool.toLowerCase() === 'flashcards') || /flashcard|flash cards|create flash/i.test(`${title} ${desc}`);
+                              const isRecord = (tool && tool.toLowerCase() === 'voice_notes') || /record|voice note|audio note/i.test(`${title} ${desc}`);
                               return (
                                 <>
                                   {isSummarize ? (
@@ -1064,6 +1194,15 @@ const StudyPlans = () => {
                                     </button>
                                   ) : (
                                     <div className="text-xs text-gray-500 capitalize">{priority}</div>
+                                  )}
+
+                                  {isRecord && (
+                                    <button
+                                      onClick={() => navigate('/tools/voice-notes', { state: { noteTitle: t.activity.title || t.activity.description || 'Voice Note' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 bg-white text-red-700 hover:bg-red-50"
+                                    >
+                                      Record
+                                    </button>
                                   )}
 
                                   {isQuizLike && (
@@ -1086,6 +1225,26 @@ const StudyPlans = () => {
                                       className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
                                     >
                                       Test your knowledge
+                                    </button>
+                                  )}
+
+                                  {isFlashcards && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-flashcards.txt', { type: 'text/plain' });
+                                          const numCards = 10;
+                                          const flashData = await generateFlashcards(file, numCards);
+                                          navigate('/tools/ai-flashcards', { state: { generatedDeck: flashData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate flashcards from task', err);
+                                          alert('Failed to generate flashcards: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-purple-200 bg-white text-purple-700 hover:bg-purple-50"
+                                    >
+                                      Create flash cards
                                     </button>
                                   )}
                                 </>
@@ -1211,6 +1370,8 @@ const StudyPlans = () => {
                               const tool = (t.activity && t.activity.tool) || "";
                               const isSummarize = (tool && tool.toLowerCase() === 'summarizer') || /summarize/i.test(title) || /summarize/i.test(desc);
                               const isQuizLike = (tool && (tool.toLowerCase() === 'quiz' || tool.toLowerCase() === 'practice_test')) || /test|quiz|practice/i.test(`${title} ${desc}`);
+                              const isFlashcards = (tool && tool.toLowerCase() === 'flashcards') || /flashcard|flash cards|create flash/i.test(`${title} ${desc}`);
+                              const isRecord = (tool && tool.toLowerCase() === 'voice_notes') || /record|voice note|audio note/i.test(`${title} ${desc}`);
                               return (
                                 <>
                                   {isSummarize ? (
@@ -1222,10 +1383,20 @@ const StudyPlans = () => {
                                       </button>
                                   ) : null}
 
+                                  {isRecord && (
+                                    <button
+                                      onClick={() => navigate('/tools/voice-notes', { state: { noteTitle: t.activity.title || t.activity.description || 'Voice Note' } })}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 bg-white text-red-700 hover:bg-red-50"
+                                    >
+                                      Record
+                                    </button>
+                                  )}
+
                                   {isQuizLike && (
                                     <button
                                       onClick={async () => {
                                         try {
+                                          setLoadingQuizTaskId(t.id);
                                           const text = t.planSourceText || '';
                                           const file = new File([text], 'task-for-quiz.txt', { type: 'text/plain' });
                                           const numQuestions = 10;
@@ -1237,11 +1408,40 @@ const StudyPlans = () => {
                                         } catch (err) {
                                           console.error('Failed to generate quiz from task', err);
                                           alert('Failed to generate quiz: ' + (err.message || err));
+                                          setLoadingQuizTaskId(null);
                                         }
                                       }}
-                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                                      disabled={loadingQuizTaskId === t.id}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
-                                      Test your knowledge
+                                      {loadingQuizTaskId === t.id ? (
+                                        <>
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                          Generating...
+                                        </>
+                                      ) : (
+                                        'Test your knowledge'
+                                      )}
+                                    </button>
+                                  )}
+
+                                  {isFlashcards && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          const text = t.planSourceText || '';
+                                          const file = new File([text], 'task-for-flashcards.txt', { type: 'text/plain' });
+                                          const numCards = 10;
+                                          const flashData = await generateFlashcards(file, numCards);
+                                          navigate('/tools/ai-flashcards', { state: { generatedDeck: flashData } });
+                                        } catch (err) {
+                                          console.error('Failed to generate flashcards from task', err);
+                                          alert('Failed to generate flashcards: ' + (err.message || err));
+                                        }
+                                      }}
+                                      className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-md border border-purple-200 bg-white text-purple-700 hover:bg-purple-50"
+                                    >
+                                      Create flash cards
                                     </button>
                                   )}
                                 </>
