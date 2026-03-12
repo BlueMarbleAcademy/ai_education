@@ -13,12 +13,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { msalInstance, protectedResources } from "../authConfig";
 
 const API_BASE = "http://localhost:8000";
+const MAX_FOLDER_NAME_LENGTH = 40;
+
 
 // ---------- Auth + API helpers ----------
 async function getToken() {
   // Ensure MSAL is initialized before using it
   await msalInstance.initialize();
-  
+
   const accounts = msalInstance.getAllAccounts();
   if (!accounts || accounts.length === 0) {
     // Surface a clear message to the UI; don't crash
@@ -51,7 +53,7 @@ async function apiFetch(path, options = {}) {
     let msg = "";
     try {
       msg = await res.text();
-    } catch {}
+    } catch { }
     throw new Error(msg || `Request failed (${res.status})`);
   }
   return res.status === 204 ? null : res.json();
@@ -86,16 +88,16 @@ export default function Workspace() {
     let count = 0;
     const folder = allFolders.find(f => f.id === folderId);
     if (!folder) return 0;
-    
+
     // Add direct items in this folder
     count += folder.items ?? 0;
-    
+
     // Find all subfolders and recursively count their items
     const subfolders = allFolders.filter(f => f.parentFolderId === folderId);
     for (const subfolder of subfolders) {
       count += countItemsRecursively(subfolder.id, allFolders);
     }
-    
+
     return count;
   }, []);
 
@@ -126,7 +128,7 @@ export default function Workspace() {
         parentFolderId: f.parentFolderId,
       }));
       setFolders(serverFolders);
-      
+
       // Derive stats client-side from folders
       setStats(deriveStats(serverFolders));
     } catch (e) {
@@ -247,15 +249,15 @@ export default function Workspace() {
             title="Toggle view"
           >
             {view === "grid"
-              ? <List className="w-5 h-5 text-slate-700"/>
-              : <FolderKanban className="w-5 h-5 text-slate-700"/>}
+              ? <List className="w-5 h-5 text-slate-700" />
+              : <FolderKanban className="w-5 h-5 text-slate-700" />}
           </button>
 
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 rounded-xl shadow bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white font-medium hover:scale-[1.03] transition-transform"
           >
-            <FolderPlus className="inline w-4 h-4 mr-2"/> New Folder
+            <FolderPlus className="inline w-4 h-4 mr-2" /> New Folder
           </button>
         </div>
       </div>
@@ -294,8 +296,18 @@ export default function Workspace() {
                 className="w-full px-4 py-2 rounded-xl border border-slate-300 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 placeholder="Folder name"
                 value={newFolderName}
-                onChange={e => setNewFolderName(e.target.value)}
+                maxLength={MAX_FOLDER_NAME_LENGTH}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_FOLDER_NAME_LENGTH) {
+                    setNewFolderName(e.target.value);
+                  }
+                }}
               />
+
+              <p className="text-sm text-slate-500 text-right">
+                {newFolderName.length}/{MAX_FOLDER_NAME_LENGTH}
+              </p>
+
               <div className="flex flex-wrap gap-2">
                 {folderColors.map((color, idx) => (
                   <button

@@ -11,6 +11,10 @@ import { motion, AnimatePresence } from "framer-motion";
  * - onRename: (id, newName) => Promise|void
  * - onDelete: (id) => Promise|void
  */
+
+const MAX_FOLDER_NAME_LENGTH = 40;
+
+
 const ConfirmModal = ({
   open,
   title,
@@ -63,13 +67,15 @@ export default function FolderManager({
 }) {
   const navigate = useNavigate();
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
 
-  const handleRename = async (folder) => {
-    const newName = prompt("Enter new folder name:", folder.name);
-    if (newName && newName.trim() && newName.trim() !== folder.name) {
-      await onRename(folder.id, newName.trim());
-    }
+
+  const openRenameModal = (folder) => {
+    setRenameTarget(folder);
+    setRenameValue(folder.name);
   };
+
 
   const sorted = [
     ...folders.filter((f) => f.starred),
@@ -97,7 +103,7 @@ export default function FolderManager({
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleRename(folder); }}
+                  onClick={(e) => { e.stopPropagation(); openRenameModal(folder); }}
                   title="Rename"
                 >
                   <Pencil className="w-5 h-5 text-blue-500 hover:text-blue-700" />
@@ -129,7 +135,7 @@ export default function FolderManager({
             if (!pendingDelete) return;
             await onDelete(pendingDelete.id);
             setPendingDelete(null);
-          }}
+          }} 
         />
       </>
     );
@@ -153,7 +159,7 @@ export default function FolderManager({
                 <div className="text-sm text-slate-600">{folder.items ?? 0} items</div>
                 <div className="absolute top-3 right-3 flex gap-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleRename(folder); }}
+                    onClick={(e) => { e.stopPropagation(); openRenameModal(folder); }}
                     title="Rename"
                   >
                     <Pencil className="w-4 h-4 text-blue-500 hover:text-blue-700" />
@@ -187,7 +193,7 @@ export default function FolderManager({
               <div className="text-sm text-slate-600">{folder.items ?? 0} items</div>
               <div className="absolute top-3 right-3 flex gap-2">
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleRename(folder); }}
+                  onClick={(e) => { e.stopPropagation(); openRenameModal(folder); }}
                   title="Rename"
                 >
                   <Pencil className="w-4 h-4 text-blue-500 hover:text-blue-700" />
@@ -222,6 +228,80 @@ export default function FolderManager({
           setPendingDelete(null);
         }}
       />
+
+      <AnimatePresence>
+        {renameTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-center items-center"
+            onClick={() => setRenameTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl shadow-2xl p-6 w-[90%] max-w-md space-y-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-bold text-slate-800">
+                Rename Folder
+              </h2>
+
+              <input
+                className="w-full px-4 py-2 rounded-xl border border-slate-300 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                value={renameValue}
+                maxLength={MAX_FOLDER_NAME_LENGTH}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_FOLDER_NAME_LENGTH) {
+                    setRenameValue(e.target.value);
+                  }
+                }}
+              />
+
+              <p className={`text-sm text-right ${renameValue.length > MAX_FOLDER_NAME_LENGTH * 0.8
+                  ? "text-amber-500"
+                  : "text-slate-500"
+                }`}>
+                {renameValue.length}/{MAX_FOLDER_NAME_LENGTH}
+              </p>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setRenameTarget(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={async () => {
+                    if (
+                      !renameValue.trim() ||
+                      renameValue.trim() === renameTarget.name
+                    ) {
+                      return;
+                    }
+
+                    await onRename(renameTarget.id, renameValue.trim());
+                    setRenameTarget(null);
+                  }}
+                  disabled={
+                    !renameValue.trim() ||
+                    renameValue.trim() === renameTarget?.name
+                  }
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white disabled:opacity-50"
+                >
+                  Save
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
     </>
   );
 }

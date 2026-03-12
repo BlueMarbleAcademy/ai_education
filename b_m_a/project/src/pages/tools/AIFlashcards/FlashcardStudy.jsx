@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  RotateCw,
   ArrowLeft,
   FileDown,
   Volume2,
@@ -9,7 +8,6 @@ import {
   Plus
 } from 'lucide-react';
 import { useLocation, Link, useParams } from 'react-router-dom';
-import jsPDF from 'jspdf';
 import { useDeckData } from './hooks';
 import FlashcardDifficultySelector from './FlashcardDifficultySelector';
 
@@ -30,9 +28,10 @@ const FlashcardStudyPage = () => {
   const [newAnswer, setNewAnswer] = useState('');
   const [newDifficulty, setNewDifficulty] = useState(null);
 
-  /* ----------------------------------------
-     NORMALIZE EVERYTHING INTO ONE SHAPE
-  -----------------------------------------*/
+  const MAX_QUESTION_LENGTH = 200;
+  const MAX_ANSWER_LENGTH = 500;
+
+  /* ---------------- NORMALIZE ---------------- */
   const normalizeCard = (card) => ({
     question: card.question ?? card.front ?? '',
     answer: card.answer ?? card.back ?? '',
@@ -40,9 +39,7 @@ const FlashcardStudyPage = () => {
     important: card.important ?? false
   });
 
-  /* ----------------------------------------
-     LOAD FROM BACKEND
-  -----------------------------------------*/
+  /* ---------------- LOAD ---------------- */
   useEffect(() => {
     if (!deckId) return;
 
@@ -56,9 +53,7 @@ const FlashcardStudyPage = () => {
       .finally(() => setLoading(false));
   }, [deckId]);
 
-  /* ----------------------------------------
-     STUDY MODE CONTROLS
-  -----------------------------------------*/
+  /* ---------------- STUDY MODE ---------------- */
   const handleFlip = () => setFlipped((p) => !p);
 
   const handleNext = () => {
@@ -72,6 +67,7 @@ const FlashcardStudyPage = () => {
     const text = flipped
       ? flashcards[index].answer
       : flashcards[index].question;
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     synth.speak(utterance);
@@ -90,10 +86,17 @@ const FlashcardStudyPage = () => {
     setFlipped(false);
   };
 
-  /* ----------------------------------------
-     EDIT MODE
-  -----------------------------------------*/
+  /* ---------------- EDIT MODE ---------------- */
   const handleCardEdit = (i, field, value) => {
+    const limit =
+      field === 'question'
+        ? MAX_QUESTION_LENGTH
+        : field === 'answer'
+        ? MAX_ANSWER_LENGTH
+        : null;
+
+    if (limit && value.length > limit) return;
+
     setFlashcards((prev) => {
       const updated = [...prev];
       updated[i] = { ...updated[i], [field]: value };
@@ -103,6 +106,12 @@ const FlashcardStudyPage = () => {
 
   const handleAddCard = () => {
     if (!newQuestion || !newAnswer || !newDifficulty) return;
+
+    if (
+      newQuestion.length > MAX_QUESTION_LENGTH ||
+      newAnswer.length > MAX_ANSWER_LENGTH
+    )
+      return;
 
     setFlashcards((prev) => [
       ...prev,
@@ -126,14 +135,13 @@ const FlashcardStudyPage = () => {
     setIsEditing((p) => !p);
   };
 
-  /* ----------------------------------------
-     EXPORTS
-  -----------------------------------------*/
+  /* ---------------- EXPORT ---------------- */
   const exportToJSON = () => {
     const blob = new Blob(
       [JSON.stringify({ title: deckTitle, cards: flashcards }, null, 2)],
       { type: 'application/json' }
     );
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -142,9 +150,7 @@ const FlashcardStudyPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  /* ----------------------------------------
-     RENDER
-  -----------------------------------------*/
+  /* ---------------- RENDER ---------------- */
   if (loading) {
     return <div className="text-center py-16">Loading flashcards…</div>;
   }
@@ -168,6 +174,7 @@ const FlashcardStudyPage = () => {
             <Pencil className="w-4 h-4 mr-1" />
             {isEditing ? 'Save Editor' : 'Edit Cards'}
           </button>
+
           <button onClick={exportToJSON} className="text-blue-600 flex items-center">
             <FileDown className="w-4 h-4 mr-1" />
             Export JSON
@@ -177,11 +184,15 @@ const FlashcardStudyPage = () => {
 
       {!isEditing ? (
         <>
+          {/* FLASHCARD DISPLAY FIXED WRAPPING */}
           <div
-            className="h-64 bg-white rounded-lg shadow flex items-center justify-center text-2xl font-semibold cursor-pointer"
+            className="h-64 bg-white rounded-lg shadow flex items-center justify-center text-2xl font-semibold cursor-pointer relative p-6 text-center break-words whitespace-pre-wrap overflow-y-auto"
             onClick={handleFlip}
           >
-            {flipped ? currentCard.answer : currentCard.question}
+            <div className="max-w-full">
+              {flipped ? currentCard.answer : currentCard.question}
+            </div>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -194,12 +205,20 @@ const FlashcardStudyPage = () => {
           </div>
 
           <div className="flex justify-between mt-6">
-            <button onClick={handleNext} className="bg-blue-600 text-white px-4 py-2 rounded">
+            <button
+              onClick={handleNext}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
               Next Card
             </button>
-            <button onClick={smartShuffle} className="bg-purple-600 text-white px-4 py-2 rounded">
+
+            <button
+              onClick={smartShuffle}
+              className="bg-purple-600 text-white px-4 py-2 rounded"
+            >
               Smart Shuffle
             </button>
+
             <span className="text-gray-500">
               Card {index + 1} of {flashcards.length}
             </span>
@@ -210,16 +229,28 @@ const FlashcardStudyPage = () => {
           {flashcards.map((card, i) => (
             <div key={i} className="bg-white p-4 rounded shadow">
               <p className="mb-2 font-medium">Card {i + 1}</p>
+
               <input
                 value={card.question}
+                maxLength={MAX_QUESTION_LENGTH}
                 onChange={(e) => handleCardEdit(i, 'question', e.target.value)}
-                className="w-full mb-2 border px-3 py-2 rounded"
+                className="w-full mb-1 border px-3 py-2 rounded"
               />
-              <input
+              <p className="text-xs text-gray-500 text-right mb-2">
+                {card.question.length}/{MAX_QUESTION_LENGTH}
+              </p>
+
+              <textarea
                 value={card.answer}
+                maxLength={MAX_ANSWER_LENGTH}
                 onChange={(e) => handleCardEdit(i, 'answer', e.target.value)}
-                className="w-full mb-2 border px-3 py-2 rounded"
+                className="w-full mb-1 border px-3 py-2 rounded resize-none"
+                rows={3}
               />
+              <p className="text-xs text-gray-500 text-right mb-2">
+                {card.answer.length}/{MAX_ANSWER_LENGTH}
+              </p>
+
               <select
                 value={card.difficulty}
                 onChange={(e) => handleCardEdit(i, 'difficulty', e.target.value)}
@@ -234,19 +265,32 @@ const FlashcardStudyPage = () => {
 
           <div className="bg-white p-4 rounded shadow">
             <h3 className="font-medium mb-4">Add New Flashcard</h3>
+
             <input
               value={newQuestion}
+              maxLength={MAX_QUESTION_LENGTH}
               onChange={(e) => setNewQuestion(e.target.value)}
               placeholder="Question"
-              className="w-full mb-2 border px-3 py-2 rounded"
+              className="w-full mb-1 border px-3 py-2 rounded"
             />
-            <input
+            <p className="text-xs text-gray-500 text-right mb-2">
+              {newQuestion.length}/{MAX_QUESTION_LENGTH}
+            </p>
+
+            <textarea
               value={newAnswer}
+              maxLength={MAX_ANSWER_LENGTH}
               onChange={(e) => setNewAnswer(e.target.value)}
               placeholder="Answer"
-              className="w-full mb-2 border px-3 py-2 rounded"
+              className="w-full mb-1 border px-3 py-2 rounded resize-none"
+              rows={3}
             />
+            <p className="text-xs text-gray-500 text-right mb-2">
+              {newAnswer.length}/{MAX_ANSWER_LENGTH}
+            </p>
+
             <FlashcardDifficultySelector onSelect={setNewDifficulty} />
+
             <button
               onClick={handleAddCard}
               disabled={!newQuestion || !newAnswer || !newDifficulty}
