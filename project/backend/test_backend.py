@@ -44,7 +44,11 @@ def test_database_connection():
     
     try:
         from database import client, container
-        
+
+        if container is None:
+            print("ℹ️ Cosmos credentials not set; skipping live DB query.")
+            return True
+
         # Try to query the database
         query = "SELECT VALUE COUNT(1) FROM c"
         result = list(container.query_items(
