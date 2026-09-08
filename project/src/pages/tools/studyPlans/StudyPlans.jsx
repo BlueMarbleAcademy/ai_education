@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  Book,
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Calculator,
   PlusCircle,
-  FileText,
-  RefreshCw,
   Calendar,
-  Tag,
-  ChevronRight,
-  Search,
-  Filter,
-  Check,
-  Info
+  ChevronDown,
+  Clock3,
+  FlaskConical,
+  MoreHorizontal,
+  Play,
+  SlidersHorizontal,
+  Sparkles
 } from "lucide-react";
-import { getStudyPlan, getStudyPlans } from "../../../api/apiService";
+import { getStudyPlan } from "../../../api/apiService";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
-import SavedStudyPlansList from "./SavedStudyPlansList";
 
 /**
  * Main StudyPlans component that coordinates all other components
@@ -30,22 +31,7 @@ const StudyPlans = () => {
   const [showPlanner, setShowPlanner] = useState(true);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [planStatus, setPlanStatus] = useState("idle"); // idle, loading, ready, updating
-
-  // State for search and filtering
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTag, setFilterTag] = useState("");
-
-  // State for study plans
-  const [studyPlans, setStudyPlans] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Fetch saved study plans on component mount
-  useEffect(() => {
-    if (showPlanner) {
-      fetchStudyPlans();
-    }
-  }, [showPlanner]);
+  const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
     if (!planId) {
@@ -56,8 +42,6 @@ const StudyPlans = () => {
 
     const loadPlanFromQuery = async () => {
       try {
-        setLoading(true);
-        setError("");
         const plan = await getStudyPlan(planId);
         if (cancelled) {
           return;
@@ -67,13 +51,6 @@ const StudyPlans = () => {
         setShowCreate(false);
       } catch (err) {
         console.error("Error fetching study plan by id:", err);
-        if (!cancelled) {
-          setError("Failed to load study plan");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
       }
     };
 
@@ -83,19 +60,6 @@ const StudyPlans = () => {
       cancelled = true;
     };
   }, [planId]);
-
-  const fetchStudyPlans = async () => {
-    try {
-      setLoading(true);
-      const plans = await getStudyPlans();
-      setStudyPlans(plans || []);
-      setLoading(false);
-    } catch (err) {
-      console.error("Error fetching study plans:", err);
-      setError("Failed to load study plans");
-      setLoading(false);
-    }
-  };
 
   // Create a new study plan
   const handleCreatePlan = () => {
@@ -110,214 +74,42 @@ const StudyPlans = () => {
     setShowPlanner(true);
     setShowCreate(false);
     setCurrentPlan(null);
-    fetchStudyPlans(); // Refresh the list when returning
-  };
-
-  // Load a saved study plan
-  const handleSelectPlan = async (plan) => {
-    setCurrentPlan(plan);
-    setShowPlanner(false);
-  };
-
-  // Filter study plans based on search and tag
-  const filteredPlans = studyPlans.filter((plan) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      plan.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      plan.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesTag =
-      filterTag === "" || (plan.tags && plan.tags.includes(filterTag));
-
-    return matchesSearch && matchesTag;
-  });
-
-  // Get all unique tags from study plans
-  const getAllTags = () => {
-    if (!studyPlans || studyPlans.length === 0) return [];
-    const allTags = studyPlans.flatMap((plan) => plan.tags || []);
-    return [...new Set(allTags)];
   };
 
   // Render the planner home view
-  const renderPlannerHome = () => (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <div className="bg-indigo-50 p-2.5 rounded-xl">
-            <Calendar className="h-6 w-6 text-indigo-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Study Plans</h1>
-            <p className="text-sm text-gray-500">Create optimized study schedules</p>
-          </div>
+  const renderPlannerHome = () => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const dates = ["6", "7", "8", "9", "10", "11", "12"];
+    const times = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM"];
+    const blocks = [
+      { day: 0, start: 1, span: 2, title: "Quadratic functions", meta: "Math 11 · Chapter 4", color: "bg-[#dcecff] border-[#91bdf5] text-[#164b87]", icon: Calculator },
+      { day: 1, start: 4, span: 2, title: "Organic chemistry", meta: "Chemistry · Flashcards", color: "bg-[#ffe9d8] border-[#f4b27d] text-[#85451f]", icon: FlaskConical },
+      { day: 2, start: 0, span: 3, title: "Essay outline", meta: "English · Draft notes", color: "bg-[#e8e2ff] border-[#b4a4ee] text-[#4c3c8c]", icon: BookOpen },
+      { day: 2, start: 6, span: 2, title: "Practice quiz", meta: "Math 11 · 12 questions", color: "bg-[#dff5e8] border-[#8fd3aa] text-[#1f6741]", icon: Play },
+      { day: 3, start: 2, span: 2, title: "Limits review", meta: "Calculus · Video + notes", color: "bg-[#dcecff] border-[#91bdf5] text-[#164b87]", icon: Calculator },
+      { day: 4, start: 5, span: 2, title: "Weekly recap", meta: "Review · All subjects", color: "bg-[#ffe2eb] border-[#f2a1ba] text-[#8f294a]", icon: Sparkles },
+      { day: 5, start: 1, span: 2, title: "Buffer / catch-up", meta: "Flexible study block", color: "bg-[#f1f3f5] border-[#cbd2d9] text-[#59636e]", icon: Clock3 }
+    ];
+
+    return (
+      <div className="space-y-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div><div className="flex items-center gap-2 text-sm font-semibold text-[#52705f]"><Calendar className="h-4 w-4" /> Study planner</div><h1 className="mt-2 text-3xl font-bold tracking-tight text-[#18231d]">Your week at a glance</h1><p className="mt-1 text-sm text-[#68766d]">Plan focused sessions, keep a little breathing room, and make progress visible.</p></div>
+          <button onClick={handleCreatePlan} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#274c3a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3c2d]"><PlusCircle className="h-4 w-4" /> New study block</button>
         </div>
-        <button
-          onClick={handleCreatePlan}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors text-sm"
-        >
-          <PlusCircle className="h-4 w-4" />
-          New Plan
-        </button>
+        <div className="flex flex-col gap-3 rounded-xl border border-[#dce5df] bg-white p-3 shadow-[0_8px_30px_rgba(45,67,53,0.06)] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2"><button aria-label="Previous week" onClick={() => setWeekOffset((value) => value - 1)} className="rounded-md border border-[#dce5df] p-2 text-[#5d6d63] hover:bg-[#f3f7f4]"><ArrowLeft className="h-4 w-4" /></button><button onClick={() => setWeekOffset(0)} className="rounded-md border border-[#dce5df] px-3 py-2 text-sm font-semibold text-[#385445] hover:bg-[#f3f7f4]">Today</button><button aria-label="Next week" onClick={() => setWeekOffset((value) => value + 1)} className="rounded-md border border-[#dce5df] p-2 text-[#5d6d63] hover:bg-[#f3f7f4]"><ArrowRight className="h-4 w-4" /></button><span className="ml-2 text-sm font-semibold text-[#26372d]">Apr {6 + weekOffset * 7} – Apr {12 + weekOffset * 7}, 2026</span></div>
+          <div className="flex items-center gap-2"><button className="inline-flex items-center gap-2 rounded-md border border-[#dce5df] px-3 py-2 text-sm font-medium text-[#526259]"><SlidersHorizontal className="h-4 w-4" /> Filters</button><button className="inline-flex items-center gap-1 rounded-md border border-[#dce5df] px-3 py-2 text-sm font-medium text-[#526259]">Week <ChevronDown className="h-4 w-4" /></button></div>
+        </div>
+        <div className="overflow-x-auto rounded-xl border border-[#dce5df] bg-white shadow-[0_8px_30px_rgba(45,67,53,0.06)]"><div className="min-w-[840px]"><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))] border-b border-[#e7ece8] bg-[#fbfcfb]"><div className="border-r border-[#e7ece8]" />{days.map((day, index) => <div key={day} className={`border-r border-[#e7ece8] px-2 py-3 text-center last:border-r-0 ${index === 2 ? "bg-[#edf7f0]" : ""}`}><p className="text-[11px] font-bold uppercase tracking-wider text-[#839088]">{day}</p><p className={`mt-1 text-lg font-bold ${index === 2 ? "text-[#27704a]" : "text-[#26372d]"}`}>{dates[index]}</p></div>)}</div><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))]"><div className="bg-[#fbfcfb]">{times.map((time) => <div key={time} className="h-16 border-b border-r border-[#edf0ee] pr-2 pt-1 text-right text-[10px] font-medium text-[#9aa59e]">{time}</div>)}</div>{days.map((day, dayIndex) => <div key={day} className={`relative border-r border-[#edf0ee] last:border-r-0 ${dayIndex === 2 ? "bg-[#fcfefc]" : ""}`}>{times.map((time) => <div key={`${day}-${time}`} className="h-16 border-b border-[#edf0ee]" />)}{blocks.filter((block) => block.day === dayIndex).map((block) => { const Icon = block.icon; return <div key={block.title} className={`absolute left-1.5 right-1.5 rounded-md border p-2 shadow-sm ${block.color}`} style={{ top: `${block.start * 64 + 4}px`, height: `${block.span * 64 - 8}px` }}><div className="flex items-start justify-between gap-1"><Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" /><MoreHorizontal className="h-3.5 w-3.5 opacity-60" /></div><p className="mt-1 truncate text-xs font-bold">{block.title}</p><p className="mt-0.5 truncate text-[10px] font-medium opacity-75">{block.meta}</p></div>; })}</div>)}</div></div></div>
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]"><div className="rounded-xl border border-[#dce5df] bg-[#f1f8f3] p-4"><div className="flex items-start gap-3"><div className="rounded-lg bg-[#d7eddd] p-2 text-[#287247]"><Sparkles className="h-5 w-5" /></div><div><h2 className="font-bold text-[#234432]">A steady week beats a packed week</h2><p className="mt-1 text-sm leading-6 text-[#5e7465]">You have 7 hours planned across 5 subjects. There is still room for one catch-up session.</p></div></div></div><div className="rounded-xl border border-[#dce5df] bg-white p-4"><div className="flex items-center justify-between"><h2 className="font-bold text-[#26372d]">This week</h2><MoreHorizontal className="h-5 w-5 text-[#52705f]" /></div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-[#718077]">Completed</span><span className="font-bold text-[#274c3a]">2 of 8 sessions</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e5eee7]"><div className="h-full w-1/4 rounded-full bg-[#66a87c]" /></div></div></div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-2">
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
-            <div className="flex gap-3">
-              <div className="relative flex-grow">
-                <input
-                  type="text"
-                  placeholder="Search plans..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-              <div className="relative w-1/3">
-                <select
-                  value={filterTag}
-                  onChange={(e) => setFilterTag(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none bg-white"
-                >
-                  <option value="">All Tags</option>
-                  {getAllTags().map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tag}
-                    </option>
-                  ))}
-                </select>
-                <Tag className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <RefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
-              {error}
-            </div>
-          ) : filteredPlans.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow-sm text-center">
-              <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-700 mb-2">
-                No study plans found
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {searchQuery || filterTag
-                  ? "Try adjusting your search or filter"
-                  : "Get started by creating your first study plan"}
-              </p>
-              {!searchQuery && !filterTag && (
-                <button
-                  onClick={handleCreatePlan}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors mx-auto"
-                >
-                  <PlusCircle className="h-5 w-5" />
-                  Create Plan
-                </button>
-              )}
-            </div>
-          ) : (
-            <SavedStudyPlansList
-              plans={filteredPlans}
-              onSelectPlan={handleSelectPlan}
-              refreshPlans={fetchStudyPlans}
-            />
-          )}
-        </div>
-
-        <div className="md:col-span-1">
-          <div className="bg-gradient-to-br from-primary-500 to-primary-700 p-6 rounded-lg shadow-sm text-white">
-            <h3 className="text-xl font-bold mb-3">AI-Powered Study Plans</h3>
-            <p className="mb-4 text-white/90">
-              Personalized learning paths that adapt to your performance and
-              help you focus on what matters most.
-            </p>
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-start gap-2">
-                <div className="bg-white/20 p-1 rounded-full mt-0.5">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span className="text-sm">
-                  Adapts based on your quiz results
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="bg-white/20 p-1 rounded-full mt-0.5">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span className="text-sm">Daily and weekly study goals</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="bg-white/20 p-1 rounded-full mt-0.5">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span className="text-sm">Targets your weak areas</span>
-              </li>
-            </ul>
-            <button
-              onClick={handleCreatePlan}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-primary-700 rounded-md hover:bg-white/90 transition-colors w-full justify-center"
-            >
-              Get Started
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm mt-4">
-            <h3 className="text-lg font-medium mb-3">How It Works</h3>
-            <ol className="space-y-4 text-gray-600">
-              <li className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                  1
-                </div>
-                <p className="text-sm">Upload your study materials as PDFs</p>
-              </li>
-              <li className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                  2
-                </div>
-                <p className="text-sm">Name your plan and add optional tags</p>
-              </li>
-              <li className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                  3
-                </div>
-                <p className="text-sm">
-                  Tag practice quizzes with your plan name
-                </p>
-              </li>
-              <li className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
-                  4
-                </div>
-                <p className="text-sm">
-                  Update your plan based on quiz results
-                </p>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Main render method
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-       {/* Development Notice */}
-            <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mb-6 flex items-center gap-3">
-              <Info className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm">
-                The BluStudy study planner is currently under active development. Some features may change or be unavailable as we continue improving the platform.
-              </p>
-        </div>
-
       {showPlanner ? (
         renderPlannerHome()
       ) : showCreate ? (
