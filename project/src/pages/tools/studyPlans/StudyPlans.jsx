@@ -8,6 +8,7 @@ import {
   PlusCircle,
   Calendar,
   ChevronDown,
+  CheckCircle2,
   Clock3,
   FlaskConical,
   MoreHorizontal,
@@ -30,6 +31,7 @@ const StudyPlans = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [showPlanner, setShowPlanner] = useState(true);
   const [currentPlan, setCurrentPlan] = useState(null);
+  const [createdPlan, setCreatedPlan] = useState(null);
   const [planStatus, setPlanStatus] = useState("idle"); // idle, loading, ready, updating
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -95,8 +97,29 @@ const StudyPlans = () => {
       <div className="space-y-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div><div className="flex items-center gap-2 text-sm font-semibold text-[#52705f]"><Calendar className="h-4 w-4" /> Study planner</div><h1 className="mt-2 text-3xl font-bold tracking-tight text-[#18231d]">Your week at a glance</h1><p className="mt-1 text-sm text-[#68766d]">Plan focused sessions, keep a little breathing room, and make progress visible.</p></div>
-          <button onClick={handleCreatePlan} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#274c3a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3c2d]"><PlusCircle className="h-4 w-4" /> New study block</button>
+          <button onClick={handleCreatePlan} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#274c3a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3c2d]"><PlusCircle className="h-4 w-4" /> {createdPlan ? "New study plan" : "Create study plan"}</button>
         </div>
+        {createdPlan && (
+          <div className="flex flex-col gap-4 rounded-lg border border-[#a8cfb5] bg-[#edf8f0] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#287247]" />
+              <div>
+                <h2 className="font-bold text-[#234432]">{createdPlan.examName} plan created</h2>
+                <p className="mt-1 text-sm text-[#526b5a]">
+                  {createdPlan.subject} · {formatPlanDate(createdPlan.studyStartDate)} to {formatPlanDate(createdPlan.examDate)} · {createdPlan.dailyStudyMinutes} minutes daily
+                </p>
+                <p className="mt-1 text-xs text-[#6a7d70]">
+                  {createdPlan.unavailableDays.length > 0
+                    ? `Days off: ${createdPlan.unavailableDays.map(capitalize).join(", ")}`
+                    : "No unavailable days selected"}
+                </p>
+              </div>
+            </div>
+            <span className="w-fit rounded-md border border-[#a8cfb5] bg-white px-2.5 py-1 text-xs font-bold uppercase text-[#287247]">
+              Draft
+            </span>
+          </div>
+        )}
         <div className="flex flex-col gap-3 rounded-xl border border-[#dce5df] bg-white p-3 shadow-[0_8px_30px_rgba(45,67,53,0.06)] sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2"><button aria-label="Previous week" onClick={() => setWeekOffset((value) => value - 1)} className="rounded-md border border-[#dce5df] p-2 text-[#5d6d63] hover:bg-[#f3f7f4]"><ArrowLeft className="h-4 w-4" /></button><button onClick={() => setWeekOffset(0)} className="rounded-md border border-[#dce5df] px-3 py-2 text-sm font-semibold text-[#385445] hover:bg-[#f3f7f4]">Today</button><button aria-label="Next week" onClick={() => setWeekOffset((value) => value + 1)} className="rounded-md border border-[#dce5df] p-2 text-[#5d6d63] hover:bg-[#f3f7f4]"><ArrowRight className="h-4 w-4" /></button><span className="ml-2 text-sm font-semibold text-[#26372d]">Apr {6 + weekOffset * 7} – Apr {12 + weekOffset * 7}, 2026</span></div>
           <div className="flex items-center gap-2"><button className="inline-flex items-center gap-2 rounded-md border border-[#dce5df] px-3 py-2 text-sm font-medium text-[#526259]"><SlidersHorizontal className="h-4 w-4" /> Filters</button><button className="inline-flex items-center gap-1 rounded-md border border-[#dce5df] px-3 py-2 text-sm font-medium text-[#526259]">Week <ChevronDown className="h-4 w-4" /></button></div>
@@ -116,7 +139,8 @@ const StudyPlans = () => {
         <StudyPlanWizard
           onBack={handleBack}
           onPlanCreated={(plan) => {
-            setCurrentPlan(plan);
+            setCreatedPlan(plan);
+            setShowPlanner(true);
             setShowCreate(false);
           }}
         />
@@ -131,5 +155,16 @@ const StudyPlans = () => {
     </div>
   );
 };
+
+const formatPlanDate = (value) => {
+  const date = new Date(`${value}T00:00:00`);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+};
+
+const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
 
 export default StudyPlans;
