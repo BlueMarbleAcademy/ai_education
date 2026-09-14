@@ -38,7 +38,9 @@ const INITIAL_ACTIVITY = {
 const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
   const [showForm, setShowForm] = useState(false);
   const activities = plan.activities || [];
+  const sortedActivities = [...activities].sort(compareActivities);
   const completedCount = activities.filter((activity) => activity.completed).length;
+  const upcomingCount = activities.length - completedCount;
 
   const handleAdd = (activity) => {
     onAddActivity(activity);
@@ -57,12 +59,12 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
           </div>
           <div>
             <h2 id="plan-activities-heading" className="font-bold text-[#26372d]">
-              Plan activities
+              Upcoming study activities
             </h2>
             <p className="mt-0.5 text-sm text-[#718077]">
               {activities.length === 0
                 ? "Add the work you want to complete before your exam."
-                : `${completedCount} of ${activities.length} activities completed`}
+                : `${upcomingCount} upcoming · ${completedCount} completed`}
             </p>
           </div>
         </div>
@@ -90,15 +92,15 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
         <div className="mt-5 border-t border-[#e5ebe7] pt-5 text-center">
           <CalendarDays className="mx-auto h-7 w-7 text-[#9aa79f]" />
           <p className="mt-2 text-sm font-medium text-[#68766d]">
-            No study activities yet
+            No upcoming study activities yet
           </p>
         </div>
       )}
 
       {activities.length > 0 && (
-        <div className="mt-5 divide-y divide-[#e5ebe7] border-t border-[#e5ebe7]">
-          {activities.map((activity) => (
-            <div
+        <ol className="mt-5 divide-y divide-[#e5ebe7] border-t border-[#e5ebe7]">
+          {sortedActivities.map((activity) => (
+            <li
               key={activity.id}
               className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
             >
@@ -131,7 +133,10 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
                     {activity.topic}
                   </h3>
                   <p className="mt-1 text-xs text-[#718077]">
-                    {getActivityTypeLabel(activity.activityType)} · {formatPlanDate(activity.studyDate)}
+                    {getActivityTypeLabel(activity.activityType)} ·{" "}
+                    <time dateTime={activity.studyDate}>
+                      {formatPlanDate(activity.studyDate)}
+                    </time>
                   </p>
                 </div>
               </div>
@@ -150,9 +155,9 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
                   {activity.completed ? "Completed" : "Planned"}
                 </span>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
       )}
     </section>
   );
@@ -388,6 +393,18 @@ const formatPlanDate = (value) =>
 
 const getActivityTypeLabel = (value) =>
   ACTIVITY_TYPES.find((type) => type.value === value)?.label || value;
+
+const compareActivities = (first, second) => {
+  const dateOrder = first.studyDate.localeCompare(second.studyDate);
+  if (dateOrder !== 0) {
+    return dateOrder;
+  }
+
+  const createdOrder = (first.createdAt || "").localeCompare(
+    second.createdAt || ""
+  );
+  return createdOrder || first.topic.localeCompare(second.topic);
+};
 
 const inputClasses = (hasError) =>
   `w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#26372d] outline-none transition focus:ring-2 ${
