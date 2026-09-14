@@ -17,6 +17,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { getStudyPlan } from "../../../api/apiService";
+import StudyPlanActivities from "./StudyPlanActivities";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
 
@@ -78,6 +79,29 @@ const StudyPlans = () => {
     setCurrentPlan(null);
   };
 
+  const handleAddActivity = (activity) => {
+    setCreatedPlan((plan) =>
+      plan
+        ? { ...plan, activities: [...(plan.activities || []), activity] }
+        : plan
+    );
+  };
+
+  const handleToggleActivity = (activityId) => {
+    setCreatedPlan((plan) =>
+      plan
+        ? {
+            ...plan,
+            activities: (plan.activities || []).map((activity) =>
+              activity.id === activityId
+                ? { ...activity, completed: !activity.completed }
+                : activity
+            ),
+          }
+        : plan
+    );
+  };
+
   // Render the planner home view
   const renderPlannerHome = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -120,6 +144,13 @@ const StudyPlans = () => {
             </span>
           </div>
         )}
+        {createdPlan && (
+          <StudyPlanActivities
+            plan={createdPlan}
+            onAddActivity={handleAddActivity}
+            onToggleActivity={handleToggleActivity}
+          />
+        )}
         <div className="flex flex-col gap-3 rounded-xl border border-[#dce5df] bg-white p-3 shadow-[0_8px_30px_rgba(45,67,53,0.06)] sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2"><button aria-label="Previous week" onClick={() => setWeekOffset((value) => value - 1)} className="rounded-md border border-[#dce5df] p-2 text-[#5d6d63] hover:bg-[#f3f7f4]"><ArrowLeft className="h-4 w-4" /></button><button onClick={() => setWeekOffset(0)} className="rounded-md border border-[#dce5df] px-3 py-2 text-sm font-semibold text-[#385445] hover:bg-[#f3f7f4]">Today</button><button aria-label="Next week" onClick={() => setWeekOffset((value) => value + 1)} className="rounded-md border border-[#dce5df] p-2 text-[#5d6d63] hover:bg-[#f3f7f4]"><ArrowRight className="h-4 w-4" /></button><span className="ml-2 text-sm font-semibold text-[#26372d]">Apr {6 + weekOffset * 7} – Apr {12 + weekOffset * 7}, 2026</span></div>
           <div className="flex items-center gap-2"><button className="inline-flex items-center gap-2 rounded-md border border-[#dce5df] px-3 py-2 text-sm font-medium text-[#526259]"><SlidersHorizontal className="h-4 w-4" /> Filters</button><button className="inline-flex items-center gap-1 rounded-md border border-[#dce5df] px-3 py-2 text-sm font-medium text-[#526259]">Week <ChevronDown className="h-4 w-4" /></button></div>
@@ -139,7 +170,7 @@ const StudyPlans = () => {
         <StudyPlanWizard
           onBack={handleBack}
           onPlanCreated={(plan) => {
-            setCreatedPlan(plan);
+            setCreatedPlan({ ...plan, activities: [] });
             setShowPlanner(true);
             setShowCreate(false);
           }}
