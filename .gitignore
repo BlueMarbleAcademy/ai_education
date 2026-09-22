@@ -20,3 +20,4 @@ build/
 
 # Misc
 runApp.txt
+project/src/.env
