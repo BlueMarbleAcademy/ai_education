@@ -16,7 +16,10 @@ import {
   SlidersHorizontal,
   Sparkles
 } from "lucide-react";
-import { getStudyPlan } from "../../../api/apiService";
+import {
+    getStudyPlan,
+    saveStudyPlan
+} from "../../../api/apiService";
 import StudyPlanActivities from "./StudyPlanActivities";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
@@ -78,6 +81,31 @@ const StudyPlans = () => {
     setShowCreate(false);
     setCurrentPlan(null);
   };
+
+  const handlePlanCreated = async (plan) => {
+  try {
+    setPlanStatus("loading");
+
+    const response = await saveStudyPlan(plan);
+
+    const savedPlan = {
+      ...response.plan,
+      activities: response.plan.activities || [],
+    };
+
+    setCreatedPlan(savedPlan);
+
+    setShowPlanner(true);
+    setShowCreate(false);
+    setPlanStatus("ready");
+  } catch (error) {
+    console.error("Failed to save study plan:", error);
+    setPlanStatus("idle");
+
+    alert("Failed to save study plan. Please try again.");
+  }
+};
+
 
   const handleAddActivity = (activity) => {
     setCreatedPlan((plan) =>
@@ -168,13 +196,9 @@ const StudyPlans = () => {
         renderPlannerHome()
       ) : showCreate ? (
         <StudyPlanWizard
-          onBack={handleBack}
-          onPlanCreated={(plan) => {
-            setCreatedPlan({ ...plan, activities: [] });
-            setShowPlanner(true);
-            setShowCreate(false);
-          }}
-        />
+            onBack={handleBack}
+            onPlanCreated={handlePlanCreated}
+      />
       ) : currentPlan ? (
         <StudyPlanDisplay
           plan={currentPlan}

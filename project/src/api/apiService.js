@@ -463,9 +463,41 @@ export const generateStudyPlan = async (
 };
 
 /**
+ * Save a new study plan
+ * @param {Object} planData - Study plan data from the creation wizard
+ * @returns {Promise<Object>} - Saved study plan response
+ */
+export const saveStudyPlan = async (planData) => {
+    const endpoint = "http://localhost:8000/study-plans";
+
+    const requestBody = {
+        examName: planData.examName,
+        subject: planData.subject,
+        studyStartDate: planData.studyStartDate,
+        examDate: planData.examDate,
+        dailyStudyMinutes: planData.dailyStudyMinutes,
+        unavailableDays: planData.unavailableDays || [],
+    };
+
+    try {
+        const response = await callProtectedApi(endpoint, {
+            method: "POST",
+            body: JSON.stringify(requestBody),
+        });
+
+        return response;
+    } catch (error) {
+        console.error("Error saving study plan:", error);
+        throw error;
+    }
+};
+
+// old
+/**
  * Get all study plans for the current user
  * @returns {Promise<Array>} - List of study plans
  */
+
 export const getStudyPlans = async () => {
   const endpoint = "http://localhost:8000/study-plans";
 

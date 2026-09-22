@@ -2419,6 +2419,66 @@ async def get_quiz_with_history(quiz_id: str, user_claims: dict = Depends(valida
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found")
 
 # ----- Study Plans -----
+class CreateStudyPlanRequest(BaseModel):
+    examName: str
+    subject: str
+    studyStartDate: str
+    examDate: str
+    dailyStudyMinutes: int
+    unavailableDays: List[str] = []
+
+@app.post("/study-plans")
+async def save_study_plan(
+    request: CreateStudyPlanRequest,
+    user_claims: dict = Depends(validate_token)
+):
+    try:
+        now = datetime.utcnow().isoformat()
+
+        study_plan_document = {
+            "id": str(uuid.uuid4()),
+            "userId": user_claims["sub"],
+            "contentType": "study_plan",
+            "createdAt": now,
+            "updatedAt": now,
+            "data": {
+                "examName": request.examName,
+                "subject": request.subject,
+                "studyStartDate": request.studyStartDate,
+                "examDate": request.examDate,
+                "dailyStudyMinutes": request.dailyStudyMinutes,
+                "unavailableDays": request.unavailableDays,
+                "status": "draft",
+                "activities": [],
+
+                # Keep these for compatibility with the older study-plan code
+                "title": request.examName,
+                "description": "",
+                "tags": [],
+                "updatedAt": now,
+            }
+        }
+
+        container.create_item(body=study_plan_document)
+
+        return {
+            "id": study_plan_document["id"],
+            "plan": {
+                "id": study_plan_document["id"],
+                **study_plan_document["data"]
+            },
+            "message": "Study plan saved successfully"
+        }
+
+    except Exception as e:
+        print(f"Error saving study plan: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save study plan: {str(e)}"
+        )
+
+
+# old
 @app.post("/generate-study-plan", response_model=Dict[str, Any])
 async def create_study_plan(
     files: List[UploadFile] = File(...),
