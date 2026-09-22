@@ -2426,6 +2426,50 @@ class CreateStudyPlanRequest(BaseModel):
     examDate: str
     dailyStudyMinutes: int
     unavailableDays: List[str] = []
+    materials: List[Dict[str, Any]] = []
+
+@app.post("/process-study-plan-material")
+@app.post("/study-plans/materials")
+async def process_study_plan_material(
+    file: UploadFile = File(...),
+    user_claims: dict = Depends(validate_token)
+):
+    max_size = 20 * 1024 * 1024
+    filename = file.filename or "uploaded.pdf"
+    if not filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=422, detail="Only PDF files are supported for study plans.")
+
+    temp_path = None
+    try:
+        content = await file.read()
+        if not content:
+            raise HTTPException(status_code=422, detail="The uploaded PDF is empty.")
+        if len(content) > max_size:
+            raise HTTPException(status_code=413, detail="This PDF is too large. Please upload a file smaller than 20 MB.")
+
+        temp_path = os.path.join(".", f"study_material_{uuid.uuid4()}.pdf")
+        with open(temp_path, "wb") as handle:
+            handle.write(content)
+        extracted_text = extract_text_from_pdf(temp_path)
+        return {
+            "filename": filename,
+            "fileSize": len(content),
+            "extractedText": extracted_text,
+            "status": "processed",
+        }
+    except HTTPException:
+        raise
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=422, detail=f"Could not process {filename}: {exc}")
+    except Exception as exc:
+        print(f"Error processing study plan material: {exc}")
+        raise HTTPException(status_code=500, detail="The material could not be processed. Please try another PDF.")
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
 
 @app.post("/study-plans")
 async def save_study_plan(
@@ -2448,6 +2492,7 @@ async def save_study_plan(
                 "examDate": request.examDate,
                 "dailyStudyMinutes": request.dailyStudyMinutes,
                 "unavailableDays": request.unavailableDays,
+                "materials": request.materials,
                 "status": "draft",
                 "activities": [],
 

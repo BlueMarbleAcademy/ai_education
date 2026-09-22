@@ -343,6 +343,16 @@ export const batchEvaluateAnswers = async (questions, userAnswers) => {
   }
 };
 
+export const uploadStudyPlanMaterial = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return callProtectedApi(`${API_BASE}/process-study-plan-material`, {
+    method: "POST",
+    body: formData,
+  });
+};
+
 export const generateHarderQuiz = async (questions, title, numQuestions = 15, folderId = null) => {
   return callProtectedApi("http://localhost:8000/generate-harder-quiz", {
     method: "POST",
@@ -477,6 +487,7 @@ export const saveStudyPlan = async (planData) => {
         examDate: planData.examDate,
         dailyStudyMinutes: planData.dailyStudyMinutes,
         unavailableDays: planData.unavailableDays || [],
+        materials: planData.materials || [],
     };
 
     try {

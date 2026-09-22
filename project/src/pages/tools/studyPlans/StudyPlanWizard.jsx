@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import {
   AlertCircle,
   CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   Clock3,
   GraduationCap,
+  Loader2,
+  Upload,
 } from "lucide-react";
+import { uploadStudyPlanMaterial } from "../../../api/apiService";
 
 const DAYS = [
   { value: "monday", label: "Mon" },
@@ -29,6 +33,8 @@ const INITIAL_FORM = {
 const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
+  const [materials, setMaterials] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const today = new Date();
   const todayValue = [
@@ -48,6 +54,53 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
       : [...form.unavailableDays, day];
 
     updateField("unavailableDays", unavailableDays);
+  };
+
+  const handleMaterialUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setMaterials((current) => [
+        ...current,
+        { name: file.name, status: "error", error: "Only PDF files are supported." },
+      ]);
+      return;
+    }
+
+    const materialId = `${file.name}-${file.lastModified}`;
+    setMaterials((current) => [
+      ...current,
+      { id: materialId, name: file.name, status: "processing" },
+    ]);
+    setIsUploading(true);
+
+    try {
+      const processed = await uploadStudyPlanMaterial(file);
+      setMaterials((current) =>
+        current.map((material) =>
+          material.id === materialId
+            ? {
+                ...material,
+                status: "ready",
+                extractedText: processed.extractedText,
+                fileSize: processed.fileSize,
+              }
+            : material
+        )
+      );
+    } catch (error) {
+      setMaterials((current) =>
+        current.map((material) =>
+          material.id === materialId
+            ? { ...material, status: "error", error: error.message || "Processing failed." }
+            : material
+        )
+      );
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const validate = () => {
@@ -101,6 +154,9 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
       examDate: form.examDate,
       dailyStudyMinutes: Number(form.dailyStudyMinutes),
       unavailableDays: form.unavailableDays,
+      materials: materials
+        .filter((material) => material.status === "ready")
+        .map(({ id, status, ...material }) => material),
       createdAt: new Date().toISOString(),
       status: "draft",
     });
@@ -217,6 +273,49 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
         </section>
 
         <section
+          aria-labelledby="study-materials-heading"
+          className="border-t border-[#dce5df] pt-7"
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <div className="rounded-md bg-[#fff0d9] p-2 text-[#9a641c]">
+              <Upload className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 id="study-materials-heading" className="font-bold text-[#26372d]">
+                Study materials
+              </h2>
+              <p className="text-sm text-[#718077]">
+                Upload PDFs so the planner can use their extracted text.
+              </p>
+            </div>
+          </div>
+
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#b9cbbd] bg-[#fbfdfb] px-4 py-5 text-sm font-semibold text-[#385445] transition hover:bg-[#f1f6f2]">
+            <Upload className="h-4 w-4" />
+            Upload a PDF
+            <input type="file" accept="application/pdf,.pdf" onChange={handleMaterialUpload} className="sr-only" />
+          </label>
+
+          {materials.length > 0 && (
+            <ul className="mt-3 space-y-2" aria-live="polite">
+              {materials.map((material) => (
+                <li key={material.id || material.name} className="flex items-start gap-2 rounded-md border border-[#dce5df] bg-white px-3 py-2 text-sm">
+                  {material.status === "processing" && <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[#52705f]" />}
+                  {material.status === "ready" && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#287247]" />}
+                  {material.status === "error" && <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#b54747]" />}
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[#33443a]">{material.name}</p>
+                    <p className={material.status === "error" ? "text-xs text-[#b54747]" : "text-xs text-[#718077]"}>
+                      {material.status === "processing" ? "Processing..." : material.status === "ready" ? "Text extracted and connected to this plan" : material.error}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section
           aria-labelledby="study-availability-heading"
           className="border-t border-[#dce5df] pt-7"
         >
@@ -309,6 +408,7 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
           </button>
           <button
             type="submit"
+            disabled={isUploading || materials.some((material) => material.status === "processing")}
             className="rounded-md bg-[#274c3a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3c2d]"
           >
             Create plan
