@@ -167,14 +167,14 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-[#52705f] transition hover:bg-[#edf4ef]"
+        className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-[#73549a] transition hover:bg-[#f4effa]"
       >
         <ChevronLeft className="h-4 w-4" />
         Back to planner
       </button>
 
       <div className="mt-3 border-b border-[#dce5df] pb-5">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#52705f]">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[#73549a]">
           <CalendarDays className="h-4 w-4" />
           Study planner
         </div>
@@ -190,7 +190,7 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
       <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-8">
         <section aria-labelledby="exam-details-heading">
           <div className="mb-4 flex items-center gap-3">
-            <div className="rounded-md bg-[#dff0e4] p-2 text-[#287247]">
+            <div className="rounded-md bg-[#eadcf5] p-2 text-[#6941a5]">
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
@@ -290,7 +290,7 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#b9cbbd] bg-[#fbfdfb] px-4 py-5 text-sm font-semibold text-[#385445] transition hover:bg-[#f1f6f2]">
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbdde] bg-[#fdfbff] px-4 py-5 text-sm font-semibold text-[#5d4775] transition hover:bg-[#f4effa]">
             <Upload className="h-4 w-4" />
             Upload a PDF
             <input type="file" accept="application/pdf,.pdf" onChange={handleMaterialUpload} className="sr-only" />
@@ -300,8 +300,8 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
             <ul className="mt-3 space-y-2" aria-live="polite">
               {materials.map((material) => (
                 <li key={material.id || material.name} className="flex items-start gap-2 rounded-md border border-[#dce5df] bg-white px-3 py-2 text-sm">
-                  {material.status === "processing" && <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[#52705f]" />}
-                  {material.status === "ready" && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#287247]" />}
+                  {material.status === "processing" && <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-[#73549a]" />}
+                  {material.status === "ready" && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#6941a5]" />}
                   {material.status === "error" && <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#b54747]" />}
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[#33443a]">{material.name}</p>
@@ -382,8 +382,8 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
                       onClick={() => toggleUnavailableDay(day.value)}
                       className={`min-h-11 rounded-md border px-3 py-2 text-sm font-semibold transition ${
                         selected
-                          ? "border-[#274c3a] bg-[#274c3a] text-white"
-                          : "border-[#cfdad2] bg-white text-[#526259] hover:bg-[#f1f6f2]"
+                          ? "border-[#5b3a8c] bg-[#5b3a8c] text-white"
+                          : "border-[#d8cfe0] bg-white text-[#665477] hover:bg-[#f4effa]"
                       }`}
                     >
                       {day.label}
@@ -409,7 +409,7 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
           <button
             type="submit"
             disabled={isUploading || materials.some((material) => material.status === "processing")}
-            className="rounded-md bg-[#274c3a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d3c2d]"
+            className="rounded-md bg-[#5b3a8c] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#472b70]"
           >
             Create plan
           </button>
@@ -440,7 +440,7 @@ const inputClasses = (hasError) =>
   `w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#26372d] outline-none transition placeholder:text-[#a3ada7] focus:ring-2 ${
     hasError
       ? "border-[#cf6666] focus:border-[#cf6666] focus:ring-[#f1cccc]"
-      : "border-[#cfdad2] focus:border-[#5f8f72] focus:ring-[#d6e9dc]"
+      : "border-[#cfdad2] focus:border-[#8060a8] focus:ring-[#e4d8f0]"
   }`;
 
 export default StudyPlanWizard;

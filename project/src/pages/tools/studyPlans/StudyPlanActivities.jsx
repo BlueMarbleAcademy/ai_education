@@ -72,7 +72,7 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#274c3a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d3c2d]"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#5b3a8c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#472b70]"
           >
             <Plus className="h-4 w-4" />
             Add study activity
@@ -112,8 +112,8 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
                   onClick={() => onToggleActivity(activity.id)}
                   className={`mt-0.5 rounded-md p-1 transition ${
                     activity.completed
-                      ? "text-[#287247] hover:bg-[#edf8f0]"
-                      : "text-[#829087] hover:bg-[#f1f5f2]"
+                      ? "text-[#6941a5] hover:bg-[#f4effa]"
+                      : "text-[#829087] hover:bg-[#f7f3fa]"
                   }`}
                 >
                   {activity.completed ? (
@@ -148,7 +148,7 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
                 <span
                   className={`rounded-md px-2 py-1 text-xs font-semibold ${
                     activity.completed
-                      ? "bg-[#e3f3e8] text-[#287247]"
+                      ? "bg-[#eadcf5] text-[#6941a5]"
                       : "bg-[#eef2f0] text-[#66746c]"
                   }`}
                 >
@@ -323,7 +323,7 @@ const ActivityForm = ({ plan, onAdd, onCancel }) => {
         <button
           type="submit"
           disabled={studyDays.length === 0}
-          className="rounded-md bg-[#274c3a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d3c2d] disabled:cursor-not-allowed disabled:bg-[#9ba9a1]"
+          className="rounded-md bg-[#5b3a8c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#472b70] disabled:cursor-not-allowed disabled:bg-[#9ba9a1]"
         >
           Add activity
         </button>
@@ -410,7 +410,7 @@ const inputClasses = (hasError) =>
   `w-full rounded-md border bg-white px-3 py-2.5 text-sm text-[#26372d] outline-none transition focus:ring-2 ${
     hasError
       ? "border-[#cf6666] focus:border-[#cf6666] focus:ring-[#f1cccc]"
-      : "border-[#cfdad2] focus:border-[#5f8f72] focus:ring-[#d6e9dc]"
+      : "border-[#cfdad2] focus:border-[#8060a8] focus:ring-[#e4d8f0]"
   }`;
 
 export default StudyPlanActivities;

@@ -418,7 +418,7 @@ const StudyPlanDisplay = ({ plan, onBack, planStatus, setPlanStatus }) => {
 
                 <div className="space-y-3">
                   <div>
-                    <h4 className="text-sm font-medium text-green-700 mb-1">
+                    <h4 className="text-sm font-medium text-purple-700 mb-1">
                       Strengths:
                     </h4>
                     <ul className="list-disc pl-5 text-sm text-gray-700">
