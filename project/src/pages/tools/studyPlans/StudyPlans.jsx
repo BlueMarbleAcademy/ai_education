@@ -3,16 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
-  Calculator,
   PlusCircle,
   Calendar,
   ChevronDown,
   CheckCircle2,
-  Clock3,
-  FlaskConical,
   MoreHorizontal,
-  Play,
   SlidersHorizontal,
   Sparkles
 } from "lucide-react";
@@ -146,15 +141,7 @@ const StudyPlans = () => {
     const dates = weekDates.map((date) => date.getDate());
     const todayIndex = weekOffset === 0 ? today.getDay() : -1;
     const times = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM"];
-    const blocks = [
-      { day: 0, start: 1, span: 2, title: "Quadratic functions", meta: "Math 11 · Chapter 4", color: "bg-[#dcecff] border-[#91bdf5] text-[#164b87]", icon: Calculator },
-      { day: 1, start: 4, span: 2, title: "Organic chemistry", meta: "Chemistry · Flashcards", color: "bg-[#ffe9d8] border-[#f4b27d] text-[#85451f]", icon: FlaskConical },
-      { day: 2, start: 0, span: 3, title: "Essay outline", meta: "English · Draft notes", color: "bg-[#e8e2ff] border-[#b4a4ee] text-[#4c3c8c]", icon: BookOpen },
-      { day: 2, start: 6, span: 2, title: "Practice quiz", meta: "Math 11 · 12 questions", color: "bg-[#dff5e8] border-[#8fd3aa] text-[#1f6741]", icon: Play },
-      { day: 3, start: 2, span: 2, title: "Limits review", meta: "Calculus · Video + notes", color: "bg-[#dcecff] border-[#91bdf5] text-[#164b87]", icon: Calculator },
-      { day: 4, start: 5, span: 2, title: "Weekly recap", meta: "Review · All subjects", color: "bg-[#ffe2eb] border-[#f2a1ba] text-[#8f294a]", icon: Sparkles },
-      { day: 5, start: 1, span: 2, title: "Buffer / catch-up", meta: "Flexible study block", color: "bg-[#f1f3f5] border-[#cbd2d9] text-[#59636e]", icon: Clock3 }
-    ];
+    const blocks = [];
 
     return (
       <div className="space-y-5">
