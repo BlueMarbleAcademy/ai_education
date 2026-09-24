@@ -7,6 +7,7 @@ import {
   Clock3,
   GraduationCap,
   Loader2,
+  X,
   Upload,
 } from "lucide-react";
 import { uploadStudyPlanMaterial } from "../../../api/apiService";
@@ -35,6 +36,7 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
   const [errors, setErrors] = useState({});
   const [materials, setMaterials] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
 
   const today = new Date();
   const todayValue = [
@@ -56,51 +58,68 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
     updateField("unavailableDays", unavailableDays);
   };
 
-  const handleMaterialUpload = async (event) => {
-    const file = event.target.files?.[0];
+  const handleMaterialSelection = (event) => {
+    const files = Array.from(event.target.files || []);
     event.target.value = "";
-    if (!file) return;
+    if (!files.length) return;
 
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setMaterials((current) => [
-        ...current,
-        { name: file.name, status: "error", error: "Only PDF files are supported." },
-      ]);
-      return;
-    }
+    setUploadMessage("");
+    setMaterials((current) => {
+      const existingIds = new Set(current.map((material) => material.id));
+      const newMaterials = files.map((file) => ({
+        id: `${file.name}-${file.lastModified}-${file.size}`,
+        file,
+        name: file.name,
+        status: "selected",
+      })).filter((material) => !existingIds.has(material.id));
+      return [...current, ...newMaterials];
+    });
+  };
 
-    const materialId = `${file.name}-${file.lastModified}`;
-    setMaterials((current) => [
-      ...current,
-      { id: materialId, name: file.name, status: "processing" },
-    ]);
+  const removeMaterial = (materialId) => {
+    setMaterials((current) => current.filter((material) => material.id !== materialId));
+    setUploadMessage("");
+  };
+
+  const handleMaterialUpload = async () => {
+    const pendingMaterials = materials.filter((material) => material.status === "selected");
+    if (!pendingMaterials.length) return;
+
     setIsUploading(true);
+    setUploadMessage("");
+    setMaterials((current) => current.map((material) =>
+      material.status === "selected" ? { ...material, status: "processing" } : material
+    ));
 
-    try {
-      const processed = await uploadStudyPlanMaterial(file);
-      setMaterials((current) =>
-        current.map((material) =>
-          material.id === materialId
-            ? {
-                ...material,
-                status: "ready",
-                extractedText: processed.extractedText,
-                fileSize: processed.fileSize,
-              }
-            : material
-        )
-      );
-    } catch (error) {
-      setMaterials((current) =>
-        current.map((material) =>
-          material.id === materialId
-            ? { ...material, status: "error", error: error.message || "Processing failed." }
-            : material
-        )
-      );
-    } finally {
-      setIsUploading(false);
-    }
+    const results = await Promise.all(pendingMaterials.map(async (material) => {
+      try {
+        const processed = await uploadStudyPlanMaterial(material.file);
+        return {
+          id: material.id,
+          status: "ready",
+          extractedText: processed.extractedText,
+          fileSize: processed.fileSize,
+        };
+      } catch (error) {
+        return {
+          id: material.id,
+          status: "error",
+          error: error.message || "Processing failed.",
+        };
+      }
+    }));
+
+    setMaterials((current) => current.map((material) => {
+      const result = results.find((item) => item.id === material.id);
+      return result ? { ...material, ...result } : material;
+    }));
+    const completed = results.filter((result) => result.status === "ready").length;
+    const failed = results.length - completed;
+    setUploadMessage(
+      failed ? `${completed} file${completed === 1 ? "" : "s"} uploaded, ${failed} failed.` :
+        `${completed} file${completed === 1 ? "" : "s"} uploaded successfully.`
+    );
+    setIsUploading(false);
   };
 
   const validate = () => {
@@ -156,7 +175,7 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
       unavailableDays: form.unavailableDays,
       materials: materials
         .filter((material) => material.status === "ready")
-        .map(({ id, status, ...material }) => material),
+        .map(({ id, file, status, ...material }) => material),
       createdAt: new Date().toISOString(),
       status: "draft",
     });
@@ -292,8 +311,8 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
 
           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbdde] bg-[#fdfbff] px-4 py-5 text-sm font-semibold text-[#5d4775] transition hover:bg-[#f4effa]">
             <Upload className="h-4 w-4" />
-            Upload a PDF
-            <input type="file" accept="application/pdf,.pdf" onChange={handleMaterialUpload} className="sr-only" />
+            Select PDFs
+            <input type="file" accept="application/pdf,.pdf" multiple onChange={handleMaterialSelection} className="sr-only" />
           </label>
 
           {materials.length > 0 && (
@@ -306,13 +325,25 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[#33443a]">{material.name}</p>
                     <p className={material.status === "error" ? "text-xs text-[#b54747]" : "text-xs text-[#718077]"}>
-                      {material.status === "processing" ? "Processing..." : material.status === "ready" ? "Text extracted and connected to this plan" : material.error}
+                      {material.status === "selected" ? "Ready to upload" : material.status === "processing" ? "Processing..." : material.status === "ready" ? "Text extracted and connected to this plan" : material.error}
                     </p>
                   </div>
+                  {material.status !== "processing" && (
+                    <button type="button" onClick={() => removeMaterial(material.id)} aria-label={`Remove ${material.name}`} className="ml-auto shrink-0 rounded p-1 text-[#718077] hover:bg-[#f3f7f4] hover:text-[#b54747]">
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button type="button" onClick={handleMaterialUpload} disabled={isUploading || !materials.some((material) => material.status === "selected")} className="inline-flex items-center justify-center gap-2 rounded-md bg-[#5b3a8c] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#472b70] disabled:cursor-not-allowed disabled:opacity-50">
+              {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isUploading ? "Uploading..." : "Upload selected files"}
+            </button>
+            {uploadMessage && <p role="status" className="text-sm font-medium text-[#6941a5]">{uploadMessage}</p>}
+          </div>
         </section>
 
         <section
