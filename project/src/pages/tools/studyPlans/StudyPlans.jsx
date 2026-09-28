@@ -12,8 +12,10 @@ import {
   Sparkles
 } from "lucide-react";
 import {
-    getStudyPlan,
-    saveStudyPlan
+  addStudyPlanActivity,
+  getStudyPlan,
+  saveStudyPlan,
+  updateStudyPlanActivity,
 } from "../../../api/apiService";
 import StudyPlanActivities from "./StudyPlanActivities";
 import StudyPlanWizard from "./StudyPlanWizard";
@@ -23,7 +25,7 @@ import StudyPlanDisplay from "./StudyPlanDisplay";
  * Main StudyPlans component that coordinates all other components
  */
 const StudyPlans = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const planId = searchParams.get("planId");
 
   // State for component display
@@ -32,6 +34,9 @@ const StudyPlans = () => {
   const [currentPlan, setCurrentPlan] = useState(null);
   const [createdPlan, setCreatedPlan] = useState(null);
   const [planStatus, setPlanStatus] = useState("idle"); // idle, loading, ready, updating
+  const [planError, setPlanError] = useState("");
+  const [activitySaving, setActivitySaving] = useState(false);
+  const [activityError, setActivityError] = useState("");
   const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
@@ -43,15 +48,30 @@ const StudyPlans = () => {
 
     const loadPlanFromQuery = async () => {
       try {
+        setPlanStatus("loading");
+        setPlanError("");
         const plan = await getStudyPlan(planId);
         if (cancelled) {
           return;
         }
-        setCurrentPlan(plan);
-        setShowPlanner(false);
+
+        if (plan?.data?.examName) {
+          setCreatedPlan(normalizeStructuredPlan(plan));
+          setCurrentPlan(null);
+          setShowPlanner(true);
+        } else {
+          setCurrentPlan(plan);
+          setCreatedPlan(null);
+          setShowPlanner(false);
+        }
         setShowCreate(false);
+        setPlanStatus("ready");
       } catch (err) {
         console.error("Error fetching study plan by id:", err);
+        if (!cancelled) {
+          setPlanError("We couldn't load this study plan. Please try again.");
+          setPlanStatus("idle");
+        }
       }
     };
 
@@ -64,65 +84,95 @@ const StudyPlans = () => {
 
   // Create a new study plan
   const handleCreatePlan = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("planId");
+    setSearchParams(nextParams, { replace: true });
     setShowPlanner(false);
     setShowCreate(true);
     setCurrentPlan(null);
+    setCreatedPlan(null);
+    setPlanError("");
+    setActivityError("");
     setPlanStatus("idle");
   };
 
   // Go back to the planner view
   const handleBack = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("planId");
+    setSearchParams(nextParams, { replace: true });
     setShowPlanner(true);
     setShowCreate(false);
     setCurrentPlan(null);
+    setPlanError("");
   };
 
   const handlePlanCreated = async (plan) => {
-  try {
-    setPlanStatus("loading");
+    try {
+      setPlanStatus("loading");
+      setPlanError("");
 
-    const response = await saveStudyPlan(plan);
+      const response = await saveStudyPlan(plan);
+      const savedPlan = {
+        ...response.plan,
+        activities: response.plan.activities || [],
+      };
 
-    const savedPlan = {
-      ...response.plan,
-      activities: response.plan.activities || [],
-    };
-
-    setCreatedPlan(savedPlan);
-
-    setShowPlanner(true);
-    setShowCreate(false);
-    setPlanStatus("ready");
-  } catch (error) {
-    console.error("Failed to save study plan:", error);
-    setPlanStatus("idle");
-
-    alert("Failed to save study plan. Please try again.");
-  }
-};
-
-
-  const handleAddActivity = (activity) => {
-    setCreatedPlan((plan) =>
-      plan
-        ? { ...plan, activities: [...(plan.activities || []), activity] }
-        : plan
-    );
+      setCreatedPlan(savedPlan);
+      setSearchParams({ planId: savedPlan.id }, { replace: true });
+      setShowPlanner(true);
+      setShowCreate(false);
+      setPlanStatus("ready");
+    } catch (error) {
+      console.error("Failed to save study plan:", error);
+      setPlanError(error.message || "Failed to save the study plan.");
+      setPlanStatus("idle");
+      throw error;
+    }
   };
 
-  const handleToggleActivity = (activityId) => {
-    setCreatedPlan((plan) =>
-      plan
-        ? {
-            ...plan,
-            activities: (plan.activities || []).map((activity) =>
-              activity.id === activityId
-                ? { ...activity, completed: !activity.completed }
-                : activity
-            ),
-          }
-        : plan
+  const handleAddActivity = async (activity) => {
+    if (!createdPlan?.id) {
+      throw new Error("Save the study plan before adding activities.");
+    }
+
+    try {
+      setActivitySaving(true);
+      setActivityError("");
+      const response = await addStudyPlanActivity(createdPlan.id, activity);
+      setCreatedPlan(response.plan);
+    } catch (error) {
+      console.error("Failed to save study activity:", error);
+      setActivityError(error.message || "Failed to save the study activity.");
+      throw error;
+    } finally {
+      setActivitySaving(false);
+    }
+  };
+
+  const handleToggleActivity = async (activityId) => {
+    const activity = (createdPlan?.activities || []).find(
+      (item) => item.id === activityId
     );
+    if (!createdPlan?.id || !activity) {
+      return;
+    }
+
+    try {
+      setActivitySaving(true);
+      setActivityError("");
+      const response = await updateStudyPlanActivity(
+        createdPlan.id,
+        activityId,
+        !activity.completed
+      );
+      setCreatedPlan(response.plan);
+    } catch (error) {
+      console.error("Failed to update study activity:", error);
+      setActivityError(error.message || "Failed to update the study activity.");
+    } finally {
+      setActivitySaving(false);
+    }
   };
 
   // Render the planner home view
@@ -145,6 +195,16 @@ const StudyPlans = () => {
 
     return (
       <div className="space-y-5">
+        {planStatus === "loading" && (
+          <p role="status" className="rounded-md border border-[#d8cfe0] bg-[#f7f1fb] px-4 py-3 text-sm font-medium text-[#5b3a8c]">
+            Loading your saved study plan...
+          </p>
+        )}
+        {planError && (
+          <p role="alert" className="rounded-md border border-[#e6b8b8] bg-[#fff3f3] px-4 py-3 text-sm font-medium text-[#9b3434]">
+            {planError}
+          </p>
+        )}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div><div className="flex items-center gap-2 text-sm font-semibold text-[#73549a]"><Calendar className="h-4 w-4" /> Study planner</div><h1 className="mt-2 text-3xl font-bold tracking-tight text-[#18231d]">Your week at a glance</h1><p className="mt-1 text-sm text-[#68766d]">Plan focused sessions, keep a little breathing room, and make progress visible.</p></div>
           <button onClick={handleCreatePlan} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#5b3a8c] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#472b70]"><PlusCircle className="h-4 w-4" /> {createdPlan ? "New study plan" : "Create study plan"}</button>
@@ -175,6 +235,8 @@ const StudyPlans = () => {
             plan={createdPlan}
             onAddActivity={handleAddActivity}
             onToggleActivity={handleToggleActivity}
+            isSaving={activitySaving}
+            error={activityError}
           />
         )}
         <div className="flex flex-col gap-3 rounded-xl border border-[#dce5df] bg-white p-3 shadow-[0_8px_30px_rgba(45,67,53,0.06)] sm:flex-row sm:items-center sm:justify-between">
@@ -194,9 +256,11 @@ const StudyPlans = () => {
         renderPlannerHome()
       ) : showCreate ? (
         <StudyPlanWizard
-            onBack={handleBack}
-            onPlanCreated={handlePlanCreated}
-      />
+          onBack={handleBack}
+          onPlanCreated={handlePlanCreated}
+          isSaving={planStatus === "loading"}
+          saveError={planError}
+        />
       ) : currentPlan ? (
         <StudyPlanDisplay
           plan={currentPlan}
@@ -229,5 +293,11 @@ const formatWeekRange = (dates) => {
 };
 
 const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+
+const normalizeStructuredPlan = (studyPlanDocument) => ({
+  id: studyPlanDocument.id,
+  ...studyPlanDocument.data,
+  activities: studyPlanDocument.data?.activities || [],
+});
 
 export default StudyPlans;

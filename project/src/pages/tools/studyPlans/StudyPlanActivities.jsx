@@ -35,16 +35,26 @@ const INITIAL_ACTIVITY = {
   studyDate: "",
 };
 
-const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
+const StudyPlanActivities = ({
+  plan,
+  onAddActivity,
+  onToggleActivity,
+  isSaving = false,
+  error = "",
+}) => {
   const [showForm, setShowForm] = useState(false);
   const activities = plan.activities || [];
   const sortedActivities = [...activities].sort(compareActivities);
   const completedCount = activities.filter((activity) => activity.completed).length;
   const upcomingCount = activities.length - completedCount;
 
-  const handleAdd = (activity) => {
-    onAddActivity(activity);
-    setShowForm(false);
+  const handleAdd = async (activity) => {
+    try {
+      await onAddActivity(activity);
+      setShowForm(false);
+    } catch {
+      // The parent displays the API error and keeps this form open for retrying.
+    }
   };
 
   return (
@@ -85,7 +95,15 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
           plan={plan}
           onAdd={handleAdd}
           onCancel={() => setShowForm(false)}
+          isSaving={isSaving}
         />
+      )}
+
+      {error && (
+        <p role="alert" className="mt-4 flex items-center gap-2 rounded-md border border-[#e6b8b8] bg-[#fff3f3] px-3 py-2 text-sm font-medium text-[#9b3434]">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </p>
       )}
 
       {!showForm && activities.length === 0 && (
@@ -110,11 +128,12 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
                   aria-label={`${activity.completed ? "Mark incomplete" : "Mark complete"}: ${activity.topic}`}
                   aria-pressed={activity.completed}
                   onClick={() => onToggleActivity(activity.id)}
+                  disabled={isSaving}
                   className={`mt-0.5 rounded-md p-1 transition ${
                     activity.completed
                       ? "text-[#6941a5] hover:bg-[#f4effa]"
                       : "text-[#829087] hover:bg-[#f7f3fa]"
-                  }`}
+                  } disabled:cursor-wait disabled:opacity-50`}
                 >
                   {activity.completed ? (
                     <CheckCircle2 className="h-5 w-5" />
@@ -163,7 +182,7 @@ const StudyPlanActivities = ({ plan, onAddActivity, onToggleActivity }) => {
   );
 };
 
-const ActivityForm = ({ plan, onAdd, onCancel }) => {
+const ActivityForm = ({ plan, onAdd, onCancel, isSaving }) => {
   const [form, setForm] = useState(INITIAL_ACTIVITY);
   const [errors, setErrors] = useState({});
   const studyDays = useMemo(() => getStudyDays(plan), [plan]);
@@ -173,7 +192,7 @@ const ActivityForm = ({ plan, onAdd, onCancel }) => {
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const nextErrors = {};
     const estimatedMinutes = Number(form.estimatedMinutes);
@@ -202,7 +221,7 @@ const ActivityForm = ({ plan, onAdd, onCancel }) => {
       return;
     }
 
-    onAdd({
+    await onAdd({
       id: `activity-${Date.now()}`,
       topic: form.topic.trim(),
       activityType: form.activityType,
@@ -316,16 +335,17 @@ const ActivityForm = ({ plan, onAdd, onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSaving}
           className="rounded-md border border-[#cfdad2] bg-white px-4 py-2.5 text-sm font-semibold text-[#526259] transition hover:bg-[#f3f7f4]"
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={studyDays.length === 0}
+          disabled={studyDays.length === 0 || isSaving}
           className="rounded-md bg-[#5b3a8c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#472b70] disabled:cursor-not-allowed disabled:bg-[#9ba9a1]"
         >
-          Add activity
+          {isSaving ? "Saving..." : "Add activity"}
         </button>
       </div>
     </form>

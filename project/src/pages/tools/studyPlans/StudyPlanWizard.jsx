@@ -31,7 +31,12 @@ const INITIAL_FORM = {
   unavailableDays: [],
 };
 
-const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
+const StudyPlanWizard = ({
+  onBack,
+  onPlanCreated,
+  isSaving = false,
+  saveError = "",
+}) => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [materials, setMaterials] = useState([]);
@@ -159,26 +164,30 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validate()) {
       return;
     }
 
-    onPlanCreated({
-      id: `draft-${Date.now()}`,
-      examName: form.examName.trim(),
-      subject: form.subject.trim(),
-      studyStartDate: form.studyStartDate,
-      examDate: form.examDate,
-      dailyStudyMinutes: Number(form.dailyStudyMinutes),
-      unavailableDays: form.unavailableDays,
-      materials: materials
-        .filter((material) => material.status === "ready")
-        .map(({ id, file, status, ...material }) => material),
-      createdAt: new Date().toISOString(),
-      status: "draft",
-    });
+    try {
+      await onPlanCreated({
+        id: `draft-${Date.now()}`,
+        examName: form.examName.trim(),
+        subject: form.subject.trim(),
+        studyStartDate: form.studyStartDate,
+        examDate: form.examDate,
+        dailyStudyMinutes: Number(form.dailyStudyMinutes),
+        unavailableDays: form.unavailableDays,
+        materials: materials
+          .filter((material) => material.status === "ready")
+          .map(({ id, file, status, ...material }) => material),
+        createdAt: new Date().toISOString(),
+        status: "draft",
+      });
+    } catch {
+      // The planner keeps this form open and displays saveError below.
+    }
   };
 
   return (
@@ -429,20 +438,29 @@ const StudyPlanWizard = ({ onBack, onPlanCreated }) => {
           </div>
         </section>
 
+        {saveError && (
+          <p role="alert" className="flex items-center gap-2 rounded-md border border-[#e6b8b8] bg-[#fff3f3] px-4 py-3 text-sm font-medium text-[#9b3434]">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {saveError}
+          </p>
+        )}
+
         <div className="flex flex-col-reverse gap-3 border-t border-[#dce5df] pt-5 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onBack}
+            disabled={isSaving}
             className="rounded-md border border-[#cfdad2] bg-white px-5 py-2.5 text-sm font-semibold text-[#526259] transition hover:bg-[#f3f7f4]"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={isUploading || materials.some((material) => material.status === "processing")}
-            className="rounded-md bg-[#5b3a8c] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#472b70]"
+            disabled={isSaving || isUploading || materials.some((material) => material.status === "processing")}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#5b3a8c] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#472b70] disabled:cursor-wait disabled:opacity-60"
           >
-            Create plan
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isSaving ? "Saving plan..." : "Create plan"}
           </button>
         </div>
       </form>

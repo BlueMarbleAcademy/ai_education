@@ -290,12 +290,11 @@ except ImportError:
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import database
 from pdf_utils import extract_text_from_pdf
 from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse, Flashcard, FlashcardDeck, FlashcardDocument, MindmapDocument, SaveMindmapResponse, CreateMindmapRequest, CreateFolderRequest, UpdateFolderRequest, FolderOut, ShareLinkCreateRequest, ShareLinkUpdateRequest, ShareLinkSettings
-from pydantic import BaseModel
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
 import time
 from openai_client import analyze_quiz_performance
@@ -2425,8 +2424,93 @@ class CreateStudyPlanRequest(BaseModel):
     studyStartDate: str
     examDate: str
     dailyStudyMinutes: int
-    unavailableDays: List[str] = []
-    materials: List[Dict[str, Any]] = []
+    unavailableDays: List[str] = Field(default_factory=list)
+    materials: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class CreateStudyPlanActivityRequest(BaseModel):
+    id: Optional[str] = None
+    topic: str
+    activityType: str
+    estimatedMinutes: int
+    studyDate: str
+    completed: bool = False
+    createdAt: Optional[str] = None
+
+
+class UpdateStudyPlanActivityRequest(BaseModel):
+    completed: bool
+
+
+def _study_plan_response(study_plan: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "id": study_plan["id"],
+        **study_plan.get("data", {}),
+    }
+
+
+def _read_owned_study_plan(plan_id: str, user_id: str) -> Dict[str, Any]:
+    try:
+        study_plan = container.read_item(item=plan_id, partition_key=user_id)
+    except (HTTPException, CosmosResourceNotFoundError):
+        raise HTTPException(status_code=404, detail="Study plan not found")
+
+    if (
+        study_plan.get("userId") != user_id
+        or study_plan.get("contentType") != "study_plan"
+    ):
+        raise HTTPException(status_code=404, detail="Study plan not found")
+
+    return study_plan
+
+
+def _save_study_plan_document(study_plan: Dict[str, Any], user_id: str) -> None:
+    now = datetime.utcnow().isoformat()
+    study_plan["updatedAt"] = now
+    study_plan.setdefault("data", {})["updatedAt"] = now
+    container.replace_item(
+        item=study_plan["id"],
+        body=study_plan,
+        partition_key=user_id,
+    )
+
+
+def _validate_study_activity(
+    request: CreateStudyPlanActivityRequest,
+    study_plan: Dict[str, Any],
+) -> None:
+    if not request.topic.strip():
+        raise HTTPException(status_code=422, detail="Activity topic is required.")
+    if not request.activityType.strip():
+        raise HTTPException(status_code=422, detail="Activity type is required.")
+    if request.estimatedMinutes < 5 or request.estimatedMinutes > 720:
+        raise HTTPException(
+            status_code=422,
+            detail="Estimated time must be between 5 and 720 minutes.",
+        )
+
+    data = study_plan.get("data", {})
+    try:
+        activity_date = datetime.fromisoformat(request.studyDate).date()
+        start_date = datetime.fromisoformat(data["studyStartDate"]).date()
+        exam_date = datetime.fromisoformat(data["examDate"]).date()
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="Activity date is invalid.")
+
+    if activity_date < start_date or activity_date > exam_date:
+        raise HTTPException(
+            status_code=422,
+            detail="Activity date must be within the study plan dates.",
+        )
+
+    unavailable_days = {
+        str(day).lower() for day in data.get("unavailableDays", [])
+    }
+    if activity_date.strftime("%A").lower() in unavailable_days:
+        raise HTTPException(
+            status_code=422,
+            detail="Activity date cannot be an unavailable study day.",
+        )
 
 @app.post("/process-study-plan-material")
 @app.post("/study-plans/materials")
@@ -2646,13 +2730,72 @@ async def get_study_plans(user_claims: dict = Depends(validate_token)):
 @app.get("/study-plans/{plan_id}")
 async def get_study_plan(plan_id: str, user_claims: dict = Depends(validate_token)):
     try:
-        study_plan = container.read_item(item=plan_id, partition_key=user_claims["sub"])
-        if study_plan["userId"] != user_claims["sub"]:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
-        return study_plan
+        return _read_owned_study_plan(plan_id, user_claims["sub"])
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error retrieving study plan: {str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study plan not found")
+
+
+@app.post("/study-plans/{plan_id}/activities")
+async def add_study_plan_activity(
+    plan_id: str,
+    request: CreateStudyPlanActivityRequest,
+    user_claims: dict = Depends(validate_token),
+):
+    study_plan = _read_owned_study_plan(plan_id, user_claims["sub"])
+    _validate_study_activity(request, study_plan)
+
+    activities = study_plan.setdefault("data", {}).setdefault("activities", [])
+    activity_id = request.id or str(uuid.uuid4())
+    if any(activity.get("id") == activity_id for activity in activities):
+        raise HTTPException(status_code=409, detail="Activity already exists.")
+
+    activity = {
+        "id": activity_id,
+        "topic": request.topic.strip(),
+        "activityType": request.activityType.strip(),
+        "estimatedMinutes": request.estimatedMinutes,
+        "studyDate": request.studyDate,
+        "completed": request.completed,
+        "createdAt": request.createdAt or datetime.utcnow().isoformat(),
+    }
+    activities.append(activity)
+    _save_study_plan_document(study_plan, user_claims["sub"])
+
+    return {
+        "activity": activity,
+        "plan": _study_plan_response(study_plan),
+        "message": "Study activity saved successfully",
+    }
+
+
+@app.patch("/study-plans/{plan_id}/activities/{activity_id}")
+async def update_study_plan_activity(
+    plan_id: str,
+    activity_id: str,
+    request: UpdateStudyPlanActivityRequest,
+    user_claims: dict = Depends(validate_token),
+):
+    study_plan = _read_owned_study_plan(plan_id, user_claims["sub"])
+    activities = study_plan.setdefault("data", {}).setdefault("activities", [])
+    activity = next(
+        (item for item in activities if item.get("id") == activity_id),
+        None,
+    )
+    if activity is None:
+        raise HTTPException(status_code=404, detail="Study activity not found")
+
+    activity["completed"] = request.completed
+    activity["updatedAt"] = datetime.utcnow().isoformat()
+    _save_study_plan_document(study_plan, user_claims["sub"])
+
+    return {
+        "activity": activity,
+        "plan": _study_plan_response(study_plan),
+        "message": "Study activity updated successfully",
+    }
 
 @app.post("/update-study-plan", response_model=UpdateStudyPlanResponse)
 async def update_study_plan_endpoint(request: UpdateStudyPlanRequest, user_claims: dict = Depends(validate_token)):

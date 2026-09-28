@@ -539,6 +539,43 @@ export const getStudyPlan = async (planId) => {
 };
 
 /**
+ * Add an activity to a saved study plan.
+ * @param {String} planId - Saved study plan ID
+ * @param {Object} activity - Activity created in the planner
+ * @returns {Promise<Object>} - Updated plan response
+ */
+export const addStudyPlanActivity = async (planId, activity) => {
+  return callProtectedApi(
+    `http://localhost:8000/study-plans/${planId}/activities`,
+    {
+      method: "POST",
+      body: JSON.stringify(activity),
+    }
+  );
+};
+
+/**
+ * Update the completion state of a saved study-plan activity.
+ * @param {String} planId - Saved study plan ID
+ * @param {String} activityId - Activity ID
+ * @param {Boolean} completed - New completion state
+ * @returns {Promise<Object>} - Updated plan response
+ */
+export const updateStudyPlanActivity = async (
+  planId,
+  activityId,
+  completed
+) => {
+  return callProtectedApi(
+    `http://localhost:8000/study-plans/${planId}/activities/${activityId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ completed }),
+    }
+  );
+};
+
+/**
  * Update a study plan based on quiz results
  * @param {String} planId - The ID of the study plan to update
  * @param {Array} quizIds - Array of quiz IDs to use for updating the plan
