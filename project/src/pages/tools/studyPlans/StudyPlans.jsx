@@ -12,12 +12,15 @@ import {
   Sparkles
 } from "lucide-react";
 import {
+  addStudyPlanMaterial,
   addStudyPlanActivity,
   getStudyPlan,
+  removeStudyPlanMaterial,
   saveStudyPlan,
   updateStudyPlanActivity,
 } from "../../../api/apiService";
 import StudyPlanActivities from "./StudyPlanActivities";
+import StudyPlanMaterials from "./StudyPlanMaterials";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
 
@@ -37,6 +40,8 @@ const StudyPlans = () => {
   const [planError, setPlanError] = useState("");
   const [activitySaving, setActivitySaving] = useState(false);
   const [activityError, setActivityError] = useState("");
+  const [materialSaving, setMaterialSaving] = useState(false);
+  const [materialError, setMaterialError] = useState("");
   const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
@@ -50,6 +55,7 @@ const StudyPlans = () => {
       try {
         setPlanStatus("loading");
         setPlanError("");
+        setMaterialError("");
         const plan = await getStudyPlan(planId);
         if (cancelled) {
           return;
@@ -93,6 +99,7 @@ const StudyPlans = () => {
     setCreatedPlan(null);
     setPlanError("");
     setActivityError("");
+    setMaterialError("");
     setPlanStatus("idle");
   };
 
@@ -105,6 +112,7 @@ const StudyPlans = () => {
     setShowCreate(false);
     setCurrentPlan(null);
     setPlanError("");
+    setMaterialError("");
   };
 
   const handlePlanCreated = async (plan) => {
@@ -116,6 +124,7 @@ const StudyPlans = () => {
       const savedPlan = {
         ...response.plan,
         activities: response.plan.activities || [],
+        materials: response.plan.materials || [],
       };
 
       setCreatedPlan(savedPlan);
@@ -175,6 +184,47 @@ const StudyPlans = () => {
     }
   };
 
+  const handleAddMaterials = async (files) => {
+    if (!createdPlan?.id || files.length === 0) {
+      return;
+    }
+
+    try {
+      setMaterialSaving(true);
+      setMaterialError("");
+      for (const file of files) {
+        const response = await addStudyPlanMaterial(createdPlan.id, file);
+        setCreatedPlan(response.plan);
+      }
+    } catch (error) {
+      console.error("Failed to save study material:", error);
+      setMaterialError(error.message || "Failed to save the study material.");
+    } finally {
+      setMaterialSaving(false);
+    }
+  };
+
+  const handleRemoveMaterial = async (materialId) => {
+    if (!createdPlan?.id) {
+      return;
+    }
+
+    try {
+      setMaterialSaving(true);
+      setMaterialError("");
+      const response = await removeStudyPlanMaterial(
+        createdPlan.id,
+        materialId
+      );
+      setCreatedPlan(response.plan);
+    } catch (error) {
+      console.error("Failed to remove study material:", error);
+      setMaterialError(error.message || "Failed to remove the study material.");
+    } finally {
+      setMaterialSaving(false);
+    }
+  };
+
   // Render the planner home view
   const renderPlannerHome = () => {
     const today = new Date();
@@ -229,6 +279,15 @@ const StudyPlans = () => {
               Draft
             </span>
           </div>
+        )}
+        {createdPlan && (
+          <StudyPlanMaterials
+            materials={createdPlan.materials || []}
+            onAddMaterials={handleAddMaterials}
+            onRemoveMaterial={handleRemoveMaterial}
+            isSaving={materialSaving}
+            error={materialError}
+          />
         )}
         {createdPlan && (
           <StudyPlanActivities
@@ -298,6 +357,7 @@ const normalizeStructuredPlan = (studyPlanDocument) => ({
   id: studyPlanDocument.id,
   ...studyPlanDocument.data,
   activities: studyPlanDocument.data?.activities || [],
+  materials: studyPlanDocument.data?.materials || [],
 });
 
 export default StudyPlans;

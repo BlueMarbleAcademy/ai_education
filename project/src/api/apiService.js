@@ -347,10 +347,33 @@ export const uploadStudyPlanMaterial = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  return callProtectedApi(`${API_BASE}/process-study-plan-material`, {
+  return callProtectedApi(`${API_BASE}/study-plan-materials`, {
     method: "POST",
     body: formData,
   });
+};
+
+export const deleteUnlinkedStudyPlanMaterial = async (materialId) => {
+  return callProtectedApi(`${API_BASE}/study-plan-materials/${materialId}`, {
+    method: "DELETE",
+  });
+};
+
+export const addStudyPlanMaterial = async (planId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return callProtectedApi(`${API_BASE}/study-plans/${planId}/materials`, {
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const removeStudyPlanMaterial = async (planId, materialId) => {
+  return callProtectedApi(
+    `${API_BASE}/study-plans/${planId}/materials/${materialId}`,
+    { method: "DELETE" }
+  );
 };
 
 export const generateHarderQuiz = async (questions, title, numQuestions = 15, folderId = null) => {

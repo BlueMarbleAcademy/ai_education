@@ -10,7 +10,10 @@ import {
   X,
   Upload,
 } from "lucide-react";
-import { uploadStudyPlanMaterial } from "../../../api/apiService";
+import {
+  deleteUnlinkedStudyPlanMaterial,
+  uploadStudyPlanMaterial,
+} from "../../../api/apiService";
 
 const DAYS = [
   { value: "monday", label: "Mon" },
@@ -81,9 +84,34 @@ const StudyPlanWizard = ({
     });
   };
 
-  const removeMaterial = (materialId) => {
-    setMaterials((current) => current.filter((material) => material.id !== materialId));
+  const removeMaterial = async (materialId) => {
+    const material = materials.find((item) => item.id === materialId);
+    if (!material) return;
+
+    if (material.materialId) {
+      try {
+        await deleteUnlinkedStudyPlanMaterial(material.materialId);
+      } catch (error) {
+        setUploadMessage(error.message || "The material could not be removed.");
+        return;
+      }
+    }
+
+    setMaterials((current) => current.filter((item) => item.id !== materialId));
     setUploadMessage("");
+  };
+
+  const handleBack = async () => {
+    const uploadedIds = materials
+      .map((material) => material.materialId)
+      .filter(Boolean);
+
+    await Promise.allSettled(
+      uploadedIds.map((materialId) =>
+        deleteUnlinkedStudyPlanMaterial(materialId)
+      )
+    );
+    onBack();
   };
 
   const handleMaterialUpload = async () => {
@@ -102,7 +130,7 @@ const StudyPlanWizard = ({
         return {
           id: material.id,
           status: "ready",
-          extractedText: processed.extractedText,
+          materialId: processed.id,
           fileSize: processed.fileSize,
         };
       } catch (error) {
@@ -194,7 +222,8 @@ const StudyPlanWizard = ({
     <div className="mx-auto max-w-4xl">
       <button
         type="button"
-        onClick={onBack}
+        onClick={handleBack}
+        disabled={isUploading || isSaving}
         className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold text-[#73549a] transition hover:bg-[#f4effa]"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -334,7 +363,7 @@ const StudyPlanWizard = ({
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[#33443a]">{material.name}</p>
                     <p className={material.status === "error" ? "text-xs text-[#b54747]" : "text-xs text-[#718077]"}>
-                      {material.status === "selected" ? "Ready to upload" : material.status === "processing" ? "Processing..." : material.status === "ready" ? "Text extracted and connected to this plan" : material.error}
+                      {material.status === "selected" ? "Ready to upload" : material.status === "processing" ? "Processing..." : material.status === "ready" ? "Ready to save with this plan" : material.error}
                     </p>
                   </div>
                   {material.status !== "processing" && (
@@ -448,7 +477,7 @@ const StudyPlanWizard = ({
         <div className="flex flex-col-reverse gap-3 border-t border-[#dce5df] pt-5 sm:flex-row sm:justify-end">
           <button
             type="button"
-            onClick={onBack}
+            onClick={handleBack}
             disabled={isSaving}
             className="rounded-md border border-[#cfdad2] bg-white px-5 py-2.5 text-sm font-semibold text-[#526259] transition hover:bg-[#f3f7f4]"
           >

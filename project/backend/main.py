@@ -336,6 +336,7 @@ app.add_middleware(
 
 # Static mount for local storage fallback
 os.makedirs("static/audio", exist_ok=True)
+os.makedirs("static/study_plan_materials", exist_ok=True)
 try:
     app.mount("/static", StaticFiles(directory="static"), name="static")
 except Exception:
@@ -547,8 +548,8 @@ class LocalContainer:
                 it
                 for it in items
                 if (it.get("userId") == user_id or it.get("user_id") == user_id)
-                and (it.get("contentType", "").lower() not in {"folder", "shared_link"})
-                and (it.get("contenttype", "").lower() not in {"folder", "shared_link"})
+                and (it.get("contentType", "").lower() not in {"folder", "shared_link", "study_plan_material"})
+                and (it.get("contenttype", "").lower() not in {"folder", "shared_link", "study_plan_material"})
                 and not it.get("folderId")
                 and not it.get("deleted")
             ]
@@ -2442,6 +2443,11 @@ class UpdateStudyPlanActivityRequest(BaseModel):
     completed: bool
 
 
+STUDY_PLAN_MATERIAL_DIR = os.path.abspath(
+    os.path.join("static", "study_plan_materials")
+)
+
+
 def _study_plan_response(study_plan: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": study_plan["id"],
@@ -2512,48 +2518,169 @@ def _validate_study_activity(
             detail="Activity date cannot be an unavailable study day.",
         )
 
+
+def _study_plan_material_response(material: Dict[str, Any]) -> Dict[str, Any]:
+    data = material.get("data", {})
+    return {
+        "id": material["id"],
+        "name": data.get("name") or "Study material",
+        "fileSize": data.get("fileSize", 0),
+        "fileType": data.get("fileType", "application/pdf"),
+        "status": data.get("status", "ready"),
+        "createdAt": material.get("createdAt"),
+    }
+
+
+def _read_owned_study_material(material_id: str, user_id: str) -> Dict[str, Any]:
+    try:
+        material = container.read_item(item=material_id, partition_key=user_id)
+    except (HTTPException, CosmosResourceNotFoundError):
+        raise HTTPException(status_code=404, detail="Study material not found")
+
+    if (
+        material.get("userId") != user_id
+        or material.get("contentType") != "study_plan_material"
+    ):
+        raise HTTPException(status_code=404, detail="Study material not found")
+
+    return material
+
+
+def _delete_study_material_file(material: Dict[str, Any]) -> None:
+    file_path = material.get("data", {}).get("filePath")
+    if not file_path:
+        return
+
+    absolute_path = os.path.abspath(file_path)
+    try:
+        if os.path.commonpath([STUDY_PLAN_MATERIAL_DIR, absolute_path]) != STUDY_PLAN_MATERIAL_DIR:
+            return
+    except ValueError:
+        return
+
+    if os.path.exists(absolute_path):
+        try:
+            os.remove(absolute_path)
+        except OSError:
+            pass
+
+
+async def _store_study_plan_material(
+    file: UploadFile,
+    user_id: str,
+    plan_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    max_size = 20 * 1024 * 1024
+    filename = file.filename or "uploaded.pdf"
+    if not filename.lower().endswith(".pdf"):
+        raise HTTPException(
+            status_code=422,
+            detail="Only PDF files are supported for study plans.",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=422, detail="The uploaded PDF is empty.")
+    if len(content) > max_size:
+        raise HTTPException(
+            status_code=413,
+            detail="This PDF is too large. Please upload a file smaller than 20 MB.",
+        )
+
+    material_id = str(uuid.uuid4())
+    stored_filename = f"{material_id}.pdf"
+    os.makedirs(STUDY_PLAN_MATERIAL_DIR, exist_ok=True)
+    file_path = os.path.join(STUDY_PLAN_MATERIAL_DIR, stored_filename)
+
+    try:
+        with open(file_path, "wb") as handle:
+            handle.write(content)
+
+        extracted_text = extract_text_from_pdf(file_path)
+        now = datetime.utcnow().isoformat()
+        material_document = {
+            "id": material_id,
+            "userId": user_id,
+            "contentType": "study_plan_material",
+            "planId": plan_id,
+            "createdAt": now,
+            "updatedAt": now,
+            "data": {
+                "name": filename,
+                "storedFilename": stored_filename,
+                "filePath": file_path,
+                "fileSize": len(content),
+                "fileType": "application/pdf",
+                "extractedText": extracted_text,
+                "status": "ready",
+            },
+        }
+        container.create_item(body=material_document)
+        return material_document
+    except HTTPException:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise
+    except (ValueError, RuntimeError) as exc:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise HTTPException(
+            status_code=422,
+            detail=f"Could not process {filename}: {exc}",
+        )
+    except Exception as exc:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        print(f"Error processing study plan material: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail="The material could not be processed. Please try another PDF.",
+        )
+
 @app.post("/process-study-plan-material")
 @app.post("/study-plans/materials")
+@app.post("/study-plan-materials")
 async def process_study_plan_material(
     file: UploadFile = File(...),
     user_claims: dict = Depends(validate_token)
 ):
-    max_size = 20 * 1024 * 1024
-    filename = file.filename or "uploaded.pdf"
-    if not filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=422, detail="Only PDF files are supported for study plans.")
+    material = await _store_study_plan_material(file, user_claims["sub"])
+    return _study_plan_material_response(material)
 
-    temp_path = None
-    try:
-        content = await file.read()
-        if not content:
-            raise HTTPException(status_code=422, detail="The uploaded PDF is empty.")
-        if len(content) > max_size:
-            raise HTTPException(status_code=413, detail="This PDF is too large. Please upload a file smaller than 20 MB.")
 
-        temp_path = os.path.join(".", f"study_material_{uuid.uuid4()}.pdf")
-        with open(temp_path, "wb") as handle:
-            handle.write(content)
-        extracted_text = extract_text_from_pdf(temp_path)
-        return {
-            "filename": filename,
-            "fileSize": len(content),
-            "extractedText": extracted_text,
-            "status": "processed",
-        }
-    except HTTPException:
-        raise
-    except (ValueError, RuntimeError) as exc:
-        raise HTTPException(status_code=422, detail=f"Could not process {filename}: {exc}")
-    except Exception as exc:
-        print(f"Error processing study plan material: {exc}")
-        raise HTTPException(status_code=500, detail="The material could not be processed. Please try another PDF.")
-    finally:
-        if temp_path and os.path.exists(temp_path):
-            try:
-                os.remove(temp_path)
-            except OSError:
-                pass
+@app.delete("/study-plan-materials/{material_id}")
+async def delete_unlinked_study_plan_material(
+    material_id: str,
+    user_claims: dict = Depends(validate_token),
+):
+    material = _read_owned_study_material(material_id, user_claims["sub"])
+    if material.get("planId"):
+        raise HTTPException(
+            status_code=409,
+            detail="Remove this material from its study plan instead.",
+        )
+
+    _delete_study_material_file(material)
+    container.delete_item(item=material_id, partition_key=user_claims["sub"])
+    return {"deleted": True}
+
+
+@app.get("/study-plan-materials/{material_id}/file")
+async def get_study_plan_material_file(
+    material_id: str,
+    user_claims: dict = Depends(validate_token),
+):
+    material = _read_owned_study_material(material_id, user_claims["sub"])
+    data = material.get("data", {})
+    file_path = data.get("filePath")
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Study material file not found")
+
+    return FileResponse(
+        path=file_path,
+        media_type=data.get("fileType", "application/pdf"),
+        filename=data.get("name", "study-material.pdf"),
+    )
 
 @app.post("/study-plans")
 async def save_study_plan(
@@ -2562,9 +2689,30 @@ async def save_study_plan(
 ):
     try:
         now = datetime.utcnow().isoformat()
+        plan_id = str(uuid.uuid4())
+        material_documents = []
+
+        for material_request in request.materials:
+            material_id = material_request.get("materialId") or material_request.get("id")
+            if not material_id:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Upload each study material before creating the plan.",
+                )
+
+            material = _read_owned_study_material(
+                str(material_id),
+                user_claims["sub"],
+            )
+            if material.get("planId"):
+                raise HTTPException(
+                    status_code=409,
+                    detail="A study material is already connected to another plan.",
+                )
+            material_documents.append(material)
 
         study_plan_document = {
-            "id": str(uuid.uuid4()),
+            "id": plan_id,
             "userId": user_claims["sub"],
             "contentType": "study_plan",
             "createdAt": now,
@@ -2576,7 +2724,10 @@ async def save_study_plan(
                 "examDate": request.examDate,
                 "dailyStudyMinutes": request.dailyStudyMinutes,
                 "unavailableDays": request.unavailableDays,
-                "materials": request.materials,
+                "materials": [
+                    _study_plan_material_response(material)
+                    for material in material_documents
+                ],
                 "status": "draft",
                 "activities": [],
 
@@ -2590,6 +2741,15 @@ async def save_study_plan(
 
         container.create_item(body=study_plan_document)
 
+        for material in material_documents:
+            material["planId"] = plan_id
+            material["updatedAt"] = now
+            container.replace_item(
+                item=material["id"],
+                body=material,
+                partition_key=user_claims["sub"],
+            )
+
         return {
             "id": study_plan_document["id"],
             "plan": {
@@ -2599,12 +2759,78 @@ async def save_study_plan(
             "message": "Study plan saved successfully"
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error saving study plan: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save study plan: {str(e)}"
         )
+
+
+@app.post("/study-plans/{plan_id}/materials")
+async def add_study_plan_material(
+    plan_id: str,
+    file: UploadFile = File(...),
+    user_claims: dict = Depends(validate_token),
+):
+    study_plan = _read_owned_study_plan(plan_id, user_claims["sub"])
+    material = await _store_study_plan_material(
+        file,
+        user_claims["sub"],
+        plan_id,
+    )
+
+    try:
+        material_summary = _study_plan_material_response(material)
+        materials = study_plan.setdefault("data", {}).setdefault("materials", [])
+        materials.append(material_summary)
+        _save_study_plan_document(study_plan, user_claims["sub"])
+        return {
+            "material": material_summary,
+            "plan": _study_plan_response(study_plan),
+            "message": "Study material connected successfully",
+        }
+    except Exception:
+        _delete_study_material_file(material)
+        try:
+            container.delete_item(
+                item=material["id"],
+                partition_key=user_claims["sub"],
+            )
+        except Exception:
+            pass
+        raise
+
+
+@app.delete("/study-plans/{plan_id}/materials/{material_id}")
+async def remove_study_plan_material(
+    plan_id: str,
+    material_id: str,
+    user_claims: dict = Depends(validate_token),
+):
+    study_plan = _read_owned_study_plan(plan_id, user_claims["sub"])
+    material = _read_owned_study_material(material_id, user_claims["sub"])
+    if material.get("planId") != plan_id:
+        raise HTTPException(status_code=404, detail="Study material not found")
+
+    materials = study_plan.setdefault("data", {}).setdefault("materials", [])
+    if not any(item.get("id") == material_id for item in materials):
+        raise HTTPException(status_code=404, detail="Study material not found")
+
+    study_plan["data"]["materials"] = [
+        item for item in materials if item.get("id") != material_id
+    ]
+    _save_study_plan_document(study_plan, user_claims["sub"])
+    _delete_study_material_file(material)
+    container.delete_item(item=material_id, partition_key=user_claims["sub"])
+
+    return {
+        "deleted": True,
+        "plan": _study_plan_response(study_plan),
+        "message": "Study material removed successfully",
+    }
 
 
 # old
@@ -4439,7 +4665,7 @@ async def get_unfiled_items(
 ):
     """Get all items that are not in any folder."""
     try:
-        query = "SELECT * FROM c WHERE c.userId = @userId AND c.contentType != 'folder' AND c.contentType != 'shared_link' AND (NOT IS_DEFINED(c.folderId) OR IS_NULL(c.folderId)) AND (NOT IS_DEFINED(c.deleted) OR c.deleted = false)"
+        query = "SELECT * FROM c WHERE c.userId = @userId AND c.contentType != 'folder' AND c.contentType != 'shared_link' AND c.contentType != 'study_plan_material' AND (NOT IS_DEFINED(c.folderId) OR IS_NULL(c.folderId)) AND (NOT IS_DEFINED(c.deleted) OR c.deleted = false)"
         parameters = [{"name": "@userId", "value": user_claims["sub"]}]
 
         if content_type:
