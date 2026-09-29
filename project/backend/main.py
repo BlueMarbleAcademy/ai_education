@@ -2,6 +2,8 @@ import os
 import json
 import re
 import random
+from docx import Document
+from pptx import Presentation
 
 TOPIC_ALIASES = {
     "add": "addition",
@@ -2571,11 +2573,21 @@ async def _store_study_plan_material(
     plan_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     max_size = 20 * 1024 * 1024
-    filename = file.filename or "uploaded.pdf"
-    if not filename.lower().endswith(".pdf"):
+    filename = file.filename or "uploaded"
+
+    supported_extensions = {
+        ".pdf": "application/pdf",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".txt": "text/plain",
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    }
+
+    file_extension = os.path.splitext(filename)[1].lower()
+
+    if file_extension not in supported_extensions:
         raise HTTPException(
             status_code=422,
-            detail="Only PDF files are supported for study plans.",
+            detail="Unsupported file type. Supported types: PDF, DOCX, TXT, PPTX.",
         )
 
     content = await file.read()
@@ -2588,7 +2600,7 @@ async def _store_study_plan_material(
         )
 
     material_id = str(uuid.uuid4())
-    stored_filename = f"{material_id}.pdf"
+    stored_filename = f"{material_id}{file_extension}"
     os.makedirs(STUDY_PLAN_MATERIAL_DIR, exist_ok=True)
     file_path = os.path.join(STUDY_PLAN_MATERIAL_DIR, stored_filename)
 
@@ -2596,7 +2608,48 @@ async def _store_study_plan_material(
         with open(file_path, "wb") as handle:
             handle.write(content)
 
-        extracted_text = extract_text_from_pdf(file_path)
+        if file_extension == ".pdf":
+            extracted_text = extract_text_from_pdf(file_path)
+
+        elif file_extension == ".txt":
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as text_file:
+                extracted_text = text_file.read().strip()
+
+            if not extracted_text:
+                raise ValueError("No readable text was found in the TXT file.")
+
+        elif file_extension == ".docx":
+            document = Document(file_path)
+
+            extracted_text = "\n".join(
+                paragraph.text
+                for paragraph in document.paragraphs
+                if paragraph.text.strip()
+            ).strip()
+
+            if not extracted_text:
+                raise ValueError("No readable text was found in the DOCX file.")
+
+        elif file_extension == ".pptx":
+            presentation = Presentation(file_path)
+
+            slide_text = []
+
+            for slide in presentation.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text") and shape.text.strip():
+                        slide_text.append(shape.text.strip())
+
+            extracted_text = "\n".join(slide_text).strip()
+
+            if not extracted_text:
+                raise ValueError("No readable text was found in the PPTX file.")
+
+        else:
+            raise ValueError(
+                f"{file_extension.upper()} processing has not been configured yet."
+            )
+
         now = datetime.utcnow().isoformat()
         material_document = {
             "id": material_id,
@@ -2610,7 +2663,7 @@ async def _store_study_plan_material(
                 "storedFilename": stored_filename,
                 "filePath": file_path,
                 "fileSize": len(content),
-                "fileType": "application/pdf",
+                "fileType": supported_extensions[file_extension],
                 "extractedText": extracted_text,
                 "status": "ready",
             },

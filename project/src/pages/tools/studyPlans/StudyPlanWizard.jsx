@@ -25,6 +25,9 @@ const DAYS = [
   { value: "sunday", label: "Sun" },
 ];
 
+const SUPPORTED_FILE_TYPES = ".pdf,.docx,.txt,.pptx";
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
 const INITIAL_FORM = {
   examName: "",
   subject: "",
@@ -71,15 +74,54 @@ const StudyPlanWizard = ({
     event.target.value = "";
     if (!files.length) return;
 
-    setUploadMessage("");
+    const allowedExtensions = [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".pptx",
+    ];
+
+    const validFiles = [];
+    const errors = [];
+
+    files.forEach((file) => {
+      const fileName = file.name.toLowerCase();
+
+      const hasValidExtension = allowedExtensions.some((extension) =>
+        fileName.endsWith(extension)
+      );
+
+      if (!hasValidExtension) {
+        errors.push(`${file.name}: Unsupported file type.`);
+        return;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name}: File is larger than 20 MB.`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (errors.length > 0) {
+      setUploadMessage(errors.join(" "));
+    } else {
+      setUploadMessage("");
+    }
+
     setMaterials((current) => {
       const existingIds = new Set(current.map((material) => material.id));
-      const newMaterials = files.map((file) => ({
-        id: `${file.name}-${file.lastModified}-${file.size}`,
-        file,
-        name: file.name,
-        status: "selected",
-      })).filter((material) => !existingIds.has(material.id));
+
+      const newMaterials = validFiles
+        .map((file) => ({
+          id: `${file.name}-${file.lastModified}-${file.size}`,
+          file,
+          name: file.name,
+          status: "selected",
+        }))
+        .filter((material) => !existingIds.has(material.id));
+
       return [...current, ...newMaterials];
     });
   };
@@ -342,15 +384,21 @@ const StudyPlanWizard = ({
                 Study materials
               </h2>
               <p className="text-sm text-[#718077]">
-                Upload PDFs so the planner can use their extracted text.
+                Upload PDF, DOCX, TXT, or PPTX files so the planner can use your course materials.
               </p>
             </div>
           </div>
 
           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#cdbdde] bg-[#fdfbff] px-4 py-5 text-sm font-semibold text-[#5d4775] transition hover:bg-[#f4effa]">
             <Upload className="h-4 w-4" />
-            Select PDFs
-            <input type="file" accept="application/pdf,.pdf" multiple onChange={handleMaterialSelection} className="sr-only" />
+            Select Files
+            <input
+              type="file"
+              accept={SUPPORTED_FILE_TYPES}
+              multiple
+              onChange={handleMaterialSelection}
+              className="sr-only"
+            />
           </label>
 
           {materials.length > 0 && (

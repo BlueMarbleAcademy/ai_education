@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AlertCircle,
   FileText,
@@ -14,11 +14,57 @@ const StudyPlanMaterials = ({
   isSaving = false,
   error = "",
 }) => {
+  const [selectionError, setSelectionError] = useState("");
+
   const handleSelection = async (event) => {
     const files = Array.from(event.target.files || []);
     event.target.value = "";
-    if (files.length === 0) return;
-    await onAddMaterials(files);
+
+    if (!files.length) {
+      return;
+    }
+
+    const allowedExtensions = [
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".pptx",
+    ];
+
+    const maxFileSize = 20 * 1024 * 1024;
+
+    const validFiles = [];
+    const errors = [];
+
+    files.forEach((file) => {
+      const fileName = file.name.toLowerCase();
+
+      const hasValidExtension = allowedExtensions.some((extension) =>
+        fileName.endsWith(extension)
+      );
+
+      if (!hasValidExtension) {
+        errors.push(`${file.name}: Unsupported file type.`);
+        return;
+      }
+
+      if (file.size > maxFileSize) {
+        errors.push(`${file.name}: File is larger than 20 MB.`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (errors.length > 0) {
+      setSelectionError(errors.join(" "));
+    } else {
+      setSelectionError("");
+    }
+
+    if (validFiles.length > 0) {
+      await onAddMaterials(validFiles);
+    }
   };
 
   return (
@@ -37,8 +83,11 @@ const StudyPlanMaterials = ({
             </h2>
             <p className="mt-0.5 text-sm text-[#718077]">
               {materials.length === 0
-                ? "Add PDFs for this study plan."
-                : `${materials.length} saved PDF${materials.length === 1 ? "" : "s"}`}
+                ? "Add files for this study plan."
+                : `${materials.length} saved file${materials.length === 1 ? "" : "s"}`}
+            </p>
+            <p className="mt-1 text-xs text-[#8a968e]">
+              Supported files: PDF, DOCX, TXT, PPTX
             </p>
           </div>
         </div>
@@ -49,10 +98,10 @@ const StudyPlanMaterials = ({
           ) : (
             <Plus className="h-4 w-4" />
           )}
-          {isSaving ? "Saving..." : "Add PDFs"}
+          {isSaving ? "Saving..." : "Add Files"}
           <input
             type="file"
-            accept="application/pdf,.pdf"
+            accept=".pdf,.docx,.txt,.pptx"
             multiple
             disabled={isSaving}
             onChange={handleSelection}
@@ -60,6 +109,16 @@ const StudyPlanMaterials = ({
           />
         </label>
       </div>
+
+      {selectionError && (
+        <p
+          role="alert"
+          className="mt-4 flex items-center gap-2 rounded-md border border-[#e6b8b8] bg-[#fff3f3] px-3 py-2 text-sm font-medium text-[#9b3434]"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {selectionError}
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="mt-4 flex items-center gap-2 rounded-md border border-[#e6b8b8] bg-[#fff3f3] px-3 py-2 text-sm font-medium text-[#9b3434]">
@@ -112,7 +171,7 @@ const StudyPlanMaterials = ({
 
 const formatFileSize = (bytes) => {
   const size = Number(bytes);
-  if (!Number.isFinite(size) || size <= 0) return "PDF";
+  if (!Number.isFinite(size) || size <= 0) return "Unknown size";
   if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
