@@ -397,10 +397,11 @@ const [loadingTopic, setLoadingTopic] = useState(null);
 
       {/* Hero: Greeting + Streak */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: -8 }}
+        animate={{ y: 0 }}
         transition={{ delay: 0.05 }}
         className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-center justify-between"
+        style={{ background: "linear-gradient(90deg, #2563eb 0%, #1e40af 100%)" }}
       >
         <div className="text-white">
           <p className="text-primary-200 text-sm mb-1">Good to see you back</p>
