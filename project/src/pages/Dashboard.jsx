@@ -400,7 +400,7 @@ const [loadingTopic, setLoadingTopic] = useState(null);
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-center justify-between"
+        className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-center justify-between"
       >
         <div className="text-white">
           <p className="text-primary-200 text-sm mb-1">Good to see you back</p>

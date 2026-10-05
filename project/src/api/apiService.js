@@ -376,6 +376,14 @@ export const removeStudyPlanMaterial = async (planId, materialId) => {
   );
 };
 
+export const getStudyPlanMaterialsForAnalysis = async (planId = null) => {
+  const endpoint = planId
+    ? `${API_BASE}/study-plans/${planId}/materials`
+    : `${API_BASE}/study-plans/materials`;
+
+  return callProtectedApi(endpoint, { method: "GET" });
+};
+
 export const generateHarderQuiz = async (questions, title, numQuestions = 15, folderId = null) => {
   return callProtectedApi("http://localhost:8000/generate-harder-quiz", {
     method: "POST",

@@ -21,3 +21,4 @@ build/
 # Misc
 runApp.txt
 project/src/.env
+project/backend/test_study_plan_materials.py

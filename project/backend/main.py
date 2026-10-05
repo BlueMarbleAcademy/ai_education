@@ -2533,6 +2533,46 @@ def _study_plan_material_response(material: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def collect_study_plan_materials(
+    study_plan: Dict[str, Any],
+    material_details: Dict[str, Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    material_rows = study_plan.get("data", {}).get("materials", []) or []
+    gathered: List[Dict[str, Any]] = []
+
+    for material_ref in material_rows:
+        if isinstance(material_ref, str):
+            material_id = material_ref.strip()
+            material_ref = {}
+        elif isinstance(material_ref, dict):
+            material_id = str(
+                material_ref.get("id") or material_ref.get("materialId") or ""
+            ).strip()
+        else:
+            continue
+
+        if not material_id:
+            continue
+
+        material_doc = material_details.get(material_id, {})
+        data = material_doc.get("data", {}) if isinstance(material_doc, dict) else {}
+        if not isinstance(data, dict):
+            data = {}
+
+        plan_id = (material_doc.get("planId") if isinstance(material_doc, dict) else None) or study_plan.get("id")
+        gathered.append({
+            "id": material_doc.get("id", material_id) if isinstance(material_doc, dict) else material_id,
+            "name": data.get("name") or material_ref.get("name") or "Study material",
+            "fileSize": data.get("fileSize", material_ref.get("fileSize", 0)),
+            "fileType": data.get("fileType", material_ref.get("fileType", "application/pdf")),
+            "status": data.get("status", material_ref.get("status", "ready")),
+            "planId": plan_id,
+            "extractedText": data.get("extractedText") or "",
+        })
+
+    return gathered
+
+
 def _read_owned_study_material(material_id: str, user_id: str) -> Dict[str, Any]:
     try:
         material = container.read_item(item=material_id, partition_key=user_id)
@@ -3015,6 +3055,91 @@ async def get_study_plan(plan_id: str, user_claims: dict = Depends(validate_toke
     except Exception as e:
         print(f"Error retrieving study plan: {str(e)}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study plan not found")
+
+
+@app.get("/study-plans/{plan_id}/materials")
+async def get_study_plan_materials_for_plan(
+    plan_id: str,
+    user_claims: dict = Depends(validate_token),
+):
+    study_plan = _read_owned_study_plan(plan_id, user_claims["sub"])
+    material_query = "SELECT * FROM c WHERE c.userId = @uid AND c.contentType = 'study_plan_material' AND c.planId = @planId"
+    material_items = list(
+        container.query_items(
+            query=material_query,
+            parameters=[
+                {"name": "@uid", "value": user_claims["sub"]},
+                {"name": "@planId", "value": plan_id},
+            ],
+            enable_cross_partition_query=True,
+        )
+    )
+    material_details = {
+        str(item.get("id")): item for item in material_items if isinstance(item, dict) and item.get("id")
+    }
+    return {
+        "planId": plan_id,
+        "materials": collect_study_plan_materials(study_plan, material_details),
+    }
+
+
+@app.get("/study-plans/materials")
+async def get_all_study_plan_materials(user_claims: dict = Depends(validate_token)):
+    try:
+        plan_query = "SELECT * FROM c WHERE c.userId = @uid AND c.contentType = 'study_plan' ORDER BY c.createdAt DESC"
+        plans = list(
+            container.query_items(
+                query=plan_query,
+                parameters=[{"name": "@uid", "value": user_claims["sub"]}],
+                enable_cross_partition_query=True,
+            )
+        )
+
+        material_query = "SELECT * FROM c WHERE c.userId = @uid AND c.contentType = 'study_plan_material'"
+        material_items = list(
+            container.query_items(
+                query=material_query,
+                parameters=[{"name": "@uid", "value": user_claims["sub"]}],
+                enable_cross_partition_query=True,
+            )
+        )
+
+        material_details = {
+            str(item.get("id")): item
+            for item in material_items
+            if isinstance(item, dict) and item.get("id")
+        }
+
+        study_plans_payload = []
+        all_materials = []
+
+        for plan in plans:
+            if not isinstance(plan.get("data"), dict):
+                continue
+
+            materials = collect_study_plan_materials(plan, material_details)
+            study_plan_summary = {
+                "id": plan.get("id"),
+                "title": plan.get("data", {}).get("title") or plan.get("data", {}).get("examName") or "Untitled Study Plan",
+                "description": plan.get("data", {}).get("description") or "",
+                "materials": materials,
+            }
+            study_plans_payload.append(study_plan_summary)
+            all_materials.extend(materials)
+
+        return {
+            "studyPlans": study_plans_payload,
+            "materials": all_materials,
+            "count": len(all_materials),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"Error gathering study plan materials: {str(exc)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to gather study plan materials: {str(exc)}",
+        )
 
 
 @app.post("/study-plans/{plan_id}/activities")
