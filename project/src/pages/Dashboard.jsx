@@ -46,6 +46,7 @@ const Dashboard = () => {
   const [streakDays, setStreakDays] = useState(0);
   const [streakLoading, setStreakLoading] = useState(true);
   const [streakLoadError, setStreakLoadError] = useState(false);
+  const [streakError, setStreakError] = useState("");
   const recentItems = useUserRecents();
   const [suggestedNextSteps, setSuggestedNextSteps] = useState([]);
   const [loadingNextSteps, setLoadingNextSteps] = useState(true);
@@ -271,6 +272,7 @@ const [loadingTopic, setLoadingTopic] = useState(null);
     const fetchStreak = async () => {
       setStreakLoading(true);
       setStreakLoadError(false);
+      setStreakError("");
 
       try {
         const data = await getStudyStreak();
@@ -291,6 +293,7 @@ const [loadingTopic, setLoadingTopic] = useState(null);
       } catch (err) {
         if (cancelled) return;
         console.error("Error fetching streak:", err);
+        setStreakError(err instanceof Error ? err.message : String(err));
 
         const cachedStreak = getCachedStudyStreak();
         if (cachedStreak !== null) {
@@ -414,7 +417,14 @@ const [loadingTopic, setLoadingTopic] = useState(null);
           {streakLoading ? (
             <p className="text-white font-semibold text-sm mt-1">Syncing...</p>
           ) : streakLoadError ? (
-            <p className="text-orange-300 font-semibold text-sm mt-1">Unavailable</p>
+            <>
+              <p className="text-orange-300 font-semibold text-sm mt-1">Unavailable</p>
+              {streakError && (
+                <p className="mt-1 max-w-[260px] break-words text-left text-[11px] text-white/80" role="status">
+                  {streakError}
+                </p>
+              )}
+            </>
           ) : streakDays === 0 ? (
             <>
               <p className="text-white text-2xl font-bold">🔥</p>
