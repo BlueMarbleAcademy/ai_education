@@ -2992,13 +2992,19 @@ async def get_study_plans(user_claims: dict = Depends(validate_token)):
         for item in items:
             if item.get("contentType") != "study_plan" or not isinstance(item.get("data"), dict):
                 continue
+            plan_data = item["data"]
             study_plans.append({
                 "id": item["id"],
-                "title": item["data"]["title"],
-                "description": item["data"]["description"],
-                "tags": item["data"]["tags"],
+                "title": plan_data.get("examName") or plan_data.get("title") or "Untitled study plan",
+                "description": plan_data.get("description", ""),
+                "tags": plan_data.get("tags", []),
+                "examName": plan_data.get("examName"),
+                "subject": plan_data.get("subject"),
+                "studyStartDate": plan_data.get("studyStartDate"),
+                "examDate": plan_data.get("examDate"),
+                "activityCount": len(plan_data.get("activities", [])),
                 "createdAt": item["createdAt"],
-                "updatedAt": item["data"]["updatedAt"]
+                "updatedAt": plan_data.get("updatedAt") or item.get("updatedAt") or item["createdAt"]
             })
         print(f"Found {len(study_plans)} study plans for user")
         return {"study_plans": study_plans}
