@@ -15,6 +15,7 @@ import {
   addStudyPlanMaterial,
   addStudyPlanActivity,
   getStudyPlan,
+  getStudyPlans,
   removeStudyPlanMaterial,
   saveStudyPlan,
   updateStudyPlanActivity,
@@ -23,6 +24,14 @@ import StudyPlanActivities from "./StudyPlanActivities";
 import StudyPlanMaterials from "./StudyPlanMaterials";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
+import StudyPlanSelector from "./StudyPlanSelector";
+import {
+  buildCalendarBlocks,
+  formatPlannedTime,
+  getPlanFocusDate,
+  getWeekActivities,
+  getWeekOffsetForDate,
+} from "./studyPlanCalendar";
 
 /**
  * Main StudyPlans component that coordinates all other components
@@ -43,6 +52,59 @@ const StudyPlans = () => {
   const [materialSaving, setMaterialSaving] = useState(false);
   const [materialError, setMaterialError] = useState("");
   const [weekOffset, setWeekOffset] = useState(0);
+  const [savedPlans, setSavedPlans] = useState([]);
+  const [plansStatus, setPlansStatus] = useState("loading");
+  const [plansError, setPlansError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSavedPlans = async () => {
+      try {
+        setPlansStatus("loading");
+        setPlansError("");
+        const plans = await getStudyPlans();
+        if (!cancelled) {
+          setSavedPlans(plans || []);
+          setPlansStatus("ready");
+        }
+      } catch (error) {
+        console.error("Failed to load saved study plans:", error);
+        if (!cancelled) {
+          setPlansError("We couldn't load your saved study plans. Please try again.");
+          setPlansStatus("error");
+        }
+      }
+    };
+
+    loadSavedPlans();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      showCreate ||
+      planId ||
+      plansStatus !== "ready" ||
+      savedPlans.length === 0
+    ) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("planId", savedPlans[0].id);
+    setSearchParams(nextParams, { replace: true });
+  }, [
+    planId,
+    plansStatus,
+    savedPlans,
+    searchParams,
+    setSearchParams,
+    showCreate,
+  ]);
 
   useEffect(() => {
     if (!planId) {
@@ -62,7 +124,9 @@ const StudyPlans = () => {
         }
 
         if (plan?.data?.examName) {
-          setCreatedPlan(normalizeStructuredPlan(plan));
+          const structuredPlan = normalizeStructuredPlan(plan);
+          setCreatedPlan(structuredPlan);
+          setWeekOffset(getWeekOffsetForDate(getPlanFocusDate(structuredPlan)));
           setCurrentPlan(null);
           setShowPlanner(true);
         } else {
@@ -87,6 +151,24 @@ const StudyPlans = () => {
       cancelled = true;
     };
   }, [planId]);
+
+  const handleSelectPlan = (selectedPlanId) => {
+    if (!selectedPlanId || selectedPlanId === planId) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("planId", selectedPlanId);
+    setCreatedPlan(null);
+    setCurrentPlan(null);
+    setShowCreate(false);
+    setShowPlanner(true);
+    setPlanError("");
+    setActivityError("");
+    setMaterialError("");
+    setWeekOffset(0);
+    setSearchParams(nextParams);
+  };
 
   // Create a new study plan
   const handleCreatePlan = () => {
@@ -128,6 +210,12 @@ const StudyPlans = () => {
       };
 
       setCreatedPlan(savedPlan);
+      setWeekOffset(getWeekOffsetForDate(getPlanFocusDate(savedPlan)));
+      setSavedPlans((plans) => [
+        toStudyPlanSummary(savedPlan),
+        ...plans.filter((item) => item.id !== savedPlan.id),
+      ]);
+      setPlansStatus("ready");
       setSearchParams({ planId: savedPlan.id }, { replace: true });
       setShowPlanner(true);
       setShowCreate(false);
@@ -150,6 +238,14 @@ const StudyPlans = () => {
       setActivityError("");
       const response = await addStudyPlanActivity(createdPlan.id, activity);
       setCreatedPlan(response.plan);
+      setSavedPlans((plans) =>
+        plans.map((plan) =>
+          plan.id === response.plan.id
+            ? toStudyPlanSummary(response.plan, plan)
+            : plan
+        )
+      );
+      setWeekOffset(getWeekOffsetForDate(activity.studyDate));
     } catch (error) {
       console.error("Failed to save study activity:", error);
       setActivityError(error.message || "Failed to save the study activity.");
@@ -176,6 +272,13 @@ const StudyPlans = () => {
         !activity.completed
       );
       setCreatedPlan(response.plan);
+      setSavedPlans((plans) =>
+        plans.map((plan) =>
+          plan.id === response.plan.id
+            ? toStudyPlanSummary(response.plan, plan)
+            : plan
+        )
+      );
     } catch (error) {
       console.error("Failed to update study activity:", error);
       setActivityError(error.message || "Failed to update the study activity.");
@@ -241,7 +344,19 @@ const StudyPlans = () => {
     const dates = weekDates.map((date) => date.getDate());
     const todayIndex = weekOffset === 0 ? today.getDay() : -1;
     const times = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM"];
-    const blocks = [];
+    const activities = createdPlan?.activities || [];
+    const weekActivities = getWeekActivities(activities, weekDates);
+    const completedWeekActivities = weekActivities.filter(
+      (activity) => activity.completed
+    ).length;
+    const plannedWeekMinutes = weekActivities.reduce(
+      (total, activity) => total + Number(activity.estimatedMinutes || 0),
+      0
+    );
+    const completionPercentage = weekActivities.length
+      ? Math.round((completedWeekActivities / weekActivities.length) * 100)
+      : 0;
+    const blocks = buildCalendarBlocks(activities, weekDates);
 
     return (
       <div className="space-y-5">
@@ -302,15 +417,24 @@ const StudyPlans = () => {
           <div className="flex items-center gap-2"><button aria-label="Previous week" onClick={() => setWeekOffset((value) => value - 1)} className="rounded-md border border-white/30 p-2 text-white hover:bg-white/10"><ArrowLeft className="h-4 w-4" /></button><button onClick={() => setWeekOffset(0)} className="rounded-md border border-white bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-primary-50">Today</button><button aria-label="Next week" onClick={() => setWeekOffset((value) => value + 1)} className="rounded-md border border-white/30 p-2 text-white hover:bg-white/10"><ArrowRight className="h-4 w-4" /></button><span className="ml-2 text-sm font-semibold text-white">{formatWeekRange(weekDates)}</span></div>
           <div className="flex items-center gap-2"><button className="inline-flex items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10"><SlidersHorizontal className="h-4 w-4" /> Filters</button><button className="inline-flex items-center gap-1 rounded-md border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10">Week <ChevronDown className="h-4 w-4" /></button></div>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm"><div className="min-w-[840px]"><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))] border-b border-gray-200 bg-gray-50"><div className="border-r border-gray-200" />{days.map((day, index) => <div key={day} className={`border-r border-gray-200 px-2 py-3 text-center last:border-r-0 ${index === todayIndex ? "bg-primary-50" : ""}`}><p className="text-[11px] font-bold uppercase tracking-wider text-gray-700">{day}</p><p className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${index === todayIndex ? "bg-primary-100 text-primary-800" : "text-gray-900"}`}>{dates[index]}</p></div>)}</div><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))]"><div className="bg-primary-50">{times.map((time) => <div key={time} className="h-16 border-b border-r border-primary-100 pr-2 pt-1 text-right text-[10px] font-medium text-primary-700">{time}</div>)}</div>{days.map((day, dayIndex) => <div key={day} className={`relative border-r border-gray-100 last:border-r-0 ${dayIndex === todayIndex ? "bg-primary-50/40" : ""}`}>{times.map((time) => <div key={`${day}-${time}`} className="h-16 border-b border-gray-100" />)}{blocks.filter((block) => block.day === dayIndex).map((block) => { const Icon = block.icon; return <div key={block.title} className={`absolute left-1.5 right-1.5 rounded-md border p-2 shadow-sm ${block.color}`} style={{ top: `${block.start * 64 + 4}px`, height: `${block.span * 64 - 8}px` }}><div className="flex items-start justify-between gap-1"><Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" /><MoreHorizontal className="h-3.5 w-3.5 opacity-60" /></div><p className="mt-1 truncate text-xs font-bold">{block.title}</p><p className="mt-0.5 truncate text-[10px] font-medium opacity-75">{block.meta}</p></div>; })}</div>)}</div></div></div>
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]"><div className="rounded-xl border border-primary-200 bg-primary-50 p-4"><div className="flex items-start gap-3"><div className="rounded-lg bg-primary-100 p-2 text-primary-700"><Sparkles className="h-5 w-5" /></div><div><h2 className="font-bold text-primary-900">A steady week beats a packed week</h2><p className="mt-1 text-sm leading-6 text-primary-900">You have 7 hours planned across 5 subjects. There is still room for one catch-up session.</p></div></div></div><div className="rounded-xl border border-gray-200 bg-white p-4"><div className="flex items-center justify-between"><h2 className="font-bold text-gray-800">This week</h2><MoreHorizontal className="h-5 w-5 text-primary-700" /></div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-gray-500">Completed</span><span className="font-bold text-primary-700">2 of 8 sessions</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-primary-100"><div className="h-full w-1/4 rounded-full bg-primary-600" /></div></div></div>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm"><div className="min-w-[840px]"><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))] border-b border-gray-200 bg-gray-50"><div className="border-r border-gray-200" />{days.map((day, index) => <div key={day} className={`border-r border-gray-200 px-2 py-3 text-center last:border-r-0 ${index === todayIndex ? "bg-primary-50" : ""}`}><p className="text-[11px] font-bold uppercase tracking-wider text-gray-700">{day}</p><p className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${index === todayIndex ? "bg-primary-100 text-primary-800" : "text-gray-900"}`}>{dates[index]}</p></div>)}</div><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))]"><div className="bg-primary-50">{times.map((time) => <div key={time} className="h-16 border-b border-r border-primary-100 pr-2 pt-1 text-right text-[10px] font-medium text-primary-700">{time}</div>)}</div>{days.map((day, dayIndex) => <div key={day} className={`relative border-r border-gray-100 last:border-r-0 ${dayIndex === todayIndex ? "bg-primary-50/40" : ""}`}>{times.map((time) => <div key={`${day}-${time}`} className="h-16 border-b border-gray-100" />)}{blocks.filter((block) => block.day === dayIndex).map((block) => <article key={block.id} aria-label={`${block.title}, ${block.meta}${block.completed ? ", completed" : ""}`} className={`absolute left-1.5 right-1.5 overflow-hidden rounded-md border p-1.5 shadow-sm ${block.color} ${block.completed ? "opacity-65" : ""}`} style={{ top: `${block.start * 64 + 4}px`, height: `${block.span * 64 - 8}px` }}><div className="flex min-w-0 items-center gap-1"><Calendar className="h-3.5 w-3.5 shrink-0" /><p className={`min-w-0 flex-1 truncate text-xs font-bold ${block.completed ? "line-through" : ""}`}>{block.title}</p>{block.completed && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}</div><p className="mt-1 truncate pl-[18px] text-[10px] font-medium leading-none opacity-75">{block.meta}</p></article>)}</div>)}</div></div></div>
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]"><div className="rounded-xl border border-primary-200 bg-primary-50 p-4"><div className="flex items-start gap-3"><div className="rounded-lg bg-primary-100 p-2 text-primary-700"><Sparkles className="h-5 w-5" /></div><div><h2 className="font-bold text-primary-900">A steady week beats a packed week</h2><p className="mt-1 text-sm leading-6 text-primary-900">{weekActivities.length > 0 ? `You have ${formatPlannedTime(plannedWeekMinutes)} planned across ${weekActivities.length} study session${weekActivities.length === 1 ? "" : "s"} this week.` : createdPlan ? "No study sessions are planned for this week yet." : "Create a plan and add activities to start filling your calendar."}</p></div></div></div><div className="rounded-xl border border-gray-200 bg-white p-4"><div className="flex items-center justify-between"><h2 className="font-bold text-gray-800">This week</h2><MoreHorizontal className="h-5 w-5 text-primary-700" /></div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-gray-500">Completed</span><span className="font-bold text-primary-700">{completedWeekActivities} of {weekActivities.length} sessions</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-primary-100"><div className="h-full rounded-full bg-primary-600 transition-[width]" style={{ width: `${completionPercentage}%` }} /></div></div></div>
       </div>
     );
   };
 
   // Main render method
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+      {!showCreate && (
+        <StudyPlanSelector
+          plans={savedPlans}
+          selectedPlanId={planId}
+          status={plansStatus}
+          error={plansError}
+          onSelect={handleSelectPlan}
+        />
+      )}
       {showPlanner ? (
         renderPlannerHome()
       ) : showCreate ? (
@@ -358,6 +482,21 @@ const normalizeStructuredPlan = (studyPlanDocument) => ({
   ...studyPlanDocument.data,
   activities: studyPlanDocument.data?.activities || [],
   materials: studyPlanDocument.data?.materials || [],
+});
+
+const toStudyPlanSummary = (plan, existingSummary = {}) => ({
+  ...existingSummary,
+  id: plan.id,
+  title: plan.examName || plan.title || "Untitled study plan",
+  examName: plan.examName || null,
+  subject: plan.subject || null,
+  studyStartDate: plan.studyStartDate || null,
+  examDate: plan.examDate || null,
+  activityCount: Array.isArray(plan.activities)
+    ? plan.activities.length
+    : existingSummary.activityCount || 0,
+  createdAt: existingSummary.createdAt || plan.createdAt || new Date().toISOString(),
+  updatedAt: plan.updatedAt || new Date().toISOString(),
 });
 
 export default StudyPlans;
