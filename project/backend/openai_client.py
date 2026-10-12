@@ -19,6 +19,82 @@ SUMMARIZER_DEPLOYMENT_NAME = MODEL
 FLASHCARD_DEPLOYMENT_NAME = MODEL
 QUIZ_DEPLOYMENT_NAME = MODEL
 
+def identify_study_topics_and_concepts(material_text: str) -> Dict[str, Any]:
+    """
+    Analyze uploaded study material and identify topics, subtopics,
+    and important concepts using only the provided material.
+    """
+    try:
+        response = _client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You analyze course materials for a student study planner. "
+                        "Use ONLY the provided material. Do not add outside knowledge. "
+                        "Return ONLY valid JSON with no markdown or extra text."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+Analyze the following course material.
+
+Identify:
+1. Main topics
+2. Subtopics belonging to each main topic
+3. Important concepts for each topic or subtopic
+
+Important concepts should be ideas that a student should understand before an exam.
+Descriptions must be short, clear, and understandable to a student.
+
+Return this exact JSON structure:
+
+{{
+  "topics": [
+    {{
+      "name": "Main Topic",
+      "subtopics": [
+        {{
+          "name": "Subtopic",
+          "concepts": [
+            {{
+              "title": "Important Concept",
+              "description": "Short explanation based only on the uploaded material."
+            }}
+          ]
+        }}
+      ],
+      "concepts": [
+        {{
+          "title": "Important Concept",
+          "description": "Short explanation based only on the uploaded material."
+        }}
+      ]
+    }}
+  ]
+}}
+
+Course material:
+<<<
+{material_text}
+>>>
+""",
+                },
+            ],
+            temperature=0.2,
+            max_tokens=2500,
+        )
+
+        raw = response.choices[0].message.content.strip()
+        return json.loads(raw)
+
+    except Exception as e:
+        print(f"Study topic analysis error: {str(e)}")
+        raise Exception(f"Study topic analysis failed: {str(e)}")
+
+
 def summarize_text(text: str, style: str = "high", format: str = "bullet") -> str:
     """
     Clean, stable, UI-friendly summarizer for Azure OpenAI.

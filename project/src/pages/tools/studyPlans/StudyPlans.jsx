@@ -16,6 +16,8 @@ import {
   addStudyPlanActivity,
   getStudyPlan,
   getStudyPlans,
+  analyzeStudyPlanTopics,
+  saveStudyPlanTopicReview,
   removeStudyPlanMaterial,
   saveStudyPlan,
   updateStudyPlanActivity,
@@ -45,6 +47,11 @@ const StudyPlans = () => {
   const [showPlanner, setShowPlanner] = useState(true);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [createdPlan, setCreatedPlan] = useState(null);
+  const [expandedTopics, setExpandedTopics] = useState({});
+  const [reviewingTopics, setReviewingTopics] = useState(false);
+  const [incorrectTopics, setIncorrectTopics] = useState({});
+  const [missingTopicInput, setMissingTopicInput] = useState("");
+  const [missingTopics, setMissingTopics] = useState([]);
   const [planStatus, setPlanStatus] = useState("idle"); // idle, loading, ready, updating
   const [planError, setPlanError] = useState("");
   const [activitySaving, setActivitySaving] = useState(false);
@@ -228,6 +235,61 @@ const StudyPlans = () => {
     }
   };
 
+  const handleAnalyzeTopics = async () => {
+    if (!createdPlan?.id) {
+      console.warn("No saved study plan is available to analyze.");
+      return;
+    }
+
+    try {
+      const result = await analyzeStudyPlanTopics(createdPlan.id);
+
+      setCreatedPlan((plan) =>
+        plan
+          ? {
+              ...plan,
+              identifiedTopics: result.topics || [],
+            }
+          : plan
+      );
+
+        console.log("Study plan topic analysis:", result);
+    } catch (error) {
+      console.error("Failed to analyze study plan topics:", error);
+    }
+  };
+
+  const handleFinishTopicReview = async () => {
+    if (!createdPlan?.id) return;
+
+    const incorrectTopicNames = createdPlan.identifiedTopics
+      .filter((_, topicIndex) => incorrectTopics[topicIndex])
+      .map((topic) => topic.name);
+
+    try {
+      const result = await saveStudyPlanTopicReview(
+        createdPlan.id,
+        incorrectTopicNames,
+        missingTopics
+      );
+
+      setCreatedPlan((plan) =>
+        plan
+          ? {
+              ...plan,
+              topicReview: result.topicReview,
+            }
+          : plan
+      );
+
+      setReviewingTopics(false);
+
+      console.log("Topic review saved:", result);
+    } catch (error) {
+      console.error("Failed to save topic review:", error);
+    }
+  };
+  
   const handleAddActivity = async (activity) => {
     if (!createdPlan?.id) {
       throw new Error("Save the study plan before adding activities.");
@@ -404,6 +466,209 @@ const StudyPlans = () => {
             error={materialError}
           />
         )}
+
+        {createdPlan && (
+          <button
+            type="button"
+            onClick={handleAnalyzeTopics}
+            className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+          >
+            Analyze Topics
+          </button>
+        )}
+
+        {createdPlan?.identifiedTopics?.length > 0 && (
+          <div className="rounded-lg border border-[#dce5df] bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-[#26372d]">
+                Identified Topics
+              </h2>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (reviewingTopics) {
+                    handleFinishTopicReview();
+                  } else {
+                    const savedIncorrectTopics =
+                      createdPlan.topicReview?.incorrectTopics || [];
+
+                    const restoredIncorrectTopics = {};
+
+                    createdPlan.identifiedTopics.forEach((topic, topicIndex) => {
+                      if (savedIncorrectTopics.includes(topic.name)) {
+                        restoredIncorrectTopics[topicIndex] = true;
+                      }
+                    });
+
+                    setIncorrectTopics(restoredIncorrectTopics);
+                    setMissingTopics(
+                      createdPlan.topicReview?.missingTopics || []
+                    );
+
+                    setReviewingTopics(true);
+                  }
+                }}
+                className="rounded-md border border-[#dce5df] px-3 py-1.5 text-sm font-semibold text-[#42564a] hover:bg-[#f8faf9]"
+              >
+                {reviewingTopics ? "Finish Review" : "Review Topics"}
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {createdPlan.identifiedTopics.map((topic, topicIndex) => (
+                <div
+                  key={`${topic.name}-${topicIndex}`}
+                  className="rounded-md border border-[#e5ebe7] p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedTopics((current) => ({
+                          ...current,
+                          [topicIndex]: !current[topicIndex],
+                        }))
+                      }
+                      className="flex flex-1 items-center justify-between text-left"
+                    >
+                      <h3 className="font-semibold text-[#33443a]">
+                        {topic.name}
+                      </h3>
+
+                      <ChevronDown
+                        className={`h-4 w-4 text-[#718077] transition-transform ${
+                          expandedTopics[topicIndex] ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {reviewingTopics && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIncorrectTopics((current) => ({
+                            ...current,
+                            [topicIndex]: !current[topicIndex],
+                          }))
+                        }
+                        className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                          incorrectTopics[topicIndex]
+                            ? "border-red-300 bg-red-50 text-red-700"
+                            : "border-[#dce5df] text-[#607067] hover:bg-[#f8faf9]"
+                        }`}
+                      >
+                        {incorrectTopics[topicIndex] ? "Marked Incorrect" : "Mark Incorrect"}
+                      </button>
+                    )}
+                  </div>
+
+                  {expandedTopics[topicIndex] && (
+                    <>
+                      {topic.concepts?.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs font-bold uppercase text-[#718077]">
+                            Important Concepts
+                          </p>
+
+                          <ul className="mt-2 space-y-2">
+                            {topic.concepts.map((concept, conceptIndex) => (
+                              <li key={`${concept.title}-${conceptIndex}`}>
+                                <p className="text-sm font-semibold text-[#33443a]">
+                                  {concept.title}
+                                </p>
+                                <p className="text-sm text-[#718077]">
+                                  {concept.description}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {topic.subtopics?.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          {topic.subtopics.map((subtopic, subtopicIndex) => (
+                            <div
+                              key={`${subtopic.name}-${subtopicIndex}`}
+                              className="rounded-md bg-[#f8faf9] p-3"
+                            >
+                              <p className="text-sm font-semibold text-[#42564a]">
+                                {subtopic.name}
+                              </p>
+
+                              {subtopic.concepts?.length > 0 && (
+                                <ul className="mt-2 space-y-2">
+                                  {subtopic.concepts.map((concept, conceptIndex) => (
+                                    <li key={`${concept.title}-${conceptIndex}`}>
+                                      <p className="text-sm font-medium text-[#33443a]">
+                                        {concept.title}
+                                      </p>
+                                      <p className="text-sm text-[#718077]">
+                                        {concept.description}
+                                      </p>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {reviewingTopics && (
+              <div className="mt-4 rounded-md border border-dashed border-[#cfd9d2] bg-[#f8faf9] p-3">
+                <p className="text-sm font-semibold text-[#42564a]">
+                  Missing a topic?
+                </p>
+
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    value={missingTopicInput}
+                    onChange={(event) => setMissingTopicInput(event.target.value)}
+                    placeholder="Enter missing topic"
+                    className="flex-1 rounded-md border border-[#dce5df] px-3 py-2 text-sm outline-none focus:border-[#8fb59d]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const trimmedTopic = missingTopicInput.trim();
+
+                      if (!trimmedTopic) return;
+
+                      setMissingTopics((current) => [...current, trimmedTopic]);
+                      setMissingTopicInput("");
+                    }}
+                    className="rounded-md bg-[#274c3a] px-3 py-2 text-sm font-semibold text-white hover:bg-[#1d3c2d]"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {missingTopics.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {missingTopics.map((topic, index) => (
+                      <p
+                        key={`${topic}-${index}`}
+                        className="text-sm text-[#526b5a]"
+                      >
+                        + {topic}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {createdPlan && (
           <StudyPlanActivities
             plan={createdPlan}

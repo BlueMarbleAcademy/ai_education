@@ -295,11 +295,10 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import database
 from pdf_utils import extract_text_from_pdf
-from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz
+from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz, analyze_quiz_performance, identify_study_topics_and_concepts
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse, Flashcard, FlashcardDeck, FlashcardDocument, MindmapDocument, SaveMindmapResponse, CreateMindmapRequest, CreateFolderRequest, UpdateFolderRequest, FolderOut, ShareLinkCreateRequest, ShareLinkUpdateRequest, ShareLinkSettings
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
 import time
-from openai_client import analyze_quiz_performance
 # Load the environment variables
 load_dotenv()
 
@@ -2430,6 +2429,9 @@ class CreateStudyPlanRequest(BaseModel):
     unavailableDays: List[str] = Field(default_factory=list)
     materials: List[Dict[str, Any]] = Field(default_factory=list)
 
+class TopicReviewRequest(BaseModel):
+    incorrectTopics: list[str] = []
+    missingTopics: list[str] = []
 
 class CreateStudyPlanActivityRequest(BaseModel):
     id: Optional[str] = None
@@ -2823,6 +2825,11 @@ async def save_study_plan(
                 ],
                 "status": "draft",
                 "activities": [],
+                "identifiedTopics": [],
+                "topicReview": {
+                    "incorrectTopics": [],
+                    "missingTopics": [],
+                },
 
                 # Keep these for compatibility with the older study-plan code
                 "title": request.examName,
@@ -2861,6 +2868,117 @@ async def save_study_plan(
             detail=f"Failed to save study plan: {str(e)}"
         )
 
+@app.post("/study-plans/{plan_id}/analyze-topics")
+async def analyze_study_plan_topics(
+    plan_id: str,
+    user_claims: dict = Depends(validate_token),
+):
+    try:
+        user_id = user_claims["sub"]
+
+        materials_query = """
+        SELECT * FROM c
+        WHERE c.userId = @userId
+          AND c.contentType = 'study_plan_material'
+          AND c.planId = @planId
+        """
+
+        materials = list(
+            container.query_items(
+                query=materials_query,
+                parameters=[
+                    {"name": "@userId", "value": user_id},
+                    {"name": "@planId", "value": plan_id},
+                ],
+                enable_cross_partition_query=True,
+            )
+        )
+
+        if not materials:
+            raise HTTPException(
+                status_code=404,
+                detail="No study materials were found for this study plan.",
+            )
+
+        extracted_sections = []
+
+        for material in materials:
+            data = material.get("data", {})
+            extracted_text = (data.get("extractedText") or "").strip()
+
+            if extracted_text:
+                extracted_sections.append(
+                    f"Material: {data.get('name', 'Untitled material')}\n"
+                    f"{extracted_text}"
+                )
+
+        if not extracted_sections:
+            raise HTTPException(
+                status_code=422,
+                detail="No readable text was found in the uploaded study materials.",
+            )
+
+        combined_text = "\n\n---\n\n".join(extracted_sections)
+
+        analysis = identify_study_topics_and_concepts(combined_text)
+
+        study_plan = _read_owned_study_plan(plan_id, user_id)
+
+        study_plan.setdefault("data", {})["identifiedTopics"] = analysis.get("topics", [])
+        study_plan["updatedAt"] = datetime.utcnow().isoformat()
+        study_plan["data"]["updatedAt"] = study_plan["updatedAt"]
+
+        _save_study_plan_document(study_plan, user_id)
+
+        return {
+            "topics": study_plan["data"]["identifiedTopics"],
+            "message": "Study topics analyzed and saved successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"Error analyzing study plan topics: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail="The study materials could not be analyzed.",
+        )
+
+@app.put("/study-plans/{plan_id}/topic-review")
+async def save_study_plan_topic_review(
+    plan_id: str,
+    request: TopicReviewRequest,
+    user_claims: dict = Depends(validate_token),
+):
+    try:
+        user_id = user_claims["sub"]
+
+        study_plan = _read_owned_study_plan(plan_id, user_id)
+
+        study_plan.setdefault("data", {})["topicReview"] = {
+            "incorrectTopics": request.incorrectTopics,
+            "missingTopics": request.missingTopics,
+        }
+
+        now = datetime.utcnow().isoformat()
+        study_plan["updatedAt"] = now
+        study_plan["data"]["updatedAt"] = now
+
+        _save_study_plan_document(study_plan, user_id)
+
+        return {
+            "topicReview": study_plan["data"]["topicReview"],
+            "message": "Topic review saved successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"Error saving topic review: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail="The topic review could not be saved.",
+        )
 
 @app.post("/study-plans/{plan_id}/materials")
 async def add_study_plan_material(

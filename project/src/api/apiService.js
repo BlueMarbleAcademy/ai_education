@@ -569,6 +569,44 @@ export const getStudyPlan = async (planId) => {
   }
 };
 
+export const analyzeStudyPlanTopics = async (planId) => {
+    const endpoint = `http://localhost:8000/study-plans/${planId}/analyze-topics`;
+
+    try {
+        const response = await callProtectedApi(endpoint, {
+            method: "POST",
+        });
+
+        return response;
+    } catch (error) {
+        console.error("Error analyzing study plan topics:", error);
+        throw error;
+    }
+};
+
+export const saveStudyPlanTopicReview = async (
+    planId,
+    incorrectTopics,
+    missingTopics
+) => {
+    const endpoint = `http://localhost:8000/study-plans/${planId}/topic-review`;
+
+    try {
+        const response = await callProtectedApi(endpoint, {
+            method: "PUT",
+            body: JSON.stringify({
+                incorrectTopics,
+                missingTopics,
+            }),
+        });
+
+        return response;
+    } catch (error) {
+        console.error("Error saving study plan topic review:", error);
+        throw error;
+    }
+};
+
 /**
  * Add an activity to a saved study plan.
  * @param {String} planId - Saved study plan ID
