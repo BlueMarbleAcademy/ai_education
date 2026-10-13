@@ -48,6 +48,9 @@ Identify:
 
 Important concepts should be ideas that a student should understand before an exam.
 Descriptions must be short, clear, and understandable to a student.
+Combine duplicate or very similar topics into one main topic.
+Place each subtopic under the single main topic where it fits best.
+Do not repeat a main topic as one of its own subtopics.
 
 Return this exact JSON structure:
 

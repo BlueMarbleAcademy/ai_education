@@ -2499,6 +2499,173 @@ def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
     }
 
 
+STUDY_TOPIC_GENERIC_WORDS = {
+    "a",
+    "an",
+    "and",
+    "basics",
+    "concepts",
+    "for",
+    "fundamentals",
+    "introduction",
+    "of",
+    "overview",
+    "the",
+    "to",
+    "topic",
+    "topics",
+}
+
+
+def _study_topic_key(value: Any) -> str:
+    text = re.sub(r"['’]s\b", "", str(value or "").casefold())
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    words = []
+
+    for word in text.split():
+        if word in STUDY_TOPIC_GENERIC_WORDS:
+            continue
+        if word.endswith("ies") and len(word) > 4:
+            word = f"{word[:-3]}y"
+        elif (
+            word.endswith("s")
+            and len(word) > 3
+            and not word.endswith(("ics", "is", "ss", "us"))
+        ):
+            word = word[:-1]
+        words.append(word)
+
+    return " ".join(sorted(words))
+
+
+def _normalize_study_concepts(concepts: Any) -> List[Dict[str, str]]:
+    if not isinstance(concepts, list):
+        return []
+
+    normalized = []
+    seen = set()
+    for concept in concepts:
+        if not isinstance(concept, dict):
+            continue
+
+        raw_title = concept.get("title")
+        if not isinstance(raw_title, str):
+            continue
+
+        title = re.sub(r"\s+", " ", raw_title).strip()
+        raw_description = concept.get("description")
+        description = re.sub(
+            r"\s+",
+            " ",
+            raw_description if isinstance(raw_description, str) else "",
+        ).strip()
+        key = _study_topic_key(title)
+        if not title or not key or key in seen:
+            continue
+
+        seen.add(key)
+        normalized.append({"title": title, "description": description})
+
+    return normalized
+
+
+def _merge_unique_study_concepts(
+    existing: List[Dict[str, str]],
+    additions: List[Dict[str, str]],
+) -> None:
+    seen = {_study_topic_key(concept.get("title")) for concept in existing}
+    for concept in additions:
+        key = _study_topic_key(concept.get("title"))
+        if key and key not in seen:
+            existing.append(concept)
+            seen.add(key)
+
+
+def _normalize_study_topics(topics: Any) -> List[Dict[str, Any]]:
+    if not isinstance(topics, list):
+        return []
+
+    normalized_topics = []
+    topics_by_key = {}
+
+    for topic in topics:
+        if not isinstance(topic, dict):
+            continue
+
+        raw_name = topic.get("name")
+        if not isinstance(raw_name, str):
+            continue
+
+        name = re.sub(r"\s+", " ", raw_name).strip()
+        topic_key = _study_topic_key(name)
+        if not name or not topic_key:
+            continue
+
+        normalized_topic = topics_by_key.get(topic_key)
+        topic_concepts = _normalize_study_concepts(topic.get("concepts"))
+        if normalized_topic is None:
+            normalized_topic = {
+                "name": name,
+                "subtopics": [],
+                "concepts": topic_concepts,
+            }
+            normalized_topics.append(normalized_topic)
+            topics_by_key[topic_key] = normalized_topic
+        else:
+            _merge_unique_study_concepts(
+                normalized_topic["concepts"],
+                topic_concepts,
+            )
+
+        subtopics_by_key = {
+            _study_topic_key(subtopic.get("name")): subtopic
+            for subtopic in normalized_topic["subtopics"]
+        }
+        raw_subtopics = topic.get("subtopics")
+        if not isinstance(raw_subtopics, list):
+            continue
+
+        for subtopic in raw_subtopics:
+            if not isinstance(subtopic, dict):
+                continue
+
+            raw_subtopic_name = subtopic.get("name")
+            if not isinstance(raw_subtopic_name, str):
+                continue
+
+            subtopic_name = re.sub(
+                r"\s+",
+                " ",
+                raw_subtopic_name,
+            ).strip()
+            subtopic_key = _study_topic_key(subtopic_name)
+            if (
+                not subtopic_name
+                or not subtopic_key
+                or subtopic_key == topic_key
+            ):
+                continue
+
+            subtopic_concepts = _normalize_study_concepts(
+                subtopic.get("concepts")
+            )
+            normalized_subtopic = subtopics_by_key.get(subtopic_key)
+            if normalized_subtopic is None:
+                normalized_subtopic = {
+                    "name": subtopic_name,
+                    "concepts": subtopic_concepts,
+                }
+                normalized_topic["subtopics"].append(normalized_subtopic)
+                subtopics_by_key[subtopic_key] = normalized_subtopic
+            else:
+                _merge_unique_study_concepts(
+                    normalized_subtopic["concepts"],
+                    subtopic_concepts,
+                )
+
+    return normalized_topics
+
+
 def _validate_study_activity(
     request: CreateStudyPlanActivityRequest,
     study_plan: Dict[str, Any],
@@ -2961,8 +3128,11 @@ async def analyze_study_plan_topics(
         combined_text = "\n\n---\n\n".join(extracted_sections)
 
         analysis = identify_study_topics_and_concepts(combined_text)
-        topics = analysis.get("topics") if isinstance(analysis, dict) else None
-        if not isinstance(topics, list) or not topics:
+        raw_topics = (
+            analysis.get("topics") if isinstance(analysis, dict) else None
+        )
+        topics = _normalize_study_topics(raw_topics)
+        if not topics:
             raise HTTPException(
                 status_code=502,
                 detail="The study materials were analyzed, but no usable topics were returned.",
@@ -2970,10 +3140,18 @@ async def analyze_study_plan_topics(
 
         completed_at = datetime.utcnow().isoformat()
         study_plan.setdefault("data", {})["identifiedTopics"] = topics
+        study_plan["data"]["topicReview"] = {
+            "incorrectTopics": [],
+            "missingTopics": [],
+        }
         study_plan["data"]["topicAnalysis"] = {
             "status": "complete",
             "completedAt": completed_at,
             "materialCount": len(connected_materials),
+            "topicCount": len(topics),
+            "subtopicCount": sum(
+                len(topic.get("subtopics", [])) for topic in topics
+            ),
         }
 
         _save_study_plan_document(study_plan, user_id)
