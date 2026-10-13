@@ -2433,6 +2433,11 @@ class TopicReviewRequest(BaseModel):
     incorrectTopics: list[str] = []
     missingTopics: list[str] = []
 
+
+class ConfirmStudyPlanTopicsRequest(BaseModel):
+    topicNames: List[str] = Field(default_factory=list)
+
+
 class CreateStudyPlanActivityRequest(BaseModel):
     id: Optional[str] = None
     topic: str
@@ -2488,6 +2493,12 @@ def _save_study_plan_document(study_plan: Dict[str, Any], user_id: str) -> None:
 def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
     data = study_plan.setdefault("data", {})
     data["identifiedTopics"] = []
+    data["confirmedTopics"] = []
+    data["topicConfirmation"] = {
+        "status": "not_confirmed",
+        "confirmedAt": None,
+        "topicNames": [],
+    }
     data["topicReview"] = {
         "incorrectTopics": [],
         "missingTopics": [],
@@ -3007,6 +3018,12 @@ async def save_study_plan(
                 "status": "draft",
                 "activities": [],
                 "identifiedTopics": [],
+                "confirmedTopics": [],
+                "topicConfirmation": {
+                    "status": "not_confirmed",
+                    "confirmedAt": None,
+                    "topicNames": [],
+                },
                 "topicReview": {
                     "incorrectTopics": [],
                     "missingTopics": [],
@@ -3140,6 +3157,12 @@ async def analyze_study_plan_topics(
 
         completed_at = datetime.utcnow().isoformat()
         study_plan.setdefault("data", {})["identifiedTopics"] = topics
+        study_plan["data"]["confirmedTopics"] = []
+        study_plan["data"]["topicConfirmation"] = {
+            "status": "not_confirmed",
+            "confirmedAt": None,
+            "topicNames": [],
+        }
         study_plan["data"]["topicReview"] = {
             "incorrectTopics": [],
             "missingTopics": [],
@@ -3205,6 +3228,81 @@ async def save_study_plan_topic_review(
         raise HTTPException(
             status_code=500,
             detail="The topic review could not be saved.",
+        )
+
+
+@app.put("/study-plans/{plan_id}/confirmed-topics")
+async def confirm_study_plan_topics(
+    plan_id: str,
+    request: ConfirmStudyPlanTopicsRequest,
+    user_claims: dict = Depends(validate_token),
+):
+    try:
+        user_id = user_claims["sub"]
+        study_plan = _read_owned_study_plan(plan_id, user_id)
+        data = study_plan.setdefault("data", {})
+        identified_topics = data.get("identifiedTopics")
+
+        if not isinstance(identified_topics, list) or not identified_topics:
+            raise HTTPException(
+                status_code=409,
+                detail="Analyze the study materials before confirming topics.",
+            )
+
+        requested_keys = []
+        seen_keys = set()
+        for topic_name in request.topicNames:
+            key = str(topic_name or "").strip().casefold()
+            if key and key not in seen_keys:
+                requested_keys.append(key)
+                seen_keys.add(key)
+
+        if not requested_keys:
+            raise HTTPException(
+                status_code=422,
+                detail="Select at least one topic to include in the study plan.",
+            )
+
+        identified_by_name = {
+            str(topic.get("name") or "").strip().casefold(): topic
+            for topic in identified_topics
+            if isinstance(topic, dict) and str(topic.get("name") or "").strip()
+        }
+        if any(key not in identified_by_name for key in requested_keys):
+            raise HTTPException(
+                status_code=422,
+                detail="One or more selected topics are no longer available.",
+            )
+
+        confirmed_topics = [
+            copy.deepcopy(identified_by_name[key]) for key in requested_keys
+        ]
+        confirmed_at = datetime.utcnow().isoformat()
+        confirmed_topic_names = [
+            topic["name"] for topic in confirmed_topics
+        ]
+
+        data["confirmedTopics"] = confirmed_topics
+        data["topicConfirmation"] = {
+            "status": "confirmed",
+            "confirmedAt": confirmed_at,
+            "topicNames": confirmed_topic_names,
+        }
+        _save_study_plan_document(study_plan, user_id)
+
+        return {
+            "confirmedTopics": confirmed_topics,
+            "confirmation": data["topicConfirmation"],
+            "message": "Study plan topics confirmed successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"Error confirming study plan topics: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail="The selected topics could not be saved.",
         )
 
 @app.post("/study-plans/{plan_id}/materials")

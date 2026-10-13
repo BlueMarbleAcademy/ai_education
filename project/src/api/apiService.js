@@ -607,6 +607,20 @@ export const saveStudyPlanTopicReview = async (
     }
 };
 
+export const confirmStudyPlanTopics = async (planId, topicNames) => {
+    const endpoint = `http://localhost:8000/study-plans/${planId}/confirmed-topics`;
+
+    try {
+        return await callProtectedApi(endpoint, {
+            method: "PUT",
+            body: JSON.stringify({ topicNames }),
+        });
+    } catch (error) {
+        console.error("Error confirming study plan topics:", error);
+        throw error;
+    }
+};
+
 /**
  * Add an activity to a saved study plan.
  * @param {String} planId - Saved study plan ID

@@ -16,6 +16,7 @@ import {
 import {
   addStudyPlanMaterial,
   addStudyPlanActivity,
+  confirmStudyPlanTopics,
   getStudyPlan,
   getStudyPlans,
   analyzeStudyPlanTopics,
@@ -54,6 +55,9 @@ const StudyPlans = () => {
   const [incorrectTopics, setIncorrectTopics] = useState({});
   const [missingTopicInput, setMissingTopicInput] = useState("");
   const [missingTopics, setMissingTopics] = useState([]);
+  const [selectedTopicNames, setSelectedTopicNames] = useState([]);
+  const [topicConfirmationStatus, setTopicConfirmationStatus] = useState("idle");
+  const [topicConfirmationMessage, setTopicConfirmationMessage] = useState("");
   const [topicAnalysisStatus, setTopicAnalysisStatus] = useState("idle");
   const [topicAnalysisMessage, setTopicAnalysisMessage] = useState("");
   const [planStatus, setPlanStatus] = useState("idle"); // idle, loading, ready, updating
@@ -137,7 +141,19 @@ const StudyPlans = () => {
         if (plan?.data?.examName) {
           const structuredPlan = normalizeStructuredPlan(plan);
           const topicCount = structuredPlan.identifiedTopics?.length || 0;
+          const selectedTopics = getInitialSelectedTopicNames(structuredPlan);
+          const topicsAreConfirmed =
+            structuredPlan.topicConfirmation?.status === "confirmed";
           setCreatedPlan(structuredPlan);
+          setSelectedTopicNames(selectedTopics);
+          setTopicConfirmationStatus(
+            topicsAreConfirmed ? "success" : "idle"
+          );
+          setTopicConfirmationMessage(
+            topicsAreConfirmed
+              ? `${selectedTopics.length} topic${selectedTopics.length === 1 ? "" : "s"} confirmed for this study plan.`
+              : ""
+          );
           setTopicAnalysisStatus(topicCount > 0 ? "success" : "idle");
           setTopicAnalysisMessage(
             topicCount > 0
@@ -184,6 +200,9 @@ const StudyPlans = () => {
     setPlanError("");
     setActivityError("");
     setMaterialError("");
+    setSelectedTopicNames([]);
+    setTopicConfirmationStatus("idle");
+    setTopicConfirmationMessage("");
     setTopicAnalysisStatus("idle");
     setTopicAnalysisMessage("");
     setWeekOffset(0);
@@ -202,6 +221,9 @@ const StudyPlans = () => {
     setPlanError("");
     setActivityError("");
     setMaterialError("");
+    setSelectedTopicNames([]);
+    setTopicConfirmationStatus("idle");
+    setTopicConfirmationMessage("");
     setTopicAnalysisStatus("idle");
     setTopicAnalysisMessage("");
     setPlanStatus("idle");
@@ -232,6 +254,9 @@ const StudyPlans = () => {
       };
 
       setCreatedPlan(savedPlan);
+      setSelectedTopicNames([]);
+      setTopicConfirmationStatus("idle");
+      setTopicConfirmationMessage("");
       setTopicAnalysisStatus("idle");
       setTopicAnalysisMessage("");
       setWeekOffset(getWeekOffsetForDate(getPlanFocusDate(savedPlan)));
@@ -288,10 +313,19 @@ const StudyPlans = () => {
           ? {
               ...plan,
               identifiedTopics: topics,
+              confirmedTopics: [],
+              topicConfirmation: {
+                status: "not_confirmed",
+                confirmedAt: null,
+                topicNames: [],
+              },
               topicAnalysis: result.analysis,
             }
           : plan
       );
+      setSelectedTopicNames(topics.map((topic) => topic.name));
+      setTopicConfirmationStatus("idle");
+      setTopicConfirmationMessage("Select the topics to include, then confirm them.");
       setTopicAnalysisStatus("success");
       setTopicAnalysisMessage(
         `Analysis complete. Found ${topics.length} topic${topics.length === 1 ? "" : "s"}.`
@@ -333,6 +367,62 @@ const StudyPlans = () => {
       console.log("Topic review saved:", result);
     } catch (error) {
       console.error("Failed to save topic review:", error);
+    }
+  };
+
+  const handleToggleTopicSelection = (topicName) => {
+    setSelectedTopicNames((current) =>
+      current.includes(topicName)
+        ? current.filter((name) => name !== topicName)
+        : [...current, topicName]
+    );
+    setTopicConfirmationStatus("idle");
+    setTopicConfirmationMessage("Confirm your choices to save them.");
+  };
+
+  const handleConfirmTopics = async () => {
+    if (!createdPlan?.id) {
+      return;
+    }
+    if (selectedTopicNames.length === 0) {
+      setTopicConfirmationStatus("error");
+      setTopicConfirmationMessage(
+        "Select at least one topic to include in the study plan."
+      );
+      return;
+    }
+
+    try {
+      setTopicConfirmationStatus("saving");
+      setTopicConfirmationMessage("Saving your topic choices...");
+      const result = await confirmStudyPlanTopics(
+        createdPlan.id,
+        selectedTopicNames
+      );
+      const confirmedTopics = result.confirmedTopics || [];
+
+      setCreatedPlan((plan) =>
+        plan
+          ? {
+              ...plan,
+              confirmedTopics,
+              topicConfirmation: result.confirmation,
+            }
+          : plan
+      );
+      setSelectedTopicNames(
+        confirmedTopics.map((topic) => topic.name)
+      );
+      setTopicConfirmationStatus("success");
+      setTopicConfirmationMessage(
+        `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed for this study plan.`
+      );
+    } catch (error) {
+      console.error("Failed to confirm study plan topics:", error);
+      setTopicConfirmationStatus("error");
+      setTopicConfirmationMessage(
+        error.message || "The selected topics could not be saved."
+      );
     }
   };
   
@@ -407,6 +497,9 @@ const StudyPlans = () => {
         const response = await addStudyPlanMaterial(createdPlan.id, file);
         setCreatedPlan(response.plan);
       }
+      setSelectedTopicNames([]);
+      setTopicConfirmationStatus("idle");
+      setTopicConfirmationMessage("");
       setTopicAnalysisStatus("idle");
       setTopicAnalysisMessage("Materials updated. Analyze them to identify study topics.");
     } catch (error) {
@@ -430,6 +523,9 @@ const StudyPlans = () => {
         materialId
       );
       setCreatedPlan(response.plan);
+      setSelectedTopicNames([]);
+      setTopicConfirmationStatus("idle");
+      setTopicConfirmationMessage("");
       setTopicAnalysisStatus("idle");
       setTopicAnalysisMessage(
         response.plan.materials?.length
@@ -468,6 +564,7 @@ const StudyPlans = () => {
         (material) => (material.status || "ready").toLowerCase() === "ready"
       );
     const isAnalyzingTopics = topicAnalysisStatus === "analyzing";
+    const isConfirmingTopics = topicConfirmationStatus === "saving";
     const weekActivities = getWeekActivities(activities, weekDates);
     const completedWeekActivities = weekActivities.filter(
       (activity) => activity.completed
@@ -580,10 +677,15 @@ const StudyPlans = () => {
 
         {createdPlan?.identifiedTopics?.length > 0 && (
           <div className="rounded-lg border border-[#dce5df] bg-white p-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-[#26372d]">
-                Identified Topics
-              </h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-[#26372d]">
+                  Identified Topics
+                </h2>
+                <p className="mt-1 text-sm text-[#607067]">
+                  Choose the topics to include in your study plan.
+                </p>
+              </div>
 
               <button
                 type="button"
@@ -622,7 +724,27 @@ const StudyPlans = () => {
                   key={`${topic.name}-${topicIndex}`}
                   className="rounded-md border border-[#e5ebe7] p-4"
                 >
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <label
+                      className={`inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                        selectedTopicNames.includes(topic.name)
+                          ? "border-[#8fb59d] bg-[#eef7f1] text-[#2f6b46]"
+                          : "border-[#dce5df] bg-[#f8faf9] text-[#718077]"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTopicNames.includes(topic.name)}
+                        disabled={isConfirmingTopics}
+                        onChange={() => handleToggleTopicSelection(topic.name)}
+                        aria-label={`Include ${topic.name}`}
+                        className="h-4 w-4 accent-[#2f6b46]"
+                      />
+                      {selectedTopicNames.includes(topic.name)
+                        ? "Included"
+                        : "Excluded"}
+                    </label>
+
                     <button
                       type="button"
                       onClick={() =>
@@ -767,6 +889,47 @@ const StudyPlans = () => {
                 )}
               </div>
             )}
+
+            <div className="mt-4 flex flex-col gap-3 border-t border-[#e5ebe7] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#33443a]">
+                  {selectedTopicNames.length} of {createdPlan.identifiedTopics.length} topics selected
+                </p>
+                {topicConfirmationMessage && (
+                  <p
+                    role={topicConfirmationStatus === "error" ? "alert" : "status"}
+                    aria-live="polite"
+                    className={`mt-1 flex items-center gap-2 text-sm ${
+                      topicConfirmationStatus === "error"
+                        ? "text-[#9b3434]"
+                        : topicConfirmationStatus === "success"
+                          ? "text-[#2f6b46]"
+                          : "text-[#607067]"
+                    }`}
+                  >
+                    {topicConfirmationStatus === "error" && (
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                    )}
+                    {topicConfirmationStatus === "success" && (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    )}
+                    {topicConfirmationMessage}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleConfirmTopics}
+                disabled={isConfirmingTopics}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#274c3a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d3c2d] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isConfirmingTopics && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {isConfirmingTopics ? "Saving..." : "Confirm Topics"}
+              </button>
+            </div>
           </div>
         )}
 
@@ -842,6 +1005,37 @@ const formatWeekRange = (dates) => {
 };
 
 const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+
+const getInitialSelectedTopicNames = (plan) => {
+  const identifiedTopics = Array.isArray(plan?.identifiedTopics)
+    ? plan.identifiedTopics.filter(
+        (topic) => typeof topic?.name === "string" && topic.name.trim()
+      )
+    : [];
+  const availableTopics = new Map(
+    identifiedTopics.map((topic) => [
+      topic.name.trim().toLowerCase(),
+      topic.name,
+    ])
+  );
+
+  if (plan?.topicConfirmation?.status !== "confirmed") {
+    return identifiedTopics.map((topic) => topic.name);
+  }
+
+  const savedNames = Array.isArray(plan.topicConfirmation.topicNames)
+    ? plan.topicConfirmation.topicNames
+    : [];
+  const fallbackNames = Array.isArray(plan.confirmedTopics)
+    ? plan.confirmedTopics
+        .map((topic) => topic?.name)
+        .filter((name) => typeof name === "string")
+    : [];
+
+  return [...new Set(savedNames.length > 0 ? savedNames : fallbackNames)]
+    .map((name) => availableTopics.get(String(name).toLowerCase()))
+    .filter(Boolean);
+};
 
 const normalizeStructuredPlan = (studyPlanDocument) => ({
   id: studyPlanDocument.id,
