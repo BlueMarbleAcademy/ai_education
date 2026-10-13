@@ -2485,6 +2485,20 @@ def _save_study_plan_document(study_plan: Dict[str, Any], user_id: str) -> None:
     )
 
 
+def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
+    data = study_plan.setdefault("data", {})
+    data["identifiedTopics"] = []
+    data["topicReview"] = {
+        "incorrectTopics": [],
+        "missingTopics": [],
+    }
+    data["topicAnalysis"] = {
+        "status": "not_started",
+        "completedAt": None,
+        "materialCount": 0,
+    }
+
+
 def _validate_study_activity(
     request: CreateStudyPlanActivityRequest,
     study_plan: Dict[str, Any],
@@ -2830,6 +2844,11 @@ async def save_study_plan(
                     "incorrectTopics": [],
                     "missingTopics": [],
                 },
+                "topicAnalysis": {
+                    "status": "not_started",
+                    "completedAt": None,
+                    "materialCount": 0,
+                },
 
                 # Keep these for compatibility with the older study-plan code
                 "title": request.examName,
@@ -2875,6 +2894,7 @@ async def analyze_study_plan_topics(
 ):
     try:
         user_id = user_claims["sub"]
+        study_plan = _read_owned_study_plan(plan_id, user_id)
 
         materials_query = """
         SELECT * FROM c
@@ -2894,44 +2914,73 @@ async def analyze_study_plan_topics(
             )
         )
 
-        if not materials:
+        material_details = {
+            str(item.get("id")): item
+            for item in materials
+            if isinstance(item, dict) and item.get("id")
+        }
+        connected_materials = collect_study_plan_materials(
+            study_plan,
+            material_details,
+        )
+
+        if not connected_materials:
             raise HTTPException(
                 status_code=404,
                 detail="No study materials were found for this study plan.",
             )
 
-        extracted_sections = []
+        unfinished_materials = [
+            material
+            for material in connected_materials
+            if str(material.get("status") or "").lower() != "ready"
+        ]
+        if unfinished_materials:
+            raise HTTPException(
+                status_code=409,
+                detail="Wait for all study materials to finish processing before analyzing them.",
+            )
 
-        for material in materials:
-            data = material.get("data", {})
-            extracted_text = (data.get("extractedText") or "").strip()
-
-            if extracted_text:
-                extracted_sections.append(
-                    f"Material: {data.get('name', 'Untitled material')}\n"
-                    f"{extracted_text}"
-                )
-
-        if not extracted_sections:
+        unreadable_materials = [
+            material
+            for material in connected_materials
+            if not str(material.get("extractedText") or "").strip()
+        ]
+        if unreadable_materials:
             raise HTTPException(
                 status_code=422,
-                detail="No readable text was found in the uploaded study materials.",
+                detail="Readable text could not be found in every connected study material.",
             )
+
+        extracted_sections = [
+            f"Material: {material.get('name', 'Untitled material')}\n"
+            f"{str(material.get('extractedText') or '').strip()}"
+            for material in connected_materials
+        ]
 
         combined_text = "\n\n---\n\n".join(extracted_sections)
 
         analysis = identify_study_topics_and_concepts(combined_text)
+        topics = analysis.get("topics") if isinstance(analysis, dict) else None
+        if not isinstance(topics, list) or not topics:
+            raise HTTPException(
+                status_code=502,
+                detail="The study materials were analyzed, but no usable topics were returned.",
+            )
 
-        study_plan = _read_owned_study_plan(plan_id, user_id)
-
-        study_plan.setdefault("data", {})["identifiedTopics"] = analysis.get("topics", [])
-        study_plan["updatedAt"] = datetime.utcnow().isoformat()
-        study_plan["data"]["updatedAt"] = study_plan["updatedAt"]
+        completed_at = datetime.utcnow().isoformat()
+        study_plan.setdefault("data", {})["identifiedTopics"] = topics
+        study_plan["data"]["topicAnalysis"] = {
+            "status": "complete",
+            "completedAt": completed_at,
+            "materialCount": len(connected_materials),
+        }
 
         _save_study_plan_document(study_plan, user_id)
 
         return {
-            "topics": study_plan["data"]["identifiedTopics"],
+            "topics": topics,
+            "analysis": study_plan["data"]["topicAnalysis"],
             "message": "Study topics analyzed and saved successfully",
         }
 
@@ -2997,6 +3046,7 @@ async def add_study_plan_material(
         material_summary = _study_plan_material_response(material)
         materials = study_plan.setdefault("data", {}).setdefault("materials", [])
         materials.append(material_summary)
+        _reset_study_plan_topic_analysis(study_plan)
         _save_study_plan_document(study_plan, user_claims["sub"])
         return {
             "material": material_summary,
@@ -3033,6 +3083,7 @@ async def remove_study_plan_material(
     study_plan["data"]["materials"] = [
         item for item in materials if item.get("id") != material_id
     ]
+    _reset_study_plan_topic_analysis(study_plan)
     _save_study_plan_document(study_plan, user_claims["sub"])
     _delete_study_material_file(material)
     container.delete_item(item=material_id, partition_key=user_claims["sub"])

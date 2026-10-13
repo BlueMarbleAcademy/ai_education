@@ -3,10 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
+  AlertCircle,
   PlusCircle,
   Calendar,
   ChevronDown,
   CheckCircle2,
+  Loader2,
   MoreHorizontal,
   SlidersHorizontal,
   Sparkles
@@ -52,6 +54,8 @@ const StudyPlans = () => {
   const [incorrectTopics, setIncorrectTopics] = useState({});
   const [missingTopicInput, setMissingTopicInput] = useState("");
   const [missingTopics, setMissingTopics] = useState([]);
+  const [topicAnalysisStatus, setTopicAnalysisStatus] = useState("idle");
+  const [topicAnalysisMessage, setTopicAnalysisMessage] = useState("");
   const [planStatus, setPlanStatus] = useState("idle"); // idle, loading, ready, updating
   const [planError, setPlanError] = useState("");
   const [activitySaving, setActivitySaving] = useState(false);
@@ -132,7 +136,14 @@ const StudyPlans = () => {
 
         if (plan?.data?.examName) {
           const structuredPlan = normalizeStructuredPlan(plan);
+          const topicCount = structuredPlan.identifiedTopics?.length || 0;
           setCreatedPlan(structuredPlan);
+          setTopicAnalysisStatus(topicCount > 0 ? "success" : "idle");
+          setTopicAnalysisMessage(
+            topicCount > 0
+              ? `Analysis complete. Found ${topicCount} topic${topicCount === 1 ? "" : "s"}.`
+              : ""
+          );
           setWeekOffset(getWeekOffsetForDate(getPlanFocusDate(structuredPlan)));
           setCurrentPlan(null);
           setShowPlanner(true);
@@ -173,6 +184,8 @@ const StudyPlans = () => {
     setPlanError("");
     setActivityError("");
     setMaterialError("");
+    setTopicAnalysisStatus("idle");
+    setTopicAnalysisMessage("");
     setWeekOffset(0);
     setSearchParams(nextParams);
   };
@@ -189,6 +202,8 @@ const StudyPlans = () => {
     setPlanError("");
     setActivityError("");
     setMaterialError("");
+    setTopicAnalysisStatus("idle");
+    setTopicAnalysisMessage("");
     setPlanStatus("idle");
   };
 
@@ -217,6 +232,8 @@ const StudyPlans = () => {
       };
 
       setCreatedPlan(savedPlan);
+      setTopicAnalysisStatus("idle");
+      setTopicAnalysisMessage("");
       setWeekOffset(getWeekOffsetForDate(getPlanFocusDate(savedPlan)));
       setSavedPlans((plans) => [
         toStudyPlanSummary(savedPlan),
@@ -237,25 +254,54 @@ const StudyPlans = () => {
 
   const handleAnalyzeTopics = async () => {
     if (!createdPlan?.id) {
-      console.warn("No saved study plan is available to analyze.");
+      setTopicAnalysisStatus("error");
+      setTopicAnalysisMessage("Select or save a study plan before analyzing materials.");
+      return;
+    }
+
+    const planMaterials = createdPlan.materials || [];
+    if (planMaterials.length === 0) {
+      setTopicAnalysisStatus("error");
+      setTopicAnalysisMessage("Add at least one study material before analyzing topics.");
+      return;
+    }
+
+    const allMaterialsReady = planMaterials.every(
+      (material) => (material.status || "ready").toLowerCase() === "ready"
+    );
+    if (!allMaterialsReady) {
+      setTopicAnalysisStatus("error");
+      setTopicAnalysisMessage("Wait for all study materials to finish processing.");
       return;
     }
 
     try {
+      setTopicAnalysisStatus("analyzing");
+      setTopicAnalysisMessage(
+        `Analyzing ${planMaterials.length} study material${planMaterials.length === 1 ? "" : "s"}...`
+      );
       const result = await analyzeStudyPlanTopics(createdPlan.id);
+      const topics = result.topics || [];
 
       setCreatedPlan((plan) =>
         plan
           ? {
               ...plan,
-              identifiedTopics: result.topics || [],
+              identifiedTopics: topics,
+              topicAnalysis: result.analysis,
             }
           : plan
       );
-
-        console.log("Study plan topic analysis:", result);
+      setTopicAnalysisStatus("success");
+      setTopicAnalysisMessage(
+        `Analysis complete. Found ${topics.length} topic${topics.length === 1 ? "" : "s"}.`
+      );
     } catch (error) {
       console.error("Failed to analyze study plan topics:", error);
+      setTopicAnalysisStatus("error");
+      setTopicAnalysisMessage(
+        error.message || "The study materials could not be analyzed. Please try again."
+      );
     }
   };
 
@@ -361,6 +407,8 @@ const StudyPlans = () => {
         const response = await addStudyPlanMaterial(createdPlan.id, file);
         setCreatedPlan(response.plan);
       }
+      setTopicAnalysisStatus("idle");
+      setTopicAnalysisMessage("Materials updated. Analyze them to identify study topics.");
     } catch (error) {
       console.error("Failed to save study material:", error);
       setMaterialError(error.message || "Failed to save the study material.");
@@ -382,6 +430,12 @@ const StudyPlans = () => {
         materialId
       );
       setCreatedPlan(response.plan);
+      setTopicAnalysisStatus("idle");
+      setTopicAnalysisMessage(
+        response.plan.materials?.length
+          ? "Materials updated. Analyze them again to refresh the study topics."
+          : ""
+      );
     } catch (error) {
       console.error("Failed to remove study material:", error);
       setMaterialError(error.message || "Failed to remove the study material.");
@@ -407,6 +461,13 @@ const StudyPlans = () => {
     const todayIndex = weekOffset === 0 ? today.getDay() : -1;
     const times = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM"];
     const activities = createdPlan?.activities || [];
+    const studyMaterials = createdPlan?.materials || [];
+    const allMaterialsReady =
+      studyMaterials.length > 0 &&
+      studyMaterials.every(
+        (material) => (material.status || "ready").toLowerCase() === "ready"
+      );
+    const isAnalyzingTopics = topicAnalysisStatus === "analyzing";
     const weekActivities = getWeekActivities(activities, weekDates);
     const completedWeekActivities = weekActivities.filter(
       (activity) => activity.completed
@@ -468,13 +529,53 @@ const StudyPlans = () => {
         )}
 
         {createdPlan && (
-          <button
-            type="button"
-            onClick={handleAnalyzeTopics}
-            className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
-          >
-            Analyze Topics
-          </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={handleAnalyzeTopics}
+              disabled={!allMaterialsReady || materialSaving || isAnalyzingTopics}
+              className="inline-flex items-center gap-2 rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isAnalyzingTopics ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {isAnalyzingTopics
+                ? "Analyzing..."
+                : createdPlan.identifiedTopics?.length
+                  ? "Analyze again"
+                  : "Analyze topics"}
+            </button>
+
+            {studyMaterials.length === 0 && (
+              <p className="text-sm text-[#718077]">
+                Add study materials before analyzing topics.
+              </p>
+            )}
+
+            {topicAnalysisMessage && (
+              <p
+                role={topicAnalysisStatus === "error" ? "alert" : "status"}
+                aria-live="polite"
+                className={`flex items-center gap-2 text-sm font-medium ${
+                  topicAnalysisStatus === "error"
+                    ? "text-[#9b3434]"
+                    : topicAnalysisStatus === "success"
+                      ? "text-[#2f6b46]"
+                      : "text-[#607067]"
+                }`}
+              >
+                {topicAnalysisStatus === "error" && (
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                )}
+                {topicAnalysisStatus === "success" && (
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                )}
+                {topicAnalysisMessage}
+              </p>
+            )}
+          </div>
         )}
 
         {createdPlan?.identifiedTopics?.length > 0 && (
