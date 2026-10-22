@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   AlertCircle,
   CalendarDays,
@@ -14,6 +14,7 @@ import {
   deleteUnlinkedStudyPlanMaterial,
   uploadStudyPlanMaterial,
 } from "../../../api/apiService";
+import { getAvailableStudyDays } from "./studyPlanDates";
 
 const DAYS = [
   { value: "monday", label: "Mon" },
@@ -48,6 +49,15 @@ const StudyPlanWizard = ({
   const [materials, setMaterials] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const availableStudyDays = useMemo(
+    () =>
+      getAvailableStudyDays(
+        form.studyStartDate,
+        form.examDate,
+        form.unavailableDays
+      ),
+    [form.studyStartDate, form.examDate, form.unavailableDays]
+  );
 
   const today = new Date();
   const todayValue = [
@@ -226,8 +236,14 @@ const StudyPlanWizard = ({
       nextErrors.dailyStudyMinutes = "Enter between 15 and 720 minutes.";
     }
 
-    if (form.unavailableDays.length === DAYS.length) {
-      nextErrors.unavailableDays = "Keep at least one day available for studying.";
+    const hasValidDateRange =
+      form.studyStartDate &&
+      form.examDate &&
+      new Date(`${form.examDate}T00:00:00`) >
+        new Date(`${form.studyStartDate}T00:00:00`);
+    if (hasValidDateRange && availableStudyDays.length === 0) {
+      nextErrors.unavailableDays =
+        "No study days are available in this date range. Change the dates or unavailable days.";
     }
 
     setErrors(nextErrors);
@@ -508,6 +524,25 @@ const StudyPlanWizard = ({
                   );
                 })}
               </div>
+              {form.studyStartDate &&
+                form.examDate &&
+                new Date(`${form.examDate}T00:00:00`) >
+                  new Date(`${form.studyStartDate}T00:00:00`) && (
+                  <p
+                    role={availableStudyDays.length === 0 ? "alert" : "status"}
+                    className={`mt-3 text-xs font-medium ${
+                      availableStudyDays.length === 0
+                        ? "text-[#b54747]"
+                        : "text-[#526259]"
+                    }`}
+                  >
+                    {availableStudyDays.length > 0
+                      ? `${availableStudyDays.length} available study ${
+                          availableStudyDays.length === 1 ? "day" : "days"
+                        } in this date range.`
+                      : "No study days are available in this date range. Change the dates or unavailable days."}
+                  </p>
+                )}
               {errors.unavailableDays && (
                 <ErrorText>{errors.unavailableDays}</ErrorText>
               )}

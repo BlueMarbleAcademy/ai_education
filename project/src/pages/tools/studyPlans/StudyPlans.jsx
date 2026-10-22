@@ -30,6 +30,7 @@ import StudyPlanMaterials from "./StudyPlanMaterials";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
 import StudyPlanSelector from "./StudyPlanSelector";
+import { getAvailableStudyDays } from "./studyPlanDates";
 import {
   buildCalendarBlocks,
   formatPlannedTime,
@@ -558,6 +559,13 @@ const StudyPlans = () => {
     const times = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM"];
     const activities = createdPlan?.activities || [];
     const studyMaterials = createdPlan?.materials || [];
+    const availableStudyDayCount = createdPlan
+      ? getAvailableStudyDays(
+          createdPlan.studyStartDate,
+          createdPlan.examDate,
+          createdPlan.unavailableDays
+        ).length
+      : 0;
     const allMaterialsReady =
       studyMaterials.length > 0 &&
       studyMaterials.every(
@@ -594,6 +602,173 @@ const StudyPlans = () => {
           <div><div className="flex items-center gap-2 text-sm font-semibold text-blue-700"><Calendar className="h-4 w-4" /> Study planner</div><h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">Your week at a glance</h1><p className="mt-1 text-sm text-gray-600">Plan focused sessions, keep a little breathing room, and make progress visible.</p></div>
           <button onClick={handleCreatePlan} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"><PlusCircle className="h-4 w-4" /> {createdPlan ? "New study plan" : "Create study plan"}</button>
         </div>
+        <div className="flex flex-col gap-3 rounded-xl border border-primary-700 bg-primary-600 p-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              aria-label="Previous week"
+              onClick={() => setWeekOffset((value) => value - 1)}
+              className="rounded-md border border-white/30 p-2 text-white hover:bg-white/10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setWeekOffset(0)}
+              className="rounded-md border border-white bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-primary-50"
+            >
+              Today
+            </button>
+            <button
+              aria-label="Next week"
+              onClick={() => setWeekOffset((value) => value + 1)}
+              className="rounded-md border border-white/30 p-2 text-white hover:bg-white/10"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <span className="ml-2 text-sm font-semibold text-white">
+              {formatWeekRange(weekDates)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10">
+              <SlidersHorizontal className="h-4 w-4" /> Filters
+            </button>
+            <button className="inline-flex items-center gap-1 rounded-md border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10">
+              Week <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="min-w-[840px]">
+            <div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))] border-b border-gray-200 bg-gray-50">
+              <div className="border-r border-gray-200" />
+              {days.map((day, index) => (
+                <div
+                  key={day}
+                  className={`border-r border-gray-200 px-2 py-3 text-center last:border-r-0 ${
+                    index === todayIndex ? "bg-primary-50" : ""
+                  }`}
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                    {day}
+                  </p>
+                  <p
+                    className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${
+                      index === todayIndex
+                        ? "bg-primary-100 text-primary-800"
+                        : "text-gray-900"
+                    }`}
+                  >
+                    {dates[index]}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))]">
+              <div className="bg-primary-50">
+                {times.map((time) => (
+                  <div
+                    key={time}
+                    className="h-16 border-b border-r border-primary-100 pr-2 pt-1 text-right text-[10px] font-medium text-primary-700"
+                  >
+                    {time}
+                  </div>
+                ))}
+              </div>
+              {days.map((day, dayIndex) => (
+                <div
+                  key={day}
+                  className={`relative border-r border-gray-100 last:border-r-0 ${
+                    dayIndex === todayIndex ? "bg-primary-50/40" : ""
+                  }`}
+                >
+                  {times.map((time) => (
+                    <div
+                      key={`${day}-${time}`}
+                      className="h-16 border-b border-gray-100"
+                    />
+                  ))}
+                  {blocks
+                    .filter((block) => block.day === dayIndex)
+                    .map((block) => (
+                      <article
+                        key={block.id}
+                        aria-label={`${block.title}, ${block.meta}${
+                          block.completed ? ", completed" : ""
+                        }`}
+                        className={`absolute left-1.5 right-1.5 overflow-hidden rounded-md border p-1.5 shadow-sm ${
+                          block.color
+                        } ${block.completed ? "opacity-65" : ""}`}
+                        style={{
+                          top: `${block.start * 64 + 4}px`,
+                          height: `${block.span * 64 - 8}px`,
+                        }}
+                      >
+                        <div className="flex min-w-0 items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                          <p
+                            className={`min-w-0 flex-1 truncate text-xs font-bold ${
+                              block.completed ? "line-through" : ""
+                            }`}
+                          >
+                            {block.title}
+                          </p>
+                          {block.completed && (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          )}
+                        </div>
+                        <p className="mt-1 truncate pl-[18px] text-[10px] font-medium leading-none opacity-75">
+                          {block.meta}
+                        </p>
+                      </article>
+                    ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-xl border border-primary-200 bg-primary-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-primary-100 p-2 text-primary-700">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="font-bold text-primary-900">
+                  A steady week beats a packed week
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-primary-900">
+                  {weekActivities.length > 0
+                    ? `You have ${formatPlannedTime(
+                        plannedWeekMinutes
+                      )} planned across ${weekActivities.length} study session${
+                        weekActivities.length === 1 ? "" : "s"
+                      } this week.`
+                    : createdPlan
+                      ? "No study sessions are planned for this week yet."
+                      : "Create a plan and add activities to start filling your calendar."}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-gray-800">This week</h2>
+              <MoreHorizontal className="h-5 w-5 text-primary-700" />
+            </div>
+            <div className="mt-3 flex items-center justify-between text-sm">
+              <span className="text-gray-500">Completed</span>
+              <span className="font-bold text-primary-700">
+                {completedWeekActivities} of {weekActivities.length} sessions
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-primary-100">
+              <div
+                className="h-full rounded-full bg-primary-600 transition-[width]"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
         {createdPlan && (
           <div className="flex flex-col gap-4 rounded-lg border border-primary-200 bg-primary-50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
@@ -602,6 +777,10 @@ const StudyPlans = () => {
                 <h2 className="font-bold text-blue-950">{createdPlan.examName} plan created</h2>
                 <p className="mt-1 text-sm text-blue-900">
                   {createdPlan.subject} · {formatPlanDate(createdPlan.studyStartDate)} to {formatPlanDate(createdPlan.examDate)} · {createdPlan.dailyStudyMinutes} minutes daily
+                </p>
+                <p className="mt-1 text-xs text-blue-800">
+                  {availableStudyDayCount} available study{" "}
+                  {availableStudyDayCount === 1 ? "day" : "days"}
                 </p>
                 <p className="mt-1 text-xs text-blue-800">
                   {createdPlan.unavailableDays.length > 0
@@ -942,12 +1121,6 @@ const StudyPlans = () => {
             error={activityError}
           />
         )}
-        <div className="flex flex-col gap-3 rounded-xl border border-primary-700 bg-primary-600 p-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2"><button aria-label="Previous week" onClick={() => setWeekOffset((value) => value - 1)} className="rounded-md border border-white/30 p-2 text-white hover:bg-white/10"><ArrowLeft className="h-4 w-4" /></button><button onClick={() => setWeekOffset(0)} className="rounded-md border border-white bg-white px-3 py-2 text-sm font-semibold text-blue-900 hover:bg-primary-50">Today</button><button aria-label="Next week" onClick={() => setWeekOffset((value) => value + 1)} className="rounded-md border border-white/30 p-2 text-white hover:bg-white/10"><ArrowRight className="h-4 w-4" /></button><span className="ml-2 text-sm font-semibold text-white">{formatWeekRange(weekDates)}</span></div>
-          <div className="flex items-center gap-2"><button className="inline-flex items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10"><SlidersHorizontal className="h-4 w-4" /> Filters</button><button className="inline-flex items-center gap-1 rounded-md border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10">Week <ChevronDown className="h-4 w-4" /></button></div>
-        </div>
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm"><div className="min-w-[840px]"><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))] border-b border-gray-200 bg-gray-50"><div className="border-r border-gray-200" />{days.map((day, index) => <div key={day} className={`border-r border-gray-200 px-2 py-3 text-center last:border-r-0 ${index === todayIndex ? "bg-primary-50" : ""}`}><p className="text-[11px] font-bold uppercase tracking-wider text-gray-700">{day}</p><p className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${index === todayIndex ? "bg-primary-100 text-primary-800" : "text-gray-900"}`}>{dates[index]}</p></div>)}</div><div className="grid grid-cols-[64px_repeat(7,minmax(108px,1fr))]"><div className="bg-primary-50">{times.map((time) => <div key={time} className="h-16 border-b border-r border-primary-100 pr-2 pt-1 text-right text-[10px] font-medium text-primary-700">{time}</div>)}</div>{days.map((day, dayIndex) => <div key={day} className={`relative border-r border-gray-100 last:border-r-0 ${dayIndex === todayIndex ? "bg-primary-50/40" : ""}`}>{times.map((time) => <div key={`${day}-${time}`} className="h-16 border-b border-gray-100" />)}{blocks.filter((block) => block.day === dayIndex).map((block) => <article key={block.id} aria-label={`${block.title}, ${block.meta}${block.completed ? ", completed" : ""}`} className={`absolute left-1.5 right-1.5 overflow-hidden rounded-md border p-1.5 shadow-sm ${block.color} ${block.completed ? "opacity-65" : ""}`} style={{ top: `${block.start * 64 + 4}px`, height: `${block.span * 64 - 8}px` }}><div className="flex min-w-0 items-center gap-1"><Calendar className="h-3.5 w-3.5 shrink-0" /><p className={`min-w-0 flex-1 truncate text-xs font-bold ${block.completed ? "line-through" : ""}`}>{block.title}</p>{block.completed && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}</div><p className="mt-1 truncate pl-[18px] text-[10px] font-medium leading-none opacity-75">{block.meta}</p></article>)}</div>)}</div></div></div>
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]"><div className="rounded-xl border border-primary-200 bg-primary-50 p-4"><div className="flex items-start gap-3"><div className="rounded-lg bg-primary-100 p-2 text-primary-700"><Sparkles className="h-5 w-5" /></div><div><h2 className="font-bold text-primary-900">A steady week beats a packed week</h2><p className="mt-1 text-sm leading-6 text-primary-900">{weekActivities.length > 0 ? `You have ${formatPlannedTime(plannedWeekMinutes)} planned across ${weekActivities.length} study session${weekActivities.length === 1 ? "" : "s"} this week.` : createdPlan ? "No study sessions are planned for this week yet." : "Create a plan and add activities to start filling your calendar."}</p></div></div></div><div className="rounded-xl border border-gray-200 bg-white p-4"><div className="flex items-center justify-between"><h2 className="font-bold text-gray-800">This week</h2><MoreHorizontal className="h-5 w-5 text-primary-700" /></div><div className="mt-3 flex items-center justify-between text-sm"><span className="text-gray-500">Completed</span><span className="font-bold text-primary-700">{completedWeekActivities} of {weekActivities.length} sessions</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-primary-100"><div className="h-full rounded-full bg-primary-600 transition-[width]" style={{ width: `${completionPercentage}%` }} /></div></div></div>
       </div>
     );
   };

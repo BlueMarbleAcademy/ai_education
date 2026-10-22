@@ -297,6 +297,7 @@ import database
 from pdf_utils import extract_text_from_pdf
 from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz, analyze_quiz_performance, identify_study_topics_and_concepts
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse, Flashcard, FlashcardDeck, FlashcardDocument, MindmapDocument, SaveMindmapResponse, CreateMindmapRequest, CreateFolderRequest, UpdateFolderRequest, FolderOut, ShareLinkCreateRequest, ShareLinkUpdateRequest, ShareLinkSettings
+from study_plan_dates import calculate_available_study_days
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
 import time
 # Load the environment variables
@@ -2429,6 +2430,7 @@ class CreateStudyPlanRequest(BaseModel):
     unavailableDays: List[str] = Field(default_factory=list)
     materials: List[Dict[str, Any]] = Field(default_factory=list)
 
+
 class TopicReviewRequest(BaseModel):
     incorrectTopics: list[str] = []
     missingTopics: list[str] = []
@@ -2706,7 +2708,7 @@ def _validate_study_activity(
         )
 
     unavailable_days = {
-        str(day).lower() for day in data.get("unavailableDays", [])
+        str(day).strip().lower() for day in data.get("unavailableDays", [])
     }
     if activity_date.strftime("%A").lower() in unavailable_days:
         raise HTTPException(
@@ -2975,6 +2977,14 @@ async def save_study_plan(
     user_claims: dict = Depends(validate_token)
 ):
     try:
+        available_study_days = calculate_available_study_days(
+            request.studyStartDate,
+            request.examDate,
+            request.unavailableDays,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    try:
         now = datetime.utcnow().isoformat()
         plan_id = str(uuid.uuid4())
         material_documents = []
@@ -3011,6 +3021,7 @@ async def save_study_plan(
                 "examDate": request.examDate,
                 "dailyStudyMinutes": request.dailyStudyMinutes,
                 "unavailableDays": request.unavailableDays,
+                "availableStudyDays": available_study_days,
                 "materials": [
                     _study_plan_material_response(material)
                     for material in material_documents

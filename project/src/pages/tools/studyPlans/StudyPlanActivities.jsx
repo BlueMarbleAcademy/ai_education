@@ -8,6 +8,7 @@ import {
   ListChecks,
   Plus,
 } from "lucide-react";
+import { getAvailableStudyDays } from "./studyPlanDates";
 
 const ACTIVITY_TYPES = [
   { value: "reading", label: "Reading" },
@@ -16,16 +17,6 @@ const ACTIVITY_TYPES = [
   { value: "practice_quiz", label: "Practice quiz" },
   { value: "video", label: "Video lesson" },
   { value: "review", label: "Review session" },
-];
-
-const WEEKDAYS = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
 ];
 
 const INITIAL_ACTIVITY = {
@@ -368,41 +359,12 @@ const Field = ({ htmlFor, label, error, children }) => (
 );
 
 const getStudyDays = (plan) => {
-  const start = new Date(`${plan.studyStartDate}T12:00:00`);
-  const end = new Date(`${plan.examDate}T12:00:00`);
-  const unavailableDays = new Set(plan.unavailableDays || []);
-
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
-    return [];
-  }
-
-  const days = [];
-  const cursor = new Date(start);
-  while (cursor <= end) {
-    const weekday = WEEKDAYS[cursor.getDay()];
-    if (!unavailableDays.has(weekday)) {
-      days.push({
-        value: formatDateValue(cursor),
-        label: new Intl.DateTimeFormat("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }).format(cursor),
-      });
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return days;
+  return getAvailableStudyDays(
+    plan.studyStartDate,
+    plan.examDate,
+    plan.unavailableDays
+  );
 };
-
-const formatDateValue = (date) =>
-  [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
 
 const formatPlanDate = (value) =>
   new Intl.DateTimeFormat("en-US", {
