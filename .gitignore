@@ -22,5 +22,4 @@ build/
 runApp.txt
 project/src/.env
 project/backend/test_study_plan_materials.py
-project/backend/study_plan_dates.py
 project/backend/test_study_plan_dates.py

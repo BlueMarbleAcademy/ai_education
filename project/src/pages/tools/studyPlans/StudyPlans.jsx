@@ -415,8 +415,15 @@ const StudyPlans = () => {
         confirmedTopics.map((topic) => topic.name)
       );
       setTopicConfirmationStatus("success");
+      const scheduledDayCount = new Set(
+        confirmedTopics
+          .map((topic) => topic.scheduledDate)
+          .filter(Boolean)
+      ).size;
       setTopicConfirmationMessage(
-        `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed for this study plan.`
+        scheduledDayCount > 0
+          ? `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed and balanced across ${scheduledDayCount} remaining study day${scheduledDayCount === 1 ? "" : "s"}.`
+          : `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed, but no study days remain to schedule them.`
       );
     } catch (error) {
       console.error("Failed to confirm study plan topics:", error);
@@ -1113,6 +1120,16 @@ const StudyPlans = () => {
         )}
 
         {createdPlan && (
+          <ConfirmedTopicSchedule
+            topics={createdPlan.confirmedTopics || []}
+            isConfirmed={
+              createdPlan.topicConfirmation?.status === "confirmed" &&
+              topicConfirmationStatus === "success"
+            }
+          />
+        )}
+
+        {createdPlan && (
           <StudyPlanActivities
             plan={createdPlan}
             onAddActivity={handleAddActivity}
@@ -1155,6 +1172,80 @@ const StudyPlans = () => {
         />
       ) : null}
     </div>
+  );
+};
+
+const ConfirmedTopicSchedule = ({ topics, isConfirmed }) => {
+  if (!isConfirmed || topics.length === 0) {
+    return null;
+  }
+
+  const hasSavedSchedule = topics.every((topic) =>
+    Object.prototype.hasOwnProperty.call(topic, "scheduledDate")
+  );
+  if (!hasSavedSchedule) {
+    return (
+      <section className="rounded-lg border border-[#dce5df] bg-white p-4 shadow-[0_8px_30px_rgba(45,67,53,0.06)] sm:p-5">
+        <h2 className="font-bold text-[#26372d]">Balanced topic schedule</h2>
+        <p className="mt-1 text-sm text-[#718077]">
+          Confirm your selected topics again to assign them across the remaining
+          available study days.
+        </p>
+      </section>
+    );
+  }
+
+  const scheduledTopicsByDate = topics.reduce((schedule, topic) => {
+    if (!topic.scheduledDate) {
+      return schedule;
+    }
+
+    if (!schedule[topic.scheduledDate]) {
+      schedule[topic.scheduledDate] = [];
+    }
+    schedule[topic.scheduledDate].push(topic);
+    return schedule;
+  }, {});
+  const scheduledDays = Object.entries(scheduledTopicsByDate).sort(
+    ([firstDate], [secondDate]) => firstDate.localeCompare(secondDate)
+  );
+
+  return (
+    <section className="rounded-lg border border-[#dce5df] bg-white p-4 shadow-[0_8px_30px_rgba(45,67,53,0.06)] sm:p-5">
+      <h2 className="font-bold text-[#26372d]">Balanced topic schedule</h2>
+      <p className="mt-1 text-sm text-[#718077]">
+        Confirmed topics are spread across the remaining available study days.
+      </p>
+      {scheduledDays.length > 0 ? (
+        <ol className="mt-4 space-y-3">
+          {scheduledDays.map(([studyDate, dayTopics]) => (
+            <li
+              key={studyDate}
+              className="rounded-md border border-[#e5ebe7] bg-[#f8faf9] p-3"
+            >
+              <h3 className="text-sm font-semibold text-[#33443a]">
+                {formatPlanDate(studyDate)}
+              </h3>
+              <ul className="mt-2 space-y-1">
+                {dayTopics.map((topic, index) => (
+                  <li
+                    key={`${topic.name}-${index}`}
+                    className="text-sm text-[#607067]"
+                  >
+                    {topic.name}
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-4 rounded-md border border-[#ead7b4] bg-[#fff9eb] p-3 text-sm text-[#795d2d]">
+          No available study days remain before the exam. Update the plan dates
+          to schedule these topics.
+        </p>
+      )}
+    </section>
   );
 };
 

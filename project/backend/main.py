@@ -276,7 +276,7 @@ import shutil
 import secrets
 import hmac
 import copy
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Dict, Any, Optional, Union
 from json_repair import repair_json
 from dotenv import load_dotenv
@@ -298,6 +298,7 @@ from pdf_utils import extract_text_from_pdf
 from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz, analyze_quiz_performance, identify_study_topics_and_concepts
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse, Flashcard, FlashcardDeck, FlashcardDocument, MindmapDocument, SaveMindmapResponse, CreateMindmapRequest, CreateFolderRequest, UpdateFolderRequest, FolderOut, ShareLinkCreateRequest, ShareLinkUpdateRequest, ShareLinkSettings
 from study_plan_dates import calculate_available_study_days
+from study_plan_scheduling import distribute_topics_across_study_days
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
 import time
 # Load the environment variables
@@ -3288,6 +3289,27 @@ async def confirm_study_plan_topics(
         confirmed_topics = [
             copy.deepcopy(identified_by_name[key]) for key in requested_keys
         ]
+        try:
+            available_study_days = calculate_available_study_days(
+                data.get("studyStartDate"),
+                data.get("examDate"),
+                data.get("unavailableDays", []),
+            )
+        except ValueError as error:
+            raise HTTPException(
+                status_code=422,
+                detail="The study plan dates are invalid, so topics could not be scheduled.",
+            ) from error
+
+        remaining_study_days = [
+            study_day
+            for study_day in available_study_days
+            if study_day >= date.today().isoformat()
+        ]
+        confirmed_topics = distribute_topics_across_study_days(
+            confirmed_topics,
+            remaining_study_days,
+        )
         confirmed_at = datetime.utcnow().isoformat()
         confirmed_topic_names = [
             topic["name"] for topic in confirmed_topics
