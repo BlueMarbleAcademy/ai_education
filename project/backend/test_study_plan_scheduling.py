@@ -1,4 +1,9 @@
-from study_plan_scheduling import distribute_topics_across_study_days
+import pytest
+
+from study_plan_scheduling import (
+    distribute_topics_across_study_days,
+    verify_topics_scheduled_before_exam,
+)
 
 
 def test_distributes_topics_evenly_when_topics_outnumber_days():
@@ -33,3 +38,31 @@ def test_leaves_topics_unscheduled_when_no_days_remain():
     assert distribute_topics_across_study_days(topics, []) == [
         {"name": "First", "scheduledDate": None}
     ]
+
+
+def test_verifies_every_topic_is_scheduled_before_the_exam():
+    topics = [
+        {"name": "First", "scheduledDate": "2026-10-22"},
+        {"name": "Second", "scheduledDate": "2026-10-23"},
+    ]
+
+    verify_topics_scheduled_before_exam(topics, "2026-10-24")
+
+
+@pytest.mark.parametrize(
+    "scheduled_date",
+    [None, "2026-10-24", "2026-10-25", "invalid"],
+)
+def test_rejects_topics_not_scheduled_before_the_exam(scheduled_date):
+    topics = [{"name": "Major topic", "scheduledDate": scheduled_date}]
+
+    with pytest.raises(ValueError, match="scheduled before the exam"):
+        verify_topics_scheduled_before_exam(topics, "2026-10-24")
+
+
+def test_rejects_an_invalid_exam_date():
+    with pytest.raises(ValueError, match="Exam date must be a valid date"):
+        verify_topics_scheduled_before_exam(
+            [{"name": "Major topic", "scheduledDate": "2026-10-22"}],
+            "invalid",
+        )

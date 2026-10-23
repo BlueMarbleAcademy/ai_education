@@ -1,4 +1,29 @@
+from datetime import date
 from typing import Any, Dict, List
+
+
+def verify_topics_scheduled_before_exam(
+    topics: List[Dict[str, Any]],
+    exam_date: str,
+) -> None:
+    try:
+        exam_day = date.fromisoformat(exam_date)
+    except (TypeError, ValueError) as error:
+        raise ValueError("Exam date must be a valid date.") from error
+
+    for topic in topics:
+        scheduled_date = topic.get("scheduledDate")
+        try:
+            scheduled_day = date.fromisoformat(scheduled_date)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                "Every selected topic must be scheduled before the exam."
+            ) from error
+
+        if scheduled_day >= exam_day:
+            raise ValueError(
+                "Every selected topic must be scheduled before the exam."
+            )
 
 
 def distribute_topics_across_study_days(

@@ -298,7 +298,10 @@ from pdf_utils import extract_text_from_pdf
 from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz, analyze_quiz_performance, identify_study_topics_and_concepts
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse, Flashcard, FlashcardDeck, FlashcardDocument, MindmapDocument, SaveMindmapResponse, CreateMindmapRequest, CreateFolderRequest, UpdateFolderRequest, FolderOut, ShareLinkCreateRequest, ShareLinkUpdateRequest, ShareLinkSettings
 from study_plan_dates import calculate_available_study_days
-from study_plan_scheduling import distribute_topics_across_study_days
+from study_plan_scheduling import (
+    distribute_topics_across_study_days,
+    verify_topics_scheduled_before_exam,
+)
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
 import time
 # Load the environment variables
@@ -3304,12 +3307,23 @@ async def confirm_study_plan_topics(
         remaining_study_days = [
             study_day
             for study_day in available_study_days
-            if study_day >= date.today().isoformat()
+            if date.today().isoformat() <= study_day < data["examDate"]
         ]
         confirmed_topics = distribute_topics_across_study_days(
             confirmed_topics,
             remaining_study_days,
         )
+        try:
+            verify_topics_scheduled_before_exam(
+                confirmed_topics,
+                data.get("examDate"),
+            )
+        except ValueError as error:
+            raise HTTPException(
+                status_code=422,
+                detail=str(error),
+            ) from error
+
         confirmed_at = datetime.utcnow().isoformat()
         confirmed_topic_names = [
             topic["name"] for topic in confirmed_topics

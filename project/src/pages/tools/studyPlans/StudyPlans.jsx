@@ -422,8 +422,8 @@ const StudyPlans = () => {
       ).size;
       setTopicConfirmationMessage(
         scheduledDayCount > 0
-          ? `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed and balanced across ${scheduledDayCount} remaining study day${scheduledDayCount === 1 ? "" : "s"}.`
-          : `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed, but no study days remain to schedule them.`
+          ? `All ${confirmedTopics.length} selected topic${confirmedTopics.length === 1 ? "" : "s"} scheduled before the exam across ${scheduledDayCount} remaining study day${scheduledDayCount === 1 ? "" : "s"}.`
+          : `${confirmedTopics.length} topic${confirmedTopics.length === 1 ? "" : "s"} confirmed, but no study days remain before the exam.`
       );
     } catch (error) {
       console.error("Failed to confirm study plan topics:", error);
