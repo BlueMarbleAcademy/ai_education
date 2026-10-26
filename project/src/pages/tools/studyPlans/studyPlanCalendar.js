@@ -16,7 +16,7 @@ const ACTIVITY_TYPE_LABELS = {
   flashcards: "Flashcards",
   practice_quiz: "Practice quiz",
   video: "Video lesson",
-  review: "Review session",
+  review: "Review activity",
 };
 
 export const buildCalendarBlocks = (activities, weekDates) => {

@@ -16,7 +16,7 @@ const ACTIVITY_TYPES = [
   { value: "flashcards", label: "Flashcards" },
   { value: "practice_quiz", label: "Practice quiz" },
   { value: "video", label: "Video lesson" },
-  { value: "review", label: "Review session" },
+  { value: "review", label: "Review activity" },
 ];
 
 const INITIAL_ACTIVITY = {
@@ -133,17 +133,26 @@ const StudyPlanActivities = ({
                   )}
                 </button>
                 <div className="min-w-0">
-                  <h3
-                    className={`truncate text-sm font-bold ${
-                      activity.completed
-                        ? "text-[#77847c] line-through"
-                        : "text-[#26372d]"
-                    }`}
-                  >
-                    {activity.topic}
-                  </h3>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h3
+                      className={`truncate text-sm font-bold ${
+                        activity.completed
+                          ? "text-[#77847c] line-through"
+                          : "text-[#26372d]"
+                      }`}
+                    >
+                      {activity.topic}
+                    </h3>
+                    {activity.activityType === "review" && (
+                      <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
+                        Review activity
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-1 text-xs text-[#718077]">
-                    {getActivityTypeLabel(activity.activityType)} ·{" "}
+                    {activity.activityType === "review"
+                      ? null
+                      : `${getActivityTypeLabel(activity.activityType)} · `}
                     <time dateTime={activity.studyDate}>
                       {formatPlanDate(activity.studyDate)}
                     </time>
