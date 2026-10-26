@@ -587,7 +587,8 @@ export const analyzeStudyPlanTopics = async (planId) => {
 export const saveStudyPlanTopicReview = async (
     planId,
     incorrectTopics,
-    missingTopics
+    missingTopics,
+    additionalReviewTopics
 ) => {
     const endpoint = `http://localhost:8000/study-plans/${planId}/topic-review`;
 
@@ -597,6 +598,7 @@ export const saveStudyPlanTopicReview = async (
             body: JSON.stringify({
                 incorrectTopics,
                 missingTopics,
+                additionalReviewTopics,
             }),
         });
 

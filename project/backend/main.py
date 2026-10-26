@@ -2436,8 +2436,9 @@ class CreateStudyPlanRequest(BaseModel):
 
 
 class TopicReviewRequest(BaseModel):
-    incorrectTopics: list[str] = []
-    missingTopics: list[str] = []
+    incorrectTopics: List[str] = Field(default_factory=list)
+    missingTopics: List[str] = Field(default_factory=list)
+    additionalReviewTopics: List[str] = Field(default_factory=list)
 
 
 class ConfirmStudyPlanTopicsRequest(BaseModel):
@@ -3181,6 +3182,7 @@ async def analyze_study_plan_topics(
         study_plan["data"]["topicReview"] = {
             "incorrectTopics": [],
             "missingTopics": [],
+            "additionalReviewTopics": [],
         }
         study_plan["data"]["topicAnalysis"] = {
             "status": "complete",
@@ -3220,9 +3222,29 @@ async def save_study_plan_topic_review(
 
         study_plan = _read_owned_study_plan(plan_id, user_id)
 
+        identified_topics = study_plan.get("data", {}).get("identifiedTopics", [])
+        identified_topic_names = {
+            str(topic.get("name") or "").strip().casefold(): str(
+                topic.get("name") or ""
+            ).strip()
+            for topic in identified_topics
+            if isinstance(topic, dict) and str(topic.get("name") or "").strip()
+        }
+        additional_review_topics = []
+        seen_review_topics = set()
+        for topic_name in request.additionalReviewTopics:
+            topic_key = str(topic_name or "").strip().casefold()
+            if (
+                topic_key in identified_topic_names
+                and topic_key not in seen_review_topics
+            ):
+                additional_review_topics.append(identified_topic_names[topic_key])
+                seen_review_topics.add(topic_key)
+
         study_plan.setdefault("data", {})["topicReview"] = {
             "incorrectTopics": request.incorrectTopics,
             "missingTopics": request.missingTopics,
+            "additionalReviewTopics": additional_review_topics,
         }
 
         now = datetime.utcnow().isoformat()

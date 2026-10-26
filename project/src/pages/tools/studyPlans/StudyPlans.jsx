@@ -54,6 +54,9 @@ const StudyPlans = () => {
   const [expandedTopics, setExpandedTopics] = useState({});
   const [reviewingTopics, setReviewingTopics] = useState(false);
   const [incorrectTopics, setIncorrectTopics] = useState({});
+  const [additionalReviewTopics, setAdditionalReviewTopics] = useState([]);
+  const [topicReviewSaving, setTopicReviewSaving] = useState(false);
+  const [topicReviewError, setTopicReviewError] = useState("");
   const [missingTopicInput, setMissingTopicInput] = useState("");
   const [missingTopics, setMissingTopics] = useState([]);
   const [selectedTopicNames, setSelectedTopicNames] = useState([]);
@@ -146,6 +149,9 @@ const StudyPlans = () => {
           const topicsAreConfirmed =
             structuredPlan.topicConfirmation?.status === "confirmed";
           setCreatedPlan(structuredPlan);
+          setAdditionalReviewTopics(
+            structuredPlan.topicReview?.additionalReviewTopics || []
+          );
           setSelectedTopicNames(selectedTopics);
           setTopicConfirmationStatus(
             topicsAreConfirmed ? "success" : "idle"
@@ -202,6 +208,8 @@ const StudyPlans = () => {
     setActivityError("");
     setMaterialError("");
     setSelectedTopicNames([]);
+    setAdditionalReviewTopics([]);
+    setTopicReviewError("");
     setTopicConfirmationStatus("idle");
     setTopicConfirmationMessage("");
     setTopicAnalysisStatus("idle");
@@ -223,6 +231,8 @@ const StudyPlans = () => {
     setActivityError("");
     setMaterialError("");
     setSelectedTopicNames([]);
+    setAdditionalReviewTopics([]);
+    setTopicReviewError("");
     setTopicConfirmationStatus("idle");
     setTopicConfirmationMessage("");
     setTopicAnalysisStatus("idle");
@@ -256,6 +266,8 @@ const StudyPlans = () => {
 
       setCreatedPlan(savedPlan);
       setSelectedTopicNames([]);
+      setAdditionalReviewTopics([]);
+      setTopicReviewError("");
       setTopicConfirmationStatus("idle");
       setTopicConfirmationMessage("");
       setTopicAnalysisStatus("idle");
@@ -314,6 +326,11 @@ const StudyPlans = () => {
           ? {
               ...plan,
               identifiedTopics: topics,
+              topicReview: {
+                incorrectTopics: [],
+                missingTopics: [],
+                additionalReviewTopics: [],
+              },
               confirmedTopics: [],
               topicConfirmation: {
                 status: "not_confirmed",
@@ -325,6 +342,8 @@ const StudyPlans = () => {
           : plan
       );
       setSelectedTopicNames(topics.map((topic) => topic.name));
+      setAdditionalReviewTopics([]);
+      setTopicReviewError("");
       setTopicConfirmationStatus("idle");
       setTopicConfirmationMessage("Select the topics to include, then confirm them.");
       setTopicAnalysisStatus("success");
@@ -348,10 +367,13 @@ const StudyPlans = () => {
       .map((topic) => topic.name);
 
     try {
+      setTopicReviewSaving(true);
+      setTopicReviewError("");
       const result = await saveStudyPlanTopicReview(
         createdPlan.id,
         incorrectTopicNames,
-        missingTopics
+        missingTopics,
+        additionalReviewTopics
       );
 
       setCreatedPlan((plan) =>
@@ -364,10 +386,13 @@ const StudyPlans = () => {
       );
 
       setReviewingTopics(false);
-
-      console.log("Topic review saved:", result);
     } catch (error) {
       console.error("Failed to save topic review:", error);
+      setTopicReviewError(
+        error.message || "Your topic review could not be saved. Please try again."
+      );
+    } finally {
+      setTopicReviewSaving(false);
     }
   };
 
@@ -891,18 +916,42 @@ const StudyPlans = () => {
                     });
 
                     setIncorrectTopics(restoredIncorrectTopics);
+                    setAdditionalReviewTopics(
+                      createdPlan.topicReview?.additionalReviewTopics || []
+                    );
                     setMissingTopics(
                       createdPlan.topicReview?.missingTopics || []
                     );
+                    setTopicReviewError("");
 
                     setReviewingTopics(true);
                   }
                 }}
+                disabled={topicReviewSaving}
                 className="rounded-md border border-[#dce5df] px-3 py-1.5 text-sm font-semibold text-[#42564a] hover:bg-[#f8faf9]"
               >
-                {reviewingTopics ? "Finish Review" : "Review Topics"}
+                {topicReviewSaving
+                  ? "Saving..."
+                  : reviewingTopics
+                    ? "Finish Review"
+                    : "Review Topics"}
               </button>
             </div>
+
+            {reviewingTopics && (
+              <p className="mt-3 text-sm text-[#607067]">
+                Mark inaccurate topics separately from topics you want to spend
+                more time reviewing.
+              </p>
+            )}
+            {topicReviewError && (
+              <p
+                role="alert"
+                className="mt-3 rounded-md border border-[#e6b8b8] bg-[#fff3f3] px-3 py-2 text-sm font-medium text-[#9b3434]"
+              >
+                {topicReviewError}
+              </p>
+            )}
 
             <div className="mt-4 space-y-4">
               {createdPlan.identifiedTopics.map((topic, topicIndex) => (
@@ -931,44 +980,82 @@ const StudyPlans = () => {
                         : "Excluded"}
                     </label>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedTopics((current) => ({
-                          ...current,
-                          [topicIndex]: !current[topicIndex],
-                        }))
-                      }
-                      className="flex flex-1 items-center justify-between text-left"
-                    >
-                      <h3 className="font-semibold text-[#33443a]">
-                        {topic.name}
-                      </h3>
-
-                      <ChevronDown
-                        className={`h-4 w-4 text-[#718077] transition-transform ${
-                          expandedTopics[topicIndex] ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    {reviewingTopics && (
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
                       <button
                         type="button"
                         onClick={() =>
-                          setIncorrectTopics((current) => ({
+                          setExpandedTopics((current) => ({
                             ...current,
                             [topicIndex]: !current[topicIndex],
                           }))
                         }
-                        className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
-                          incorrectTopics[topicIndex]
-                            ? "border-red-300 bg-red-50 text-red-700"
-                            : "border-[#dce5df] text-[#607067] hover:bg-[#f8faf9]"
-                        }`}
+                        aria-expanded={Boolean(expandedTopics[topicIndex])}
+                        className="flex min-w-0 flex-1 items-center justify-between text-left"
                       >
-                        {incorrectTopics[topicIndex] ? "Marked Incorrect" : "Mark Incorrect"}
+                        <h3 className="truncate font-semibold text-[#33443a]">
+                          {topic.name}
+                        </h3>
+
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 text-[#718077] transition-transform ${
+                            expandedTopics[topicIndex] ? "rotate-180" : ""
+                          }`}
+                        />
                       </button>
+                      {!reviewingTopics &&
+                        additionalReviewTopics.includes(topic.name) && (
+                          <span className="shrink-0 rounded-md bg-[#fff8e9] px-2 py-1 text-xs font-semibold text-[#81551d]">
+                            Additional review
+                          </span>
+                        )}
+                    </div>
+
+                    {reviewingTopics && (
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIncorrectTopics((current) => ({
+                              ...current,
+                              [topicIndex]: !current[topicIndex],
+                            }))
+                          }
+                          aria-pressed={Boolean(incorrectTopics[topicIndex])}
+                          disabled={topicReviewSaving}
+                          className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                            incorrectTopics[topicIndex]
+                              ? "border-red-300 bg-red-50 text-red-700"
+                              : "border-[#dce5df] text-[#607067] hover:bg-[#f8faf9]"
+                          }`}
+                        >
+                          {incorrectTopics[topicIndex]
+                            ? "Marked Incorrect"
+                            : "Mark Incorrect"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAdditionalReviewTopics((current) =>
+                              current.includes(topic.name)
+                                ? current.filter((name) => name !== topic.name)
+                                : [...current, topic.name]
+                            )
+                          }
+                          aria-pressed={additionalReviewTopics.includes(
+                            topic.name
+                          )}
+                          disabled={topicReviewSaving}
+                          className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                            additionalReviewTopics.includes(topic.name)
+                              ? "border-[#d4b783] bg-[#fff8e9] text-[#81551d]"
+                              : "border-[#dce5df] text-[#607067] hover:bg-[#f8faf9]"
+                          }`}
+                        >
+                          {additionalReviewTopics.includes(topic.name)
+                            ? "Needs More Review"
+                            : "Flag for More Review"}
+                        </button>
+                      </div>
                     )}
                   </div>
 
