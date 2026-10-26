@@ -300,6 +300,7 @@ from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, Save
 from study_plan_dates import calculate_available_study_days
 from study_plan_scheduling import (
     distribute_topics_across_study_days,
+    schedule_review_activities,
     verify_topics_scheduled_before_exam,
 )
 from azure.cosmos.exceptions import CosmosHttpResponseError, CosmosResourceNotFoundError
@@ -2499,6 +2500,11 @@ def _save_study_plan_document(study_plan: Dict[str, Any], user_id: str) -> None:
 
 def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
     data = study_plan.setdefault("data", {})
+    data["activities"] = [
+        activity
+        for activity in data.get("activities", [])
+        if activity.get("generatedBy") != "topic-review"
+    ]
     data["identifiedTopics"] = []
     data["confirmedTopics"] = []
     data["topicConfirmation"] = {
@@ -2509,6 +2515,7 @@ def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
     data["topicReview"] = {
         "incorrectTopics": [],
         "missingTopics": [],
+        "additionalReviewTopics": [],
     }
     data["topicAnalysis"] = {
         "status": "not_started",
@@ -2720,6 +2727,117 @@ def _validate_study_activity(
             status_code=422,
             detail="Activity date cannot be an unavailable study day.",
         )
+
+    daily_study_minutes = data.get("dailyStudyMinutes")
+    if isinstance(daily_study_minutes, int) and not isinstance(
+        daily_study_minutes, bool
+    ):
+        scheduled_minutes = sum(
+            activity.get("estimatedMinutes", 0)
+            for activity in data.get("activities", [])
+            if activity.get("studyDate") == request.studyDate
+        )
+        if scheduled_minutes + request.estimatedMinutes > daily_study_minutes:
+            raise HTTPException(
+                status_code=422,
+                detail="Activity would exceed the daily study time limit.",
+            )
+
+
+def _sync_study_plan_review_activities(
+    study_plan: Dict[str, Any],
+    review_topic_names: List[str],
+    confirmed_topics: List[Dict[str, Any]],
+) -> None:
+    data = study_plan.setdefault("data", {})
+    activities = data.setdefault("activities", [])
+    previous_reviews = {
+        str(activity.get("reviewTopic") or "").strip().casefold(): activity
+        for activity in activities
+        if activity.get("generatedBy") == "topic-review"
+    }
+    other_activities = [
+        activity
+        for activity in activities
+        if activity.get("generatedBy") != "topic-review"
+    ]
+    try:
+        study_days = calculate_available_study_days(
+            data.get("studyStartDate"),
+            data.get("examDate"),
+            data.get("unavailableDays", []),
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=422,
+            detail="The study plan dates are invalid, so review activities could not be scheduled.",
+        ) from error
+
+    today = date.today().isoformat()
+    exam_date = data.get("examDate")
+    study_days = [
+        study_day
+        for study_day in study_days
+        if today <= study_day < exam_date
+    ]
+    try:
+        reviews, unscheduled_topics = schedule_review_activities(
+            confirmed_topics,
+            review_topic_names,
+            study_days,
+            data.get("dailyStudyMinutes", 0),
+            other_activities,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    if unscheduled_topics:
+        unscheduled_list = ", ".join(unscheduled_topics)
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "There is not enough later study time to schedule review "
+                f"activities for: {unscheduled_list}."
+            ),
+        )
+
+    plan_id = study_plan.get("id", "")
+    review_activities = []
+    existing_ids = {
+        activity.get("id")
+        for activity in other_activities
+        if activity.get("id")
+    }
+    for review in reviews:
+        topic_name = review["topic"]
+        prior_activity = previous_reviews.get(topic_name.casefold(), {})
+        activity_id = prior_activity.get("id") or str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"study-plan-review:{plan_id}:{topic_name.casefold()}",
+            )
+        )
+        if activity_id in existing_ids:
+            raise HTTPException(
+                status_code=409,
+                detail="A review activity conflicts with an existing activity.",
+            )
+        existing_ids.add(activity_id)
+        review_activities.append(
+            {
+                "id": activity_id,
+                **review,
+                "activityType": "review",
+                "completed": bool(prior_activity.get("completed", False)),
+                "createdAt": prior_activity.get(
+                    "createdAt", datetime.utcnow().isoformat()
+                ),
+                "generatedBy": "topic-review",
+                "reviewTopic": topic_name,
+            }
+        )
+
+    data["activities"] = other_activities + review_activities
 
 
 def _study_plan_material_response(material: Dict[str, Any]) -> Dict[str, Any]:
@@ -3171,19 +3289,9 @@ async def analyze_study_plan_topics(
                 detail="The study materials were analyzed, but no usable topics were returned.",
             )
 
+        _reset_study_plan_topic_analysis(study_plan)
         completed_at = datetime.utcnow().isoformat()
         study_plan.setdefault("data", {})["identifiedTopics"] = topics
-        study_plan["data"]["confirmedTopics"] = []
-        study_plan["data"]["topicConfirmation"] = {
-            "status": "not_confirmed",
-            "confirmedAt": None,
-            "topicNames": [],
-        }
-        study_plan["data"]["topicReview"] = {
-            "incorrectTopics": [],
-            "missingTopics": [],
-            "additionalReviewTopics": [],
-        }
         study_plan["data"]["topicAnalysis"] = {
             "status": "complete",
             "completedAt": completed_at,
@@ -3241,7 +3349,15 @@ async def save_study_plan_topic_review(
                 additional_review_topics.append(identified_topic_names[topic_key])
                 seen_review_topics.add(topic_key)
 
-        study_plan.setdefault("data", {})["topicReview"] = {
+        data = study_plan.setdefault("data", {})
+        if data.get("topicConfirmation", {}).get("status") == "confirmed":
+            _sync_study_plan_review_activities(
+                study_plan,
+                additional_review_topics,
+                data.get("confirmedTopics", []),
+            )
+
+        data["topicReview"] = {
             "incorrectTopics": request.incorrectTopics,
             "missingTopics": request.missingTopics,
             "additionalReviewTopics": additional_review_topics,
@@ -3249,12 +3365,13 @@ async def save_study_plan_topic_review(
 
         now = datetime.utcnow().isoformat()
         study_plan["updatedAt"] = now
-        study_plan["data"]["updatedAt"] = now
+        data["updatedAt"] = now
 
         _save_study_plan_document(study_plan, user_id)
 
         return {
-            "topicReview": study_plan["data"]["topicReview"],
+            "topicReview": data["topicReview"],
+            "activities": data.get("activities", []),
             "message": "Topic review saved successfully",
         }
 
@@ -3357,11 +3474,18 @@ async def confirm_study_plan_topics(
             "confirmedAt": confirmed_at,
             "topicNames": confirmed_topic_names,
         }
+        topic_review = data.get("topicReview", {})
+        _sync_study_plan_review_activities(
+            study_plan,
+            topic_review.get("additionalReviewTopics", []),
+            confirmed_topics,
+        )
         _save_study_plan_document(study_plan, user_id)
 
         return {
             "confirmedTopics": confirmed_topics,
             "confirmation": data["topicConfirmation"],
+            "activities": data.get("activities", []),
             "message": "Study plan topics confirmed successfully",
         }
 

@@ -1,5 +1,8 @@
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
+
+
+REVIEW_ACTIVITY_MINUTES = 30
 
 
 def verify_topics_scheduled_before_exam(
@@ -53,3 +56,76 @@ def distribute_topics_across_study_days(
         )
 
     return scheduled_topics
+
+
+def schedule_review_activities(
+    confirmed_topics: List[Dict[str, Any]],
+    review_topic_names: List[str],
+    study_days: List[str],
+    daily_study_minutes: int,
+    existing_activities: List[Dict[str, Any]],
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    if (
+        not isinstance(daily_study_minutes, int)
+        or isinstance(daily_study_minutes, bool)
+        or daily_study_minutes <= 0
+    ):
+        raise ValueError("Daily study time must be greater than zero.")
+
+    review_minutes = min(REVIEW_ACTIVITY_MINUTES, daily_study_minutes)
+    available_days = sorted(set(study_days))
+    minutes_by_day = {study_day: 0 for study_day in available_days}
+
+    for activity in existing_activities:
+        study_day = activity.get("studyDate")
+        if study_day not in minutes_by_day:
+            continue
+        minutes = activity.get("estimatedMinutes")
+        if isinstance(minutes, int) and not isinstance(minutes, bool) and minutes > 0:
+            minutes_by_day[study_day] += minutes
+
+    topics_by_name = {
+        str(topic.get("name") or "").strip().casefold(): topic
+        for topic in confirmed_topics
+        if isinstance(topic, dict) and str(topic.get("name") or "").strip()
+    }
+    scheduled_reviews = []
+    unscheduled_topics = []
+    seen_topics = set()
+
+    for topic_name in review_topic_names:
+        normalized_name = str(topic_name or "").strip().casefold()
+        if not normalized_name or normalized_name in seen_topics:
+            continue
+        seen_topics.add(normalized_name)
+
+        topic = topics_by_name.get(normalized_name)
+        topic_date = topic.get("scheduledDate") if topic else None
+        if not topic_date:
+            unscheduled_topics.append(str(topic_name).strip())
+            continue
+
+        review_date = next(
+            (
+                study_day
+                for study_day in available_days
+                if study_day > topic_date
+                and minutes_by_day[study_day] + review_minutes
+                <= daily_study_minutes
+            ),
+            None,
+        )
+        if review_date is None:
+            unscheduled_topics.append(str(topic_name).strip())
+            continue
+
+        minutes_by_day[review_date] += review_minutes
+        scheduled_reviews.append(
+            {
+                "topic": str(topic.get("name") or "").strip(),
+                "studyDate": review_date,
+                "estimatedMinutes": review_minutes,
+            }
+        )
+
+    return scheduled_reviews, unscheduled_topics

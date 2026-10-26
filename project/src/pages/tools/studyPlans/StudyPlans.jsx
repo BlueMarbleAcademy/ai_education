@@ -376,13 +376,18 @@ const StudyPlans = () => {
         additionalReviewTopics
       );
 
-      setCreatedPlan((plan) =>
-        plan
-          ? {
-              ...plan,
-              topicReview: result.topicReview,
-            }
-          : plan
+      const updatedPlan = {
+        ...createdPlan,
+        topicReview: result.topicReview,
+        activities: result.activities || createdPlan.activities,
+      };
+      setCreatedPlan(updatedPlan);
+      setSavedPlans((plans) =>
+        plans.map((plan) =>
+          plan.id === updatedPlan.id
+            ? toStudyPlanSummary(updatedPlan, plan)
+            : plan
+        )
       );
 
       setReviewingTopics(false);
@@ -427,14 +432,19 @@ const StudyPlans = () => {
       );
       const confirmedTopics = result.confirmedTopics || [];
 
-      setCreatedPlan((plan) =>
-        plan
-          ? {
-              ...plan,
-              confirmedTopics,
-              topicConfirmation: result.confirmation,
-            }
-          : plan
+      const updatedPlan = {
+        ...createdPlan,
+        confirmedTopics,
+        topicConfirmation: result.confirmation,
+        activities: result.activities || createdPlan.activities,
+      };
+      setCreatedPlan(updatedPlan);
+      setSavedPlans((plans) =>
+        plans.map((plan) =>
+          plan.id === updatedPlan.id
+            ? toStudyPlanSummary(updatedPlan, plan)
+            : plan
+        )
       );
       setSelectedTopicNames(
         confirmedTopics.map((topic) => topic.name)
