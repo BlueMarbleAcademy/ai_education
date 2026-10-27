@@ -1,5 +1,5 @@
 import React from "react";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Trash2 } from "lucide-react";
 
 const StudyPlanSelector = ({
   plans,
@@ -7,6 +7,9 @@ const StudyPlanSelector = ({
   status,
   error,
   onSelect,
+  onDelete,
+  deletingPlanId,
+  deleteDisabled = false,
 }) => (
   <section aria-labelledby="saved-plans-heading" className="space-y-3">
     <div className="flex flex-wrap items-end justify-between gap-2">
@@ -50,12 +53,13 @@ const StudyPlanSelector = ({
           const details = getPlanDetails(plan);
 
           return (
+            <div key={plan.id} className="flex min-w-0 items-center gap-1">
             <button
-              key={plan.id}
               type="button"
+              disabled={Boolean(deletingPlanId)}
               aria-pressed={isSelected}
               onClick={() => onSelect(plan.id)}
-              className={`min-w-0 rounded-md border px-3 py-3 text-left transition ${
+              className={`min-w-0 flex-1 rounded-md border px-3 py-3 text-left transition ${
                 isSelected
                   ? "border-[#8f6fba] bg-[#f4effa] shadow-sm"
                   : "border-[#dce5df] bg-white hover:border-[#bca8d4] hover:bg-[#fbf9fd]"
@@ -72,6 +76,16 @@ const StudyPlanSelector = ({
                 {details}
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => onDelete(plan)}
+              disabled={deleteDisabled || Boolean(deletingPlanId)}
+              aria-label={`Delete ${plan.title || plan.examName || "Untitled study plan"}`}
+              className="shrink-0 rounded-md p-2 text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            </div>
           );
         })}
       </div>

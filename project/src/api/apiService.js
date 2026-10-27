@@ -376,6 +376,12 @@ export const removeStudyPlanMaterial = async (planId, materialId) => {
   );
 };
 
+export const deleteStudyPlan = async (planId) => {
+  return callProtectedApi(`${API_BASE}/study-plans/${planId}`, {
+    method: "DELETE",
+  });
+};
+
 export const getStudyPlanMaterialsForAnalysis = async (planId = null) => {
   const endpoint = planId
     ? `${API_BASE}/study-plans/${planId}/materials`

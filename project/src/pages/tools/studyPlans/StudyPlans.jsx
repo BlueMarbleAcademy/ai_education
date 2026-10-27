@@ -17,6 +17,7 @@ import {
   addStudyPlanMaterial,
   addStudyPlanActivity,
   confirmStudyPlanTopics,
+  deleteStudyPlan,
   getStudyPlan,
   getStudyPlans,
   analyzeStudyPlanTopics,
@@ -74,6 +75,8 @@ const StudyPlans = () => {
   const [savedPlans, setSavedPlans] = useState([]);
   const [plansStatus, setPlansStatus] = useState("loading");
   const [plansError, setPlansError] = useState("");
+  const [deletingPlanId, setDeletingPlanId] = useState(null);
+  const [deleteMessage, setDeleteMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -216,6 +219,57 @@ const StudyPlans = () => {
     setTopicAnalysisMessage("");
     setWeekOffset(0);
     setSearchParams(nextParams);
+  };
+
+  const handleDeletePlan = async (plan) => {
+    if (deletingPlanId) return;
+    const title = plan.title || plan.examName || "Untitled study plan";
+    if (!window.confirm(
+      `Permanently delete "${title}"? Its activities, topic reviews, and uploaded materials will also be removed. This cannot be undone.`
+    )) return;
+
+    setDeletingPlanId(plan.id);
+    setPlansError("");
+    setDeleteMessage("");
+    try {
+      await deleteStudyPlan(plan.id);
+      const remainingPlans = savedPlans.filter((item) => item.id !== plan.id);
+      setSavedPlans(remainingPlans);
+      if (planId === plan.id) {
+        setCreatedPlan(null);
+        setCurrentPlan(null);
+        setSelectedTopicNames([]);
+        setAdditionalReviewTopics([]);
+        setExpandedTopics({});
+        setReviewingTopics(false);
+        setIncorrectTopics({});
+        setMissingTopics([]);
+        setMissingTopicInput("");
+        setTopicReviewError("");
+        setTopicConfirmationStatus("idle");
+        setTopicConfirmationMessage("");
+        setTopicAnalysisStatus("idle");
+        setTopicAnalysisMessage("");
+        setPlanError("");
+        setActivityError("");
+        setMaterialError("");
+        setPlanStatus("idle");
+        setWeekOffset(0);
+        setShowPlanner(true);
+        const nextParams = new URLSearchParams(searchParams);
+        if (remainingPlans.length) {
+          nextParams.set("planId", remainingPlans[0].id);
+        } else {
+          nextParams.delete("planId");
+        }
+        setSearchParams(nextParams, { replace: true });
+      }
+      setDeleteMessage(`"${title}" was deleted.`);
+    } catch (error) {
+      setPlansError(error.message || "The study plan could not be deleted. Please try again.");
+    } finally {
+      setDeletingPlanId(null);
+    }
   };
 
   // Create a new study plan
@@ -1249,8 +1303,13 @@ const StudyPlans = () => {
           status={plansStatus}
           error={plansError}
           onSelect={handleSelectPlan}
+          onDelete={handleDeletePlan}
+          deletingPlanId={deletingPlanId}
+          deleteDisabled={planStatus === "loading" || activitySaving || materialSaving || topicReviewSaving || topicAnalysisStatus === "analyzing" || topicConfirmationStatus === "saving"}
         />
       )}
+      {deletingPlanId && <p role="status" className="text-sm text-gray-600">Deleting study plan...</p>}
+      {deleteMessage && <p role="status" className="text-sm text-green-700">{deleteMessage}</p>}
       {showPlanner ? (
         renderPlannerHome()
       ) : showCreate ? (

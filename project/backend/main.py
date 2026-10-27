@@ -3816,6 +3816,51 @@ async def get_study_plan(plan_id: str, user_claims: dict = Depends(validate_toke
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study plan not found")
 
 
+@app.delete("/study-plans/{plan_id}")
+async def delete_study_plan(
+    plan_id: str,
+    user_claims: dict = Depends(validate_token),
+):
+    user_id = user_claims["sub"]
+    _read_owned_study_plan(plan_id, user_id)
+    materials = list(container.query_items(
+        query=(
+            "SELECT * FROM c WHERE c.userId = @userId "
+            "AND c.contentType = 'study_plan_material' AND c.planId = @planId"
+        ),
+        parameters=[
+            {"name": "@userId", "value": user_id},
+            {"name": "@planId", "value": plan_id},
+        ],
+        enable_cross_partition_query=True,
+    ))
+
+    for material in materials:
+        if (
+            material.get("userId") != user_id
+            or material.get("contentType") != "study_plan_material"
+            or material.get("planId") != plan_id
+        ):
+            continue
+        file_path = material.get("data", {}).get("filePath")
+        if file_path:
+            absolute_path = os.path.abspath(file_path)
+            if os.path.commonpath([STUDY_PLAN_MATERIAL_DIR, absolute_path]) == STUDY_PLAN_MATERIAL_DIR:
+                try:
+                    os.remove(absolute_path)
+                except FileNotFoundError:
+                    pass
+                except OSError as error:
+                    raise HTTPException(
+                        status_code=500,
+                        detail="A study material could not be removed. Please try deleting the plan again.",
+                    ) from error
+        container.delete_item(item=material["id"], partition_key=user_id)
+
+    container.delete_item(item=plan_id, partition_key=user_id)
+    return {"deleted": True, "id": plan_id, "message": "Study plan deleted successfully"}
+
+
 @app.get("/study-plans/{plan_id}/materials")
 async def get_study_plan_materials_for_plan(
     plan_id: str,
