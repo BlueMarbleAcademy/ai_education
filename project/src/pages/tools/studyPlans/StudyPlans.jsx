@@ -392,6 +392,7 @@ const StudyPlans = () => {
                 topicNames: [],
               },
               topicAnalysis: result.analysis,
+              activities: result.activities || [],
             }
           : plan
       );
@@ -432,9 +433,17 @@ const StudyPlans = () => {
 
       const updatedPlan = {
         ...createdPlan,
+        identifiedTopics: result.identifiedTopics || createdPlan.identifiedTopics,
         topicReview: result.topicReview,
+        topicConfirmation: result.confirmation || createdPlan.topicConfirmation,
         activities: result.activities || createdPlan.activities,
       };
+      const addedNames = result.addedTopicNames || [];
+      if (addedNames.length > 0) {
+        setSelectedTopicNames((names) => [...new Set([...names, ...addedNames])]);
+        setTopicConfirmationStatus("idle");
+        setTopicConfirmationMessage("Your added topics are selected. Confirm your choices to update the schedule.");
+      }
       setCreatedPlan(updatedPlan);
       setSavedPlans((plans) =>
         plans.map((plan) =>
@@ -1203,7 +1212,9 @@ const StudyPlans = () => {
 
                       if (!trimmedTopic) return;
 
-                      setMissingTopics((current) => [...current, trimmedTopic]);
+                      setMissingTopics((current) => current.some(
+                        (name) => name.toLowerCase() === trimmedTopic.toLowerCase()
+                      ) ? current : [...current, trimmedTopic]);
                       setMissingTopicInput("");
                     }}
                     className="rounded-md bg-[#274c3a] px-3 py-2 text-sm font-semibold text-white hover:bg-[#1d3c2d]"
@@ -1212,7 +1223,10 @@ const StudyPlans = () => {
                   </button>
                 </div>
 
-                {missingTopics.length > 0 && (
+                  <p className="mt-2 text-xs text-[#607067]">
+                    Finish your review to save added topics, then confirm your choices to schedule them.
+                  </p>
+                  {missingTopics.length > 0 && (
                   <div className="mt-3 space-y-1">
                     {missingTopics.map((topic, index) => (
                       <p

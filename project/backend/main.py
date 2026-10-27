@@ -2511,7 +2511,7 @@ def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
     data["activities"] = [
         activity
         for activity in data.get("activities", [])
-        if activity.get("generatedBy") != "topic-review"
+        if activity.get("generatedBy") not in {"topic-review", "day-plan"}
     ]
     data["identifiedTopics"] = []
     data["confirmedTopics"] = []
@@ -2866,6 +2866,7 @@ def _sync_study_plan_day_plan_activities(
         (
             str(activity.get("topic") or "").strip().casefold(),
             activity.get("studyDate"),
+            activity.get("studyMethod"),
         ): activity
         for activity in activities
         if activity.get("generatedBy") == "day-plan"
@@ -2905,6 +2906,7 @@ def _sync_study_plan_day_plan_activities(
         key = (
             topic_name.strip().casefold(),
             study_date,
+            generated_activity["studyMethod"],
         )
 
         prior_activity = previous_day_plan.get(key, {})
@@ -2916,7 +2918,8 @@ def _sync_study_plan_day_plan_activities(
                     f"study-plan-day:"
                     f"{plan_id}:"
                     f"{study_date}:"
-                    f"{topic_name.casefold()}"
+                    f"{topic_name.casefold()}:"
+                    f"{generated_activity['studyMethod']}"
                 ),
             )
         )
@@ -2933,7 +2936,7 @@ def _sync_study_plan_day_plan_activities(
             {
                 "id": activity_id,
                 **generated_activity,
-                "activityType": "study",
+                "activityType": generated_activity["studyMethod"],
                 "completed": bool(
                     prior_activity.get("completed", False)
                 ),
@@ -3414,6 +3417,7 @@ async def analyze_study_plan_topics(
         return {
             "topics": topics,
             "analysis": study_plan["data"]["topicAnalysis"],
+            "activities": study_plan["data"].get("activities", []),
             "message": "Study topics analyzed and saved successfully",
         }
 
@@ -3437,7 +3441,33 @@ async def save_study_plan_topic_review(
 
         study_plan = _read_owned_study_plan(plan_id, user_id)
 
-        identified_topics = study_plan.get("data", {}).get("identifiedTopics", [])
+        data = study_plan.setdefault("data", {})
+        identified_topics = data.get("identifiedTopics", [])
+        if not identified_topics:
+            raise HTTPException(status_code=409, detail="Analyze the materials before reviewing topics.")
+        existing_topic_keys = {
+            _study_topic_key(topic.get("name")) for topic in identified_topics
+        }
+        added_topic_names = []
+        missing_topic_names = []
+        seen_missing_keys = set()
+        for raw_name in request.missingTopics:
+            name = re.sub(r"\s+", " ", raw_name).strip()
+            key = _study_topic_key(name)
+            if not key or key in seen_missing_keys:
+                continue
+            seen_missing_keys.add(key)
+            missing_topic_names.append(name)
+            if key not in existing_topic_keys:
+                identified_topics.append({
+                    "name": name,
+                    "subtopics": [],
+                    "concepts": [],
+                    "addedByStudent": True,
+                })
+                existing_topic_keys.add(key)
+                added_topic_names.append(name)
+
         identified_topic_names = {
             str(topic.get("name") or "").strip().casefold(): str(
                 topic.get("name") or ""
@@ -3456,17 +3486,29 @@ async def save_study_plan_topic_review(
                 additional_review_topics.append(identified_topic_names[topic_key])
                 seen_review_topics.add(topic_key)
 
-        data = study_plan.setdefault("data", {})
         if data.get("topicConfirmation", {}).get("status") == "confirmed":
+            confirmed_names = {
+                topic["name"].strip().casefold()
+                for topic in data.get("confirmedTopics", [])
+            }
             _sync_study_plan_review_activities(
                 study_plan,
-                additional_review_topics,
+                [name for name in additional_review_topics if name.casefold() in confirmed_names],
                 data.get("confirmedTopics", []),
             )
+            _sync_study_plan_day_plan_activities(
+                study_plan, data.get("confirmedTopics", []),
+            )
+
+        if added_topic_names:
+            data["topicConfirmation"] = {
+                **data.get("topicConfirmation", {}),
+                "status": "not_confirmed",
+            }
 
         data["topicReview"] = {
             "incorrectTopics": request.incorrectTopics,
-            "missingTopics": request.missingTopics,
+            "missingTopics": missing_topic_names,
             "additionalReviewTopics": additional_review_topics,
         }
 
@@ -3478,6 +3520,9 @@ async def save_study_plan_topic_review(
 
         return {
             "topicReview": data["topicReview"],
+            "identifiedTopics": identified_topics,
+            "addedTopicNames": added_topic_names,
+            "confirmation": data.get("topicConfirmation"),
             "activities": data.get("activities", []),
             "message": "Topic review saved successfully",
         }
@@ -3586,7 +3631,10 @@ async def confirm_study_plan_topics(
 
         _sync_study_plan_review_activities(
             study_plan,
-            topic_review.get("additionalReviewTopics", []),
+            [
+                name for name in topic_review.get("additionalReviewTopics", [])
+                if name.casefold() in {topic_name.casefold() for topic_name in confirmed_topic_names}
+            ],
             confirmed_topics,
         )
 

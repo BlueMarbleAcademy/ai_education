@@ -128,7 +128,7 @@ const StudyPlanActivities = ({
               <div className="flex min-w-0 items-start gap-3">
                 <button
                   type="button"
-                  aria-label={`${activity.completed ? "Mark incomplete" : "Mark complete"}: ${activity.topic}`}
+                  aria-label={`${activity.completed ? "Mark incomplete" : "Mark complete"}: ${activity.instruction || activity.topic}`}
                   aria-pressed={activity.completed}
                   onClick={() => onToggleActivity(activity.id)}
                   disabled={isSaving}
@@ -153,7 +153,7 @@ const StudyPlanActivities = ({
                           : "text-[#26372d]"
                       }`}
                     >
-                      {activity.topic}
+                      {activity.instruction || activity.topic}
                     </h3>
                     {activity.activityType === "review" && (
                       <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
@@ -409,6 +409,14 @@ const compareActivities = (first, second) => {
   const dateOrder = first.studyDate.localeCompare(second.studyDate);
   if (dateOrder !== 0) {
     return dateOrder;
+  }
+
+  if (
+    first.topic === second.topic &&
+    first.generatedBy === "day-plan" && second.generatedBy === "day-plan" &&
+    Number.isInteger(first.stepOrder) && Number.isInteger(second.stepOrder)
+  ) {
+    return first.stepOrder - second.stepOrder;
   }
 
   const createdOrder = (first.createdAt || "").localeCompare(

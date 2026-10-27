@@ -50,7 +50,7 @@ export const buildCalendarBlocks = (activities, weekDates) => {
 
       return {
         id: activity.id,
-        title: activity.topic,
+        title: activity.instruction || activity.topic,
         meta: `${getActivityTypeLabel(studyMethod)} · ${estimatedMinutes} min`,
         day,
         start: startMinutes / 60,
@@ -130,6 +130,14 @@ const compareActivities = (first, second) => {
   const dateOrder = (first.studyDate || "").localeCompare(second.studyDate || "");
   if (dateOrder !== 0) {
     return dateOrder;
+  }
+
+  if (
+    first.topic === second.topic &&
+    first.generatedBy === "day-plan" && second.generatedBy === "day-plan" &&
+    Number.isInteger(first.stepOrder) && Number.isInteger(second.stepOrder)
+  ) {
+    return first.stepOrder - second.stepOrder;
   }
 
   const createdOrder = (first.createdAt || "").localeCompare(

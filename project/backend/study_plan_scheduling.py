@@ -91,7 +91,7 @@ def assign_study_method(topic: Dict[str, Any]) -> str:
         if isinstance(concept, dict):
             text_parts.extend(
                 [
-                    str(concept.get("name") or ""),
+                    str(concept.get("title") or concept.get("name") or ""),
                     str(concept.get("description") or ""),
                 ]
             )
@@ -108,7 +108,7 @@ def assign_study_method(topic: Dict[str, Any]) -> str:
             if isinstance(concept, dict):
                 text_parts.extend(
                     [
-                        str(concept.get("name") or ""),
+                        str(concept.get("title") or concept.get("name") or ""),
                         str(concept.get("description") or ""),
                     ]
                 )
@@ -120,13 +120,53 @@ def assign_study_method(topic: Dict[str, Any]) -> str:
         for part in text_parts
         if part
     )
+    # Normalize simple plurals so 'definitions' and 'processes' match as well.
+    words = normalized_text.split()
+    variants = set(words)
+    for word in words:
+        if word.endswith("ies"):
+            variants.add(word[:-3] + "y")
+        elif word.endswith("ses"):
+            variants.add(word[:-2])
+        elif word.endswith("s") and not word.endswith("ss"):
+            variants.add(word[:-1])
     padded_text = f" {normalized_text} "
 
     for method, keywords in STUDY_METHOD_KEYWORDS:
-        if any(f" {keyword} " in padded_text for keyword in keywords):
+        if any(keyword in variants or f" {keyword} " in padded_text for keyword in keywords):
             return method
 
     return DEFAULT_STUDY_METHOD
+
+
+def build_topic_study_steps(topic: Dict[str, Any], minutes: int) -> List[Dict[str, Any]]:
+    preferred_method = assign_study_method(topic)
+    methods = [DEFAULT_STUDY_METHOD, preferred_method, "practice_quiz"]
+    if preferred_method == DEFAULT_STUDY_METHOD:
+        methods[1] = "voice_memo"
+    methods = list(dict.fromkeys(methods))
+    if minutes < 10:
+        methods = [preferred_method]
+    elif minutes < len(methods) * 5:
+        methods = [DEFAULT_STUDY_METHOD, preferred_method if preferred_method != DEFAULT_STUDY_METHOD else "practice_quiz"]
+
+    step_minutes, extra_minutes = divmod(minutes, len(methods))
+    actions = {
+        "reading_review": "Review uploaded material",
+        "flashcards": "Practice key terms with flashcards",
+        "practice_quiz": "Test your understanding with a practice quiz",
+        "mind_map": "Connect the concepts in a mind map",
+        "voice_memo": "Explain the topic from memory in a voice memo",
+    }
+    return [
+        {
+            "studyMethod": method,
+            "estimatedMinutes": step_minutes + (index < extra_minutes),
+            "instruction": f"{actions[method]}: {topic['name'].strip()}",
+            "stepOrder": index,
+        }
+        for index, method in enumerate(methods)
+    ]
 
 
 def ensure_generated_activity_study_methods(
@@ -289,14 +329,12 @@ def generate_day_by_day_activities(
             if index < extra_minutes:
                 estimated_minutes += 1
 
-            generated_activities.append(
-                {
+            for step in build_topic_study_steps(topic, estimated_minutes):
+                generated_activities.append({
                     "topic": topic_name,
                     "studyDate": study_day,
-                    "estimatedMinutes": estimated_minutes,
-                    "studyMethod": assign_study_method(topic),
-                }
-            )
+                    **step,
+                })
 
     return generated_activities
 
@@ -331,6 +369,11 @@ def schedule_review_activities(
         for topic in confirmed_topics
         if isinstance(topic, dict) and str(topic.get("name") or "").strip()
     }
+    # Leave at least five minutes for each topic's initial study session.
+    for topic in confirmed_topics:
+        study_day = topic.get("scheduledDate")
+        if study_day in minutes_by_day:
+            minutes_by_day[study_day] += 5
     scheduled_reviews = []
     unscheduled_topics = []
     seen_topics = set()
@@ -352,7 +395,7 @@ def schedule_review_activities(
                 study_day
                 for study_day in available_days
                 if study_day > topic_date
-                and minutes_by_day[study_day] + review_minutes
+                and minutes_by_day[study_day] + 5
                 <= daily_study_minutes
             ),
             None,
@@ -361,12 +404,15 @@ def schedule_review_activities(
             unscheduled_topics.append(str(topic_name).strip())
             continue
 
-        minutes_by_day[review_date] += review_minutes
+        allocated_minutes = min(
+            review_minutes, daily_study_minutes - minutes_by_day[review_date]
+        )
+        minutes_by_day[review_date] += allocated_minutes
         scheduled_reviews.append(
             {
                 "topic": str(topic.get("name") or "").strip(),
                 "studyDate": review_date,
-                "estimatedMinutes": review_minutes,
+                "estimatedMinutes": allocated_minutes,
                 "studyMethod": DEFAULT_STUDY_METHOD,
             }
         )
