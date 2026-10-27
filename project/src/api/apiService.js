@@ -382,6 +382,13 @@ export const deleteStudyPlan = async (planId) => {
   });
 };
 
+export const rescheduleMissedStudyDay = async (planId, missedDate) => {
+  return callProtectedApi(`${API_BASE}/study-plans/${planId}/missed-day`, {
+    method: "POST",
+    body: JSON.stringify({ missedDate }),
+  });
+};
+
 export const getStudyPlanMaterialsForAnalysis = async (planId = null) => {
   const endpoint = planId
     ? `${API_BASE}/study-plans/${planId}/materials`

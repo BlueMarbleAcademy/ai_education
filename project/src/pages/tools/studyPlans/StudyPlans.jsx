@@ -18,6 +18,7 @@ import {
   addStudyPlanActivity,
   confirmStudyPlanTopics,
   deleteStudyPlan,
+  rescheduleMissedStudyDay,
   getStudyPlan,
   getStudyPlans,
   analyzeStudyPlanTopics,
@@ -31,7 +32,7 @@ import StudyPlanMaterials from "./StudyPlanMaterials";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
 import StudyPlanSelector from "./StudyPlanSelector";
-import { getAvailableStudyDays } from "./studyPlanDates";
+import { getAvailableStudyDays, formatDateValue } from "./studyPlanDates";
 import {
   buildCalendarBlocks,
   formatPlannedTime,
@@ -77,6 +78,10 @@ const StudyPlans = () => {
   const [plansError, setPlansError] = useState("");
   const [deletingPlanId, setDeletingPlanId] = useState(null);
   const [deleteMessage, setDeleteMessage] = useState("");
+  const [missedDate, setMissedDate] = useState(() => formatDateValue(new Date()));
+  const [rescheduling, setRescheduling] = useState(false);
+  const [rescheduleMessage, setRescheduleMessage] = useState("");
+  const [rescheduleError, setRescheduleError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -204,6 +209,8 @@ const StudyPlans = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("planId", selectedPlanId);
     setCreatedPlan(null);
+    setRescheduleMessage("");
+    setRescheduleError("");
     setCurrentPlan(null);
     setShowCreate(false);
     setShowPlanner(true);
@@ -269,6 +276,25 @@ const StudyPlans = () => {
       setPlansError(error.message || "The study plan could not be deleted. Please try again.");
     } finally {
       setDeletingPlanId(null);
+    }
+  };
+
+  const handleMissedDay = async () => {
+    if (!createdPlan?.id || rescheduling) return;
+    if (!window.confirm("Move unfinished activities to the remaining study days? Completed work will stay unchanged.")) return;
+    setRescheduling(true);
+    setRescheduleError("");
+    setRescheduleMessage("");
+    try {
+      const response = await rescheduleMissedStudyDay(createdPlan.id, missedDate);
+      setCreatedPlan(response.plan);
+      setRescheduleMessage(response.message);
+      setWeekOffset(getWeekOffsetForDate(getPlanFocusDate(response.plan)));
+      setSavedPlans((plans) => plans.map((plan) => plan.id === response.plan.id ? toStudyPlanSummary(response.plan, plan) : plan));
+    } catch (error) {
+      setRescheduleError(error.message || "Your plan could not be rescheduled.");
+    } finally {
+      setRescheduling(false);
     }
   };
 
@@ -393,6 +419,7 @@ const StudyPlans = () => {
               },
               topicAnalysis: result.analysis,
               activities: result.activities || [],
+              scheduleInfo: null,
             }
           : plan
       );
@@ -436,6 +463,8 @@ const StudyPlans = () => {
         identifiedTopics: result.identifiedTopics || createdPlan.identifiedTopics,
         topicReview: result.topicReview,
         topicConfirmation: result.confirmation || createdPlan.topicConfirmation,
+        confirmedTopics: result.confirmedTopics || createdPlan.confirmedTopics,
+        scheduleInfo: result.scheduleInfo || createdPlan.scheduleInfo,
         activities: result.activities || createdPlan.activities,
       };
       const addedNames = result.addedTopicNames || [];
@@ -499,6 +528,7 @@ const StudyPlans = () => {
         ...createdPlan,
         confirmedTopics,
         topicConfirmation: result.confirmation,
+        scheduleInfo: result.scheduleInfo,
         activities: result.activities || createdPlan.activities,
       };
       setCreatedPlan(updatedPlan);
@@ -669,7 +699,7 @@ const StudyPlans = () => {
           createdPlan.studyStartDate,
           createdPlan.examDate,
           createdPlan.unavailableDays
-        ).length
+        ).filter((day) => day.value < createdPlan.examDate).length
       : 0;
     const allMaterialsReady =
       studyMaterials.length > 0 &&
@@ -1134,6 +1164,16 @@ const StudyPlans = () => {
 
                   {expandedTopics[topicIndex] && (
                     <>
+                      {topic.materialCount > 1 && (
+                        <p className="mt-3 text-sm font-semibold text-blue-800">
+                          Appears in {topic.materialCount} uploaded materials
+                        </p>
+                      )}
+                      {topic.relationships?.length > 0 && (
+                        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[#42564a]">
+                          {topic.relationships.map((relationship, index) => <li key={index}>{relationship}</li>)}
+                        </ul>
+                      )}
                       {topic.concepts?.length > 0 && (
                         <div className="mt-3">
                           <p className="text-xs font-bold uppercase text-[#718077]">
@@ -1284,6 +1324,40 @@ const StudyPlans = () => {
           </div>
         )}
 
+        {createdPlan?.topicAnalysis?.visualFindings?.length > 0 && (
+          <section className="border-t border-gray-200 py-4" aria-labelledby="visual-findings-heading">
+            <h2 id="visual-findings-heading" className="font-bold text-gray-900">Diagrams and relationships</h2>
+            <ul className="mt-3 space-y-3">
+              {createdPlan.topicAnalysis.visualFindings.map((finding, index) => (
+                <li key={index} className="text-sm text-gray-700">
+                  <p>{finding.description}</p>
+                  <p className="mt-1 text-xs text-gray-500">{finding.materialName} · {finding.location}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {createdPlan?.scheduleInfo && (
+          <section className="space-y-3 border-t border-gray-200 py-4" aria-label="Review schedule">
+            {createdPlan.scheduleInfo.finalReviewDate && (
+              <p className="text-sm font-semibold text-blue-900">Final review: {formatPlanDate(createdPlan.scheduleInfo.finalReviewDate)}</p>
+            )}
+            {(createdPlan.scheduleInfo.warnings || []).map((warning, index) => (
+              <p key={index} role="status" className="text-sm text-amber-800">{warning}</p>
+            ))}
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="text-sm font-semibold text-gray-700">
+                Missed a study day?
+                <input type="date" value={missedDate} onChange={(event) => setMissedDate(event.target.value)} min={createdPlan.studyStartDate} max={formatDateValue(new Date())} className="mt-1 block rounded-md border border-gray-300 px-3 py-2" />
+              </label>
+              <button type="button" onClick={handleMissedDay} disabled={rescheduling || !missedDate || activitySaving || materialSaving || topicReviewSaving} className="rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                {rescheduling ? "Rescheduling..." : "Reschedule unfinished work"}
+              </button>
+            </div>
+            {rescheduleError && <p role="alert" className="text-sm text-red-700">{rescheduleError}</p>}
+            {rescheduleMessage && <p role="status" className="text-sm text-green-700">{rescheduleMessage}</p>}
+          </section>
+        )}
         {createdPlan && (
           <ConfirmedTopicSchedule
             topics={createdPlan.confirmedTopics || []}
@@ -1318,12 +1392,13 @@ const StudyPlans = () => {
           error={plansError}
           onSelect={handleSelectPlan}
           onDelete={handleDeletePlan}
-          deletingPlanId={deletingPlanId}
+          deletingPlanId={deletingPlanId || (rescheduling ? planId : null)}
           deleteDisabled={planStatus === "loading" || activitySaving || materialSaving || topicReviewSaving || topicAnalysisStatus === "analyzing" || topicConfirmationStatus === "saving"}
         />
       )}
       {deletingPlanId && <p role="status" className="text-sm text-gray-600">Deleting study plan...</p>}
       {deleteMessage && <p role="status" className="text-sm text-green-700">{deleteMessage}</p>}
+      <fieldset disabled={rescheduling} className="m-0 min-w-0 border-0 p-0">
       {showPlanner ? (
         renderPlannerHome()
       ) : showCreate ? (
@@ -1341,6 +1416,7 @@ const StudyPlans = () => {
           setPlanStatus={setPlanStatus}
         />
       ) : null}
+      </fieldset>
     </div>
   );
 };

@@ -29,6 +29,7 @@ const StudyPlanMaterials = ({
       ".docx",
       ".txt",
       ".pptx",
+      ".png", ".jpg", ".jpeg",
     ];
 
     const maxFileSize = 20 * 1024 * 1024;
@@ -87,7 +88,7 @@ const StudyPlanMaterials = ({
                 : `${materials.length} saved file${materials.length === 1 ? "" : "s"}`}
             </p>
             <p className="mt-1 text-xs text-[#8a968e]">
-              Supported files: PDF, DOCX, TXT, PPTX
+              Supported files: PDF, DOCX, TXT, PPTX, PNG, JPEG. Scanned PDFs are supported.
             </p>
           </div>
         </div>
@@ -101,7 +102,7 @@ const StudyPlanMaterials = ({
           {isSaving ? "Saving..." : "Add Files"}
           <input
             type="file"
-            accept=".pdf,.docx,.txt,.pptx"
+            accept=".pdf,.docx,.txt,.pptx,.png,.jpg,.jpeg"
             multiple
             disabled={isSaving}
             onChange={handleSelection}
@@ -149,6 +150,9 @@ const StudyPlanMaterials = ({
                 <p className="mt-0.5 text-xs text-[#718077]">
                   {formatFileSize(material.fileSize)} · Saved with this plan
                 </p>
+                {(material.processingWarnings || []).map((warning, warningIndex) => (
+                  <p key={warningIndex} className="mt-1 text-xs text-red-700">{warning}</p>
+                ))}
               </div>
               {material.id && (
                 <button

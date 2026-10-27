@@ -25,7 +25,7 @@ const parseDateValue = (value) => {
   return date;
 };
 
-const formatDateValue = (date) =>
+export const formatDateValue = (date) =>
   [
     date.getFullYear(),
     String(date.getMonth() + 1).padStart(2, "0"),

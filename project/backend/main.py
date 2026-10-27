@@ -298,6 +298,10 @@ from pdf_utils import extract_text_from_pdf
 from openai_client import generate_quiz, generate_answer_explanation, evaluate_short_answer, evaluate_numerical_answer, evaluate_all_answers, generate_study_plan, update_study_plan, summarize_text, generate_flashcard as openai_generate_flashcard, analyze_quiz_performance, generate_harder_quiz, analyze_quiz_performance, identify_study_topics_and_concepts
 from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, SaveQuizAttemptResponse, QuizAttempt, StudyPlanDocument, SaveStudyPlanResponse, UpdateStudyPlanRequest, UpdateStudyPlanResponse, Flashcard, FlashcardDeck, FlashcardDocument, MindmapDocument, SaveMindmapResponse, CreateMindmapRequest, CreateFolderRequest, UpdateFolderRequest, FolderOut, ShareLinkCreateRequest, ShareLinkUpdateRequest, ShareLinkSettings
 from study_plan_dates import calculate_available_study_days
+from study_plan_material_processing import extract_planner_material
+from study_plan_exam_schedule import build_exam_schedule, reschedule_missed_day, GENERATED_KINDS
+from openai_client import read_study_material_image
+from starlette.concurrency import run_in_threadpool
 from study_plan_scheduling import (
     distribute_topics_across_study_days,
     ensure_generated_activity_study_methods,
@@ -2462,6 +2466,10 @@ class UpdateStudyPlanActivityRequest(BaseModel):
     completed: bool
 
 
+class MissedStudyDayRequest(BaseModel):
+    missedDate: str
+
+
 STUDY_PLAN_MATERIAL_DIR = os.path.abspath(
     os.path.join("static", "study_plan_materials")
 )
@@ -2511,7 +2519,7 @@ def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
     data["activities"] = [
         activity
         for activity in data.get("activities", [])
-        if activity.get("generatedBy") not in {"topic-review", "day-plan"}
+        if activity.get("generatedBy") not in GENERATED_KINDS
     ]
     data["identifiedTopics"] = []
     data["confirmedTopics"] = []
@@ -2530,6 +2538,7 @@ def _reset_study_plan_topic_analysis(study_plan: Dict[str, Any]) -> None:
         "completedAt": None,
         "materialCount": 0,
     }
+    data.pop("scheduleInfo", None)
 
 
 STUDY_TOPIC_GENERIC_WORDS = {
@@ -2756,6 +2765,25 @@ def _validate_study_activity(
             )
 
 
+def _rebuild_study_plan_schedule(study_plan, confirmed_topics, flagged_topics=None):
+    data = study_plan.setdefault("data", {})
+    try:
+        days = calculate_available_study_days(data["studyStartDate"], data["examDate"], data.get("unavailableDays", []))
+        days = [day for day in days if date.today().isoformat() <= day < data["examDate"] and day not in data.get("missedStudyDays", [])]
+        topics, activities, info = build_exam_schedule(
+            study_plan["id"], confirmed_topics, days, data["dailyStudyMinutes"],
+            data.get("activities", []),
+            flagged_topics if flagged_topics is not None else data.get("topicReview", {}).get("additionalReviewTopics", []),
+        )
+    except (KeyError, ValueError) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    data["confirmedTopics"] = topics
+    data["activities"] = activities
+    data["scheduleInfo"] = info
+    for activity in activities:
+        activity.setdefault("createdAt", datetime.utcnow().isoformat())
+
+
 def _sync_study_plan_review_activities(
     study_plan: Dict[str, Any],
     review_topic_names: List[str],
@@ -2960,6 +2988,7 @@ def _study_plan_material_response(material: Dict[str, Any]) -> Dict[str, Any]:
         "fileType": data.get("fileType", "application/pdf"),
         "status": data.get("status", "ready"),
         "createdAt": material.get("createdAt"),
+        "processingWarnings": data.get("processingWarnings", []),
     }
 
 
@@ -2998,6 +3027,7 @@ def collect_study_plan_materials(
             "status": data.get("status", material_ref.get("status", "ready")),
             "planId": plan_id,
             "extractedText": data.get("extractedText") or "",
+            "visualFindings": data.get("visualFindings", []),
         })
 
     return gathered
@@ -3050,6 +3080,9 @@ async def _store_study_plan_material(
         ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ".txt": "text/plain",
         ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
     }
 
     file_extension = os.path.splitext(filename)[1].lower()
@@ -3057,16 +3090,16 @@ async def _store_study_plan_material(
     if file_extension not in supported_extensions:
         raise HTTPException(
             status_code=422,
-            detail="Unsupported file type. Supported types: PDF, DOCX, TXT, PPTX.",
+            detail="Unsupported file type. Supported types: PDF, DOCX, TXT, PPTX, PNG, JPG, JPEG.",
         )
 
     content = await file.read()
     if not content:
-        raise HTTPException(status_code=422, detail="The uploaded PDF is empty.")
+        raise HTTPException(status_code=422, detail="The uploaded file is empty.")
     if len(content) > max_size:
         raise HTTPException(
             status_code=413,
-            detail="This PDF is too large. Please upload a file smaller than 20 MB.",
+            detail="This file is too large. Please upload a file smaller than 20 MB.",
         )
 
     material_id = str(uuid.uuid4())
@@ -3078,47 +3111,8 @@ async def _store_study_plan_material(
         with open(file_path, "wb") as handle:
             handle.write(content)
 
-        if file_extension == ".pdf":
-            extracted_text = extract_text_from_pdf(file_path)
-
-        elif file_extension == ".txt":
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as text_file:
-                extracted_text = text_file.read().strip()
-
-            if not extracted_text:
-                raise ValueError("No readable text was found in the TXT file.")
-
-        elif file_extension == ".docx":
-            document = Document(file_path)
-
-            extracted_text = "\n".join(
-                paragraph.text
-                for paragraph in document.paragraphs
-                if paragraph.text.strip()
-            ).strip()
-
-            if not extracted_text:
-                raise ValueError("No readable text was found in the DOCX file.")
-
-        elif file_extension == ".pptx":
-            presentation = Presentation(file_path)
-
-            slide_text = []
-
-            for slide in presentation.slides:
-                for shape in slide.shapes:
-                    if hasattr(shape, "text") and shape.text.strip():
-                        slide_text.append(shape.text.strip())
-
-            extracted_text = "\n".join(slide_text).strip()
-
-            if not extracted_text:
-                raise ValueError("No readable text was found in the PPTX file.")
-
-        else:
-            raise ValueError(
-                f"{file_extension.upper()} processing has not been configured yet."
-            )
+        extracted = await run_in_threadpool(extract_planner_material, file_path, read_study_material_image)
+        extracted_text = extracted["text"]
 
         now = datetime.utcnow().isoformat()
         material_document = {
@@ -3135,6 +3129,9 @@ async def _store_study_plan_material(
                 "fileSize": len(content),
                 "fileType": supported_extensions[file_extension],
                 "extractedText": extracted_text,
+                "visualFindings": extracted["visualFindings"],
+                "processingWarnings": extracted["warnings"],
+                "processingVersion": 2,
                 "status": "ready",
             },
         }
@@ -3157,7 +3154,7 @@ async def _store_study_plan_material(
         print(f"Error processing study plan material: {exc}")
         raise HTTPException(
             status_code=500,
-            detail="The material could not be processed. Please try another PDF.",
+            detail="The material could not be processed. Check the AI connection and try again with a clear image or readable document.",
         )
 
 @app.post("/process-study-plan-material")
@@ -3348,6 +3345,16 @@ async def analyze_study_plan_topics(
             for item in materials
             if isinstance(item, dict) and item.get("id")
         }
+        for material in material_details.values():
+            material_data = material.get("data", {})
+            path = material_data.get("filePath")
+            if material.get("userId") != user_id or material.get("planId") != plan_id:
+                continue
+            if material_data.get("processingVersion") == 2 or not path or not os.path.isfile(path):
+                continue
+            extracted = await run_in_threadpool(extract_planner_material, path, read_study_material_image)
+            material_data.update({"extractedText": extracted["text"], "visualFindings": extracted["visualFindings"], "processingWarnings": extracted["warnings"], "processingVersion": 2})
+            container.replace_item(item=material["id"], body=material, partition_key=user_id)
         connected_materials = collect_study_plan_materials(
             study_plan,
             material_details,
@@ -3382,14 +3389,14 @@ async def analyze_study_plan_topics(
             )
 
         extracted_sections = [
-            f"Material: {material.get('name', 'Untitled material')}\n"
+            f"Material ID: {material['id']}\nMaterial: {material.get('name', 'Untitled material')}\n"
             f"{str(material.get('extractedText') or '').strip()}"
             for material in connected_materials
         ]
 
         combined_text = "\n\n---\n\n".join(extracted_sections)
 
-        analysis = identify_study_topics_and_concepts(combined_text)
+        analysis = await run_in_threadpool(identify_study_topics_and_concepts, combined_text)
         raw_topics = (
             analysis.get("topics") if isinstance(analysis, dict) else None
         )
@@ -3399,6 +3406,22 @@ async def analyze_study_plan_topics(
                 status_code=502,
                 detail="The study materials were analyzed, but no usable topics were returned.",
             )
+
+        valid_material_ids = {material["id"] for material in connected_materials}
+        for topic in topics:
+            source_ids, relationships = set(), []
+            for raw_topic in raw_topics:
+                if not isinstance(raw_topic, dict) or _study_topic_key(raw_topic.get("name")) != _study_topic_key(topic["name"]):
+                    continue
+                raw_ids = raw_topic.get("sourceMaterialIds", [])
+                if isinstance(raw_ids, list):
+                    source_ids.update(item for item in raw_ids if isinstance(item, str) and item in valid_material_ids)
+                raw_relationships = raw_topic.get("relationships", [])
+                if isinstance(raw_relationships, list):
+                    relationships.extend(item.strip() for item in raw_relationships if isinstance(item, str) and item.strip())
+            topic["sourceMaterialIds"] = sorted(source_ids)
+            topic["materialCount"] = len(source_ids)
+            topic["relationships"] = list(dict.fromkeys(relationships))
 
         _reset_study_plan_topic_analysis(study_plan)
         completed_at = datetime.utcnow().isoformat()
@@ -3411,6 +3434,10 @@ async def analyze_study_plan_topics(
             "subtopicCount": sum(
                 len(topic.get("subtopics", [])) for topic in topics
             ),
+            "visualFindings": [
+                {**finding, "materialId": material["id"], "materialName": material["name"]}
+                for material in connected_materials for finding in material.get("visualFindings", [])
+            ],
         }
 
         _save_study_plan_document(study_plan, user_id)
@@ -3488,18 +3515,7 @@ async def save_study_plan_topic_review(
                 seen_review_topics.add(topic_key)
 
         if data.get("topicConfirmation", {}).get("status") == "confirmed":
-            confirmed_names = {
-                topic["name"].strip().casefold()
-                for topic in data.get("confirmedTopics", [])
-            }
-            _sync_study_plan_review_activities(
-                study_plan,
-                [name for name in additional_review_topics if name.casefold() in confirmed_names],
-                data.get("confirmedTopics", []),
-            )
-            _sync_study_plan_day_plan_activities(
-                study_plan, data.get("confirmedTopics", []),
-            )
+            _rebuild_study_plan_schedule(study_plan, data.get("confirmedTopics", []), additional_review_topics)
 
         if added_topic_names:
             saved_topic_names = data.get("topicConfirmation", {}).get("topicNames", [])
@@ -3529,6 +3545,8 @@ async def save_study_plan_topic_review(
             "identifiedTopics": identified_topics,
             "addedTopicNames": added_topic_names,
             "confirmation": data.get("topicConfirmation"),
+            "confirmedTopics": data.get("confirmedTopics", []),
+            "scheduleInfo": data.get("scheduleInfo"),
             "activities": data.get("activities", []),
             "message": "Topic review saved successfully",
         }
@@ -3606,20 +3624,8 @@ async def confirm_study_plan_topics(
             for study_day in available_study_days
             if date.today().isoformat() <= study_day < data["examDate"]
         ]
-        confirmed_topics = distribute_topics_across_study_days(
-            confirmed_topics,
-            remaining_study_days,
-        )
-        try:
-            verify_topics_scheduled_before_exam(
-                confirmed_topics,
-                data.get("examDate"),
-            )
-        except ValueError as error:
-            raise HTTPException(
-                status_code=422,
-                detail=str(error),
-            ) from error
+        if not remaining_study_days:
+            raise HTTPException(status_code=422, detail="No study days remain before the exam.")
 
         confirmed_at = datetime.utcnow().isoformat()
         confirmed_topic_names = [
@@ -3633,26 +3639,13 @@ async def confirm_study_plan_topics(
             "topicNames": confirmed_topic_names,
         }
 
-        topic_review = data.get("topicReview", {})
-
-        _sync_study_plan_review_activities(
-            study_plan,
-            [
-                name for name in topic_review.get("additionalReviewTopics", [])
-                if name.casefold() in {topic_name.casefold() for topic_name in confirmed_topic_names}
-            ],
-            confirmed_topics,
-        )
-
-        _sync_study_plan_day_plan_activities(
-            study_plan,
-            confirmed_topics,
-        )
+        _rebuild_study_plan_schedule(study_plan, confirmed_topics)
 
         _save_study_plan_document(study_plan, user_id)
 
         return {
-            "confirmedTopics": confirmed_topics,
+            "confirmedTopics": data["confirmedTopics"],
+            "scheduleInfo": data["scheduleInfo"],
             "confirmation": data["topicConfirmation"],
             "activities": data.get("activities", []),
             "message": "Study plan topics confirmed successfully",
@@ -4000,6 +3993,38 @@ async def get_all_study_plan_materials(user_claims: dict = Depends(validate_toke
         )
 
 
+@app.post("/study-plans/{plan_id}/missed-day")
+async def reorganize_missed_study_day(
+    plan_id: str,
+    request: MissedStudyDayRequest,
+    user_claims: dict = Depends(validate_token),
+):
+    plan = _read_owned_study_plan(plan_id, user_claims["sub"])
+    data = plan["data"]
+    try:
+        missed = date.fromisoformat(request.missedDate)
+        if missed > date.today():
+            raise ValueError("Choose today or an earlier study day.")
+        available_days = calculate_available_study_days(data["studyStartDate"], data["examDate"], data.get("unavailableDays", []))
+        if request.missedDate not in available_days or request.missedDate >= data["examDate"]:
+            raise ValueError("Choose an available study day before the exam.")
+        if request.missedDate in data.get("missedStudyDays", []):
+            return {"plan": _study_plan_response(plan), "message": "This missed day has already been rescheduled."}
+        remaining = [day for day in available_days if date.today().isoformat() <= day < data["examDate"] and day not in data.get("missedStudyDays", [])]
+        activities = reschedule_missed_day(data.get("activities", []), request.missedDate, remaining, data["dailyStudyMinutes"])
+    except (ValueError, KeyError) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    data["activities"] = activities
+    data.setdefault("missedStudyDays", []).append(request.missedDate)
+    for topic in data.get("confirmedTopics", []):
+        dates = [a["studyDate"] for a in activities if a.get("generatedBy") == "day-plan" and a["topic"] == topic["name"]]
+        if dates:
+            topic["scheduledDate"] = min(dates)
+    data.setdefault("scheduleInfo", {})["lastRescheduledAt"] = datetime.utcnow().isoformat()
+    _save_study_plan_document(plan, user_claims["sub"])
+    return {"plan": _study_plan_response(plan), "message": "Unfinished activities were moved to the remaining study days. Estimated times were adjusted to stay within your daily limit."}
+
+
 @app.post("/study-plans/{plan_id}/activities")
 async def add_study_plan_activity(
     plan_id: str,
@@ -4028,10 +4053,10 @@ async def add_study_plan_activity(
     data = study_plan.setdefault("data", {})
 
     if data.get("topicConfirmation", {}).get("status") == "confirmed":
-        _sync_study_plan_day_plan_activities(
-            study_plan,
-            data.get("confirmedTopics", []),
-        )
+        if data.get("scheduleInfo", {}).get("version") == 2:
+            _rebuild_study_plan_schedule(study_plan, data.get("confirmedTopics", []))
+        else:
+            _sync_study_plan_day_plan_activities(study_plan, data.get("confirmedTopics", []))
 
     _save_study_plan_document(study_plan, user_claims["sub"])
 

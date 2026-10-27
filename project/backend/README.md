@@ -53,6 +53,14 @@ chmod +x run.sh  # Make it executable (first time only)
 
 Whenever you install a new Python package during development, make sure to update `requirements.txt` so new development environments remain consistent.
 
+### Study Planner Materials and Review Scheduling
+
+- Planner uploads accept PDF, DOCX, TXT, PPTX, PNG, JPG, and JPEG files up to 20 MB each.
+- Scans and diagram images use the existing OpenAI key and incur image-reading API usage. No Azure OCR account is needed. Files with over 40 visual pages/images must be split. Unreadable scans produce an error rather than an empty successful upload.
+- Reanalyzing older uploads refreshes their extracted text and visual evidence. Topic source IDs are restricted to the plan's connected files; repeated-topic counts mean distinct source files.
+- Confirm topics again to create automatic review activities and reserve the last available pre-exam day for final review. Existing completed work is preserved. If the available time cannot support a separate final review day, the plan shows a warning.
+- The missed-day control moves unfinished work to available days before the exam. It can shorten estimates to a minimum of five minutes per activity, preserves completed work, and rejects impossible rearrangements without saving a partial result.
+
 To check the installed version of a package:
 
 ```bash

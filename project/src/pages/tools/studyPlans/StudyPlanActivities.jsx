@@ -157,7 +157,7 @@ const StudyPlanActivities = ({
                     </h3>
                     {activity.activityType === "review" && (
                       <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
-                        Review activity
+                        {activity.generatedBy === "final-review" ? "Final review" : activity.generatedBy === "automatic-review" ? "Spaced review" : "Review activity"}
                       </span>
                     )}
                     {activity.studyMethod && (
@@ -172,6 +172,9 @@ const StudyPlanActivities = ({
                       {formatPlanDate(activity.studyDate)}
                     </time>
                   </p>
+                  {activity.topicNames?.length > 0 && (
+                    <p className="mt-1 break-words text-xs text-[#607067]">Topics: {activity.topicNames.join(", ")}</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3 pl-9 sm:pl-0">

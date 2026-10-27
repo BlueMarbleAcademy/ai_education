@@ -26,7 +26,7 @@ const DAYS = [
   { value: "sunday", label: "Sun" },
 ];
 
-const SUPPORTED_FILE_TYPES = ".pdf,.docx,.txt,.pptx";
+const SUPPORTED_FILE_TYPES = ".pdf,.docx,.txt,.pptx,.png,.jpg,.jpeg";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const INITIAL_FORM = {
@@ -89,6 +89,7 @@ const StudyPlanWizard = ({
       ".docx",
       ".txt",
       ".pptx",
+      ".png", ".jpg", ".jpeg",
     ];
 
     const validFiles = [];
@@ -400,7 +401,7 @@ const StudyPlanWizard = ({
                 Study materials
               </h2>
               <p className="text-sm text-[#718077]">
-                Upload PDF, DOCX, TXT, or PPTX files so the planner can use your course materials.
+                Upload PDF, DOCX, TXT, PPTX, PNG, or JPEG files. Clear photos and scanned PDFs are supported.
               </p>
             </div>
           </div>
