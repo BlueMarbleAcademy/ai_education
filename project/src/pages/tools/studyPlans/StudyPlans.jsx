@@ -1453,13 +1453,12 @@ const getInitialSelectedTopicNames = (plan) => {
     ])
   );
 
-  if (plan?.topicConfirmation?.status !== "confirmed") {
-    return identifiedTopics.map((topic) => topic.name);
-  }
-
-  const savedNames = Array.isArray(plan.topicConfirmation.topicNames)
+  const savedNames = Array.isArray(plan?.topicConfirmation?.topicNames)
     ? plan.topicConfirmation.topicNames
     : [];
+  if (plan?.topicConfirmation?.status !== "confirmed" && savedNames.length === 0) {
+    return identifiedTopics.map((topic) => topic.name);
+  }
   const fallbackNames = Array.isArray(plan.confirmedTopics)
     ? plan.confirmedTopics
         .map((topic) => topic?.name)

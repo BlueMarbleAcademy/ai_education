@@ -2740,12 +2740,13 @@ def _validate_study_activity(
     if isinstance(daily_study_minutes, int) and not isinstance(
         daily_study_minutes, bool
     ):
+        will_rebalance = data.get("topicConfirmation", {}).get("status") == "confirmed"
         scheduled_minutes = sum(
             activity.get("estimatedMinutes", 0)
             for activity in data.get("activities", [])
             if (
                 activity.get("studyDate") == request.studyDate
-                and activity.get("generatedBy") != "day-plan"
+                and (not will_rebalance or activity.get("generatedBy") != "day-plan")
             )
         )
         if scheduled_minutes + request.estimatedMinutes > daily_study_minutes:
@@ -3501,9 +3502,14 @@ async def save_study_plan_topic_review(
             )
 
         if added_topic_names:
+            saved_topic_names = data.get("topicConfirmation", {}).get("topicNames", [])
+            if not saved_topic_names:
+                saved_topic_names = [topic["name"] for topic in identified_topics]
             data["topicConfirmation"] = {
                 **data.get("topicConfirmation", {}),
                 "status": "not_confirmed",
+                "confirmedAt": None,
+                "topicNames": list(dict.fromkeys(saved_topic_names + added_topic_names)),
             }
 
         data["topicReview"] = {
