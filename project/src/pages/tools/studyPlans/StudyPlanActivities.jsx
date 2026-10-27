@@ -12,12 +12,24 @@ import { getAvailableStudyDays } from "./studyPlanDates";
 
 const ACTIVITY_TYPES = [
   { value: "reading", label: "Reading" },
+  { value: "reading_review", label: "Reading / review" },
   { value: "notes", label: "Notes" },
   { value: "flashcards", label: "Flashcards" },
   { value: "practice_quiz", label: "Practice quiz" },
+  { value: "mind_map", label: "Mind map" },
+  { value: "voice_memo", label: "Voice memo" },
   { value: "video", label: "Video lesson" },
   { value: "review", label: "Review activity" },
 ];
+
+const STUDY_METHOD_LABELS = {
+  study: "Reading / review",
+  reading_review: "Reading / review",
+  flashcards: "Flashcards",
+  practice_quiz: "Practice quiz",
+  mind_map: "Mind map",
+  voice_memo: "Voice memo",
+};
 
 const INITIAL_ACTIVITY = {
   topic: "",
@@ -133,7 +145,7 @@ const StudyPlanActivities = ({
                   )}
                 </button>
                 <div className="min-w-0">
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h3
                       className={`truncate text-sm font-bold ${
                         activity.completed
@@ -148,11 +160,14 @@ const StudyPlanActivities = ({
                         Review activity
                       </span>
                     )}
+                    {activity.studyMethod && (
+                      <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
+                        {getStudyMethodLabel(activity)}
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-xs text-[#718077]">
-                    {activity.activityType === "review"
-                      ? null
-                      : `${getActivityTypeLabel(activity.activityType)} · `}
+                    {`${getStudyMethodLabel(activity)} · `}
                     <time dateTime={activity.studyDate}>
                       {formatPlanDate(activity.studyDate)}
                     </time>
@@ -384,6 +399,11 @@ const formatPlanDate = (value) =>
 
 const getActivityTypeLabel = (value) =>
   ACTIVITY_TYPES.find((type) => type.value === value)?.label || value;
+
+const getStudyMethodLabel = (activity) =>
+  STUDY_METHOD_LABELS[activity.studyMethod] ||
+  getActivityTypeLabel(activity.activityType) ||
+  "Study activity";
 
 const compareActivities = (first, second) => {
   const dateOrder = first.studyDate.localeCompare(second.studyDate);

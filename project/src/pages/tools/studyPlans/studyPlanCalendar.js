@@ -3,18 +3,25 @@ const MINIMUM_VISIBLE_MINUTES = 60;
 
 export const ACTIVITY_TYPE_STYLES = {
   reading: "border-[#a9c4db] bg-[#eef6fb] text-[#315f95]",
+  reading_review: "border-[#a9c4db] bg-[#eef6fb] text-[#315f95]",
   notes: "border-[#d4b783] bg-[#fff8e9] text-[#81551d]",
   flashcards: "border-[#c9b6df] bg-[#f4effa] text-[#6941a5]",
   practice_quiz: "border-[#d7a8a8] bg-[#fff1f1] text-[#8f3f3f]",
+  mind_map: "border-[#9ec7b1] bg-[#eef8f2] text-[#37684c]",
+  voice_memo: "border-[#e2bf8f] bg-[#fff7eb] text-[#7a521d]",
   video: "border-[#9ec7b1] bg-[#eef8f2] text-[#37684c]",
   review: "border-[#b8c3a4] bg-[#f5f8ef] text-[#53633a]",
 };
 
 const ACTIVITY_TYPE_LABELS = {
+  study: "Reading / review",
   reading: "Reading",
+  reading_review: "Reading / review",
   notes: "Notes",
   flashcards: "Flashcards",
   practice_quiz: "Practice quiz",
+  mind_map: "Mind map",
+  voice_memo: "Voice memo",
   video: "Video lesson",
   review: "Review activity",
 };
@@ -29,6 +36,7 @@ export const buildCalendarBlocks = (activities, weekDates) => {
     .filter((activity) => dayIndexes.has(activity.studyDate))
     .sort(compareActivities)
     .map((activity) => {
+      const studyMethod = activity.studyMethod || activity.activityType;
       const day = dayIndexes.get(activity.studyDate);
       const estimatedMinutes = normalizeMinutes(activity.estimatedMinutes);
       const startMinutes = minutesUsedByDay.get(day) || 0;
@@ -43,13 +51,15 @@ export const buildCalendarBlocks = (activities, weekDates) => {
       return {
         id: activity.id,
         title: activity.topic,
-        meta: `${getActivityTypeLabel(activity.activityType)} · ${estimatedMinutes} min`,
+        meta: `${getActivityTypeLabel(studyMethod)} · ${estimatedMinutes} min`,
         day,
         start: startMinutes / 60,
         span: Math.min(visibleMinutes, remainingMinutes) / 60,
         completed: Boolean(activity.completed),
         color:
-          ACTIVITY_TYPE_STYLES[activity.activityType] ||
+          ACTIVITY_TYPE_STYLES[
+            activity.activityType === "review" ? "review" : studyMethod
+          ] ||
           "border-[#cfdad2] bg-[#f3f7f4] text-[#385445]",
       };
     });

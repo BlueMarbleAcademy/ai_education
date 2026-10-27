@@ -1,8 +1,165 @@
+import re
 from datetime import date
 from typing import Any, Dict, List, Tuple
 
 
 REVIEW_ACTIVITY_MINUTES = 30
+DEFAULT_STUDY_METHOD = "reading_review"
+SUPPORTED_STUDY_METHODS = {
+    DEFAULT_STUDY_METHOD,
+    "flashcards",
+    "practice_quiz",
+    "mind_map",
+    "voice_memo",
+}
+
+STUDY_METHOD_KEYWORDS = (
+    (
+        "voice_memo",
+        {
+            "conversation",
+            "debate",
+            "interview",
+            "language practice",
+            "listening",
+            "oral",
+            "presentation",
+            "pronunciation",
+            "speaking",
+            "speech",
+        },
+    ),
+    (
+        "practice_quiz",
+        {
+            "accounting",
+            "algebra",
+            "algorithm",
+            "calculation",
+            "calculus",
+            "chemistry",
+            "coding",
+            "debugging",
+            "equation",
+            "exercise",
+            "formula",
+            "math",
+            "mathematics",
+            "physics",
+            "problem solving",
+            "programming",
+            "statistics",
+        },
+    ),
+    (
+        "flashcards",
+        {
+            "anatomy",
+            "date",
+            "definition",
+            "fact",
+            "memorization",
+            "name",
+            "terminology",
+            "term",
+            "vocabulary",
+        },
+    ),
+    (
+        "mind_map",
+        {
+            "architecture",
+            "cause and effect",
+            "comparison",
+            "connection",
+            "cycle",
+            "framework",
+            "hierarchy",
+            "process",
+            "relationship",
+            "system",
+        },
+    ),
+)
+
+
+def assign_study_method(topic: Dict[str, Any]) -> str:
+    """Choose a supported study method from a topic's structured content."""
+    text_parts = [str(topic.get("name") or "")]
+
+    for concept in topic.get("concepts", []) or []:
+        if isinstance(concept, dict):
+            text_parts.extend(
+                [
+                    str(concept.get("name") or ""),
+                    str(concept.get("description") or ""),
+                ]
+            )
+        else:
+            text_parts.append(str(concept or ""))
+
+    for subtopic in topic.get("subtopics", []) or []:
+        if not isinstance(subtopic, dict):
+            text_parts.append(str(subtopic or ""))
+            continue
+
+        text_parts.append(str(subtopic.get("name") or ""))
+        for concept in subtopic.get("concepts", []) or []:
+            if isinstance(concept, dict):
+                text_parts.extend(
+                    [
+                        str(concept.get("name") or ""),
+                        str(concept.get("description") or ""),
+                    ]
+                )
+            else:
+                text_parts.append(str(concept or ""))
+
+    normalized_text = " ".join(
+        re.sub(r"[^a-z0-9+]+", " ", part.casefold()).strip()
+        for part in text_parts
+        if part
+    )
+    padded_text = f" {normalized_text} "
+
+    for method, keywords in STUDY_METHOD_KEYWORDS:
+        if any(f" {keyword} " in padded_text for keyword in keywords):
+            return method
+
+    return DEFAULT_STUDY_METHOD
+
+
+def ensure_generated_activity_study_methods(
+    activities: List[Dict[str, Any]],
+    confirmed_topics: List[Dict[str, Any]],
+) -> bool:
+    """Backfill methods for generated activities saved before this feature."""
+    topics_by_name = {
+        str(topic.get("name") or "").strip().casefold(): topic
+        for topic in confirmed_topics
+        if isinstance(topic, dict) and str(topic.get("name") or "").strip()
+    }
+    changed = False
+
+    for activity in activities:
+        if not isinstance(activity, dict):
+            continue
+        if activity.get("generatedBy") not in {"day-plan", "topic-review"}:
+            continue
+        if activity.get("studyMethod") in SUPPORTED_STUDY_METHODS:
+            continue
+
+        if activity.get("generatedBy") == "topic-review":
+            study_method = DEFAULT_STUDY_METHOD
+        else:
+            topic_name = str(activity.get("topic") or "").strip()
+            topic = topics_by_name.get(topic_name.casefold(), {"name": topic_name})
+            study_method = assign_study_method(topic)
+
+        activity["studyMethod"] = study_method
+        changed = True
+
+    return changed
 
 
 def verify_topics_scheduled_before_exam(
@@ -69,7 +226,7 @@ def generate_day_by_day_activities(
     ):
         raise ValueError("Daily study time must be greater than zero.")
 
-    topics_by_day: Dict[str, List[str]] = {}
+    topics_by_day: Dict[str, List[Dict[str, Any]]] = {}
 
     for topic in confirmed_topics:
         topic_name = str(topic.get("name") or "").strip()
@@ -80,7 +237,7 @@ def generate_day_by_day_activities(
                 "Every confirmed topic must have a scheduled study day."
             )
 
-        topics_by_day.setdefault(study_day, []).append(topic_name)
+        topics_by_day.setdefault(study_day, []).append(topic)
 
     # Count time already being used by manual/review activities.
     # Existing generated day-plan activities are ignored so the plan
@@ -107,12 +264,12 @@ def generate_day_by_day_activities(
     generated_activities = []
 
     for study_day in sorted(topics_by_day):
-        topic_names = topics_by_day[study_day]
+        day_topics = topics_by_day[study_day]
 
         used_minutes = minutes_by_day.get(study_day, 0)
         remaining_minutes = daily_study_minutes - used_minutes
 
-        minimum_required = len(topic_names) * 5
+        minimum_required = len(day_topics) * 5
 
         if remaining_minutes < minimum_required:
             raise ValueError(
@@ -122,10 +279,11 @@ def generate_day_by_day_activities(
 
         minutes_per_topic, extra_minutes = divmod(
             remaining_minutes,
-            len(topic_names),
+            len(day_topics),
         )
 
-        for index, topic_name in enumerate(topic_names):
+        for index, topic in enumerate(day_topics):
+            topic_name = str(topic.get("name") or "").strip()
             estimated_minutes = minutes_per_topic
 
             if index < extra_minutes:
@@ -136,6 +294,7 @@ def generate_day_by_day_activities(
                     "topic": topic_name,
                     "studyDate": study_day,
                     "estimatedMinutes": estimated_minutes,
+                    "studyMethod": assign_study_method(topic),
                 }
             )
 
@@ -208,6 +367,7 @@ def schedule_review_activities(
                 "topic": str(topic.get("name") or "").strip(),
                 "studyDate": review_date,
                 "estimatedMinutes": review_minutes,
+                "studyMethod": DEFAULT_STUDY_METHOD,
             }
         )
 

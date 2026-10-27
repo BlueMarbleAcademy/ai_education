@@ -300,6 +300,7 @@ from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, Save
 from study_plan_dates import calculate_available_study_days
 from study_plan_scheduling import (
     distribute_topics_across_study_days,
+    ensure_generated_activity_study_methods,
     generate_day_by_day_activities,
     schedule_review_activities,
     verify_topics_scheduled_before_exam,
@@ -2484,6 +2485,12 @@ def _read_owned_study_plan(plan_id: str, user_id: str) -> Dict[str, Any]:
         or study_plan.get("contentType") != "study_plan"
     ):
         raise HTTPException(status_code=404, detail="Study plan not found")
+
+    data = study_plan.setdefault("data", {})
+    ensure_generated_activity_study_methods(
+        data.setdefault("activities", []),
+        data.get("confirmedTopics", []),
+    )
 
     return study_plan
 
