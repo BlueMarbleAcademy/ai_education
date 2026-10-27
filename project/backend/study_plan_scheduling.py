@@ -57,6 +57,89 @@ def distribute_topics_across_study_days(
 
     return scheduled_topics
 
+def generate_day_by_day_activities(
+    confirmed_topics: List[Dict[str, Any]],
+    daily_study_minutes: int,
+    existing_activities: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    if (
+        not isinstance(daily_study_minutes, int)
+        or isinstance(daily_study_minutes, bool)
+        or daily_study_minutes <= 0
+    ):
+        raise ValueError("Daily study time must be greater than zero.")
+
+    topics_by_day: Dict[str, List[str]] = {}
+
+    for topic in confirmed_topics:
+        topic_name = str(topic.get("name") or "").strip()
+        study_day = topic.get("scheduledDate")
+
+        if not topic_name or not isinstance(study_day, str) or not study_day:
+            raise ValueError(
+                "Every confirmed topic must have a scheduled study day."
+            )
+
+        topics_by_day.setdefault(study_day, []).append(topic_name)
+
+    # Count time already being used by manual/review activities.
+    # Existing generated day-plan activities are ignored so the plan
+    # can safely be regenerated later.
+    minutes_by_day: Dict[str, int] = {}
+
+    for activity in existing_activities:
+        if activity.get("generatedBy") == "day-plan":
+            continue
+
+        study_day = activity.get("studyDate")
+        minutes = activity.get("estimatedMinutes")
+
+        if (
+            isinstance(study_day, str)
+            and isinstance(minutes, int)
+            and not isinstance(minutes, bool)
+            and minutes > 0
+        ):
+            minutes_by_day[study_day] = (
+                minutes_by_day.get(study_day, 0) + minutes
+            )
+
+    generated_activities = []
+
+    for study_day in sorted(topics_by_day):
+        topic_names = topics_by_day[study_day]
+
+        used_minutes = minutes_by_day.get(study_day, 0)
+        remaining_minutes = daily_study_minutes - used_minutes
+
+        minimum_required = len(topic_names) * 5
+
+        if remaining_minutes < minimum_required:
+            raise ValueError(
+                f"Not enough study time is available on {study_day} "
+                "to schedule all confirmed topics."
+            )
+
+        minutes_per_topic, extra_minutes = divmod(
+            remaining_minutes,
+            len(topic_names),
+        )
+
+        for index, topic_name in enumerate(topic_names):
+            estimated_minutes = minutes_per_topic
+
+            if index < extra_minutes:
+                estimated_minutes += 1
+
+            generated_activities.append(
+                {
+                    "topic": topic_name,
+                    "studyDate": study_day,
+                    "estimatedMinutes": estimated_minutes,
+                }
+            )
+
+    return generated_activities
 
 def schedule_review_activities(
     confirmed_topics: List[Dict[str, Any]],

@@ -300,6 +300,7 @@ from models import QuizDocument, SavedQuizResponse, SaveQuizAttemptRequest, Save
 from study_plan_dates import calculate_available_study_days
 from study_plan_scheduling import (
     distribute_topics_across_study_days,
+    generate_day_by_day_activities,
     schedule_review_activities,
     verify_topics_scheduled_before_exam,
 )
@@ -2735,7 +2736,10 @@ def _validate_study_activity(
         scheduled_minutes = sum(
             activity.get("estimatedMinutes", 0)
             for activity in data.get("activities", [])
-            if activity.get("studyDate") == request.studyDate
+            if (
+                activity.get("studyDate") == request.studyDate
+                and activity.get("generatedBy") != "day-plan"
+            )
         )
         if scheduled_minutes + request.estimatedMinutes > daily_study_minutes:
             raise HTTPException(
@@ -2760,6 +2764,11 @@ def _sync_study_plan_review_activities(
         activity
         for activity in activities
         if activity.get("generatedBy") != "topic-review"
+    ]
+    scheduling_activities = [
+        activity
+        for activity in other_activities
+        if activity.get("generatedBy") != "day-plan"
     ]
     try:
         study_days = calculate_available_study_days(
@@ -2786,7 +2795,7 @@ def _sync_study_plan_review_activities(
             review_topic_names,
             study_days,
             data.get("dailyStudyMinutes", 0),
-            other_activities,
+            scheduling_activities,
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
@@ -2839,6 +2848,97 @@ def _sync_study_plan_review_activities(
 
     data["activities"] = other_activities + review_activities
 
+def _sync_study_plan_day_plan_activities(
+    study_plan: Dict[str, Any],
+    confirmed_topics: List[Dict[str, Any]],
+) -> None:
+    data = study_plan.setdefault("data", {})
+    activities = data.setdefault("activities", [])
+
+    previous_day_plan = {
+        (
+            str(activity.get("topic") or "").strip().casefold(),
+            activity.get("studyDate"),
+        ): activity
+        for activity in activities
+        if activity.get("generatedBy") == "day-plan"
+    }
+
+    other_activities = [
+        activity
+        for activity in activities
+        if activity.get("generatedBy") != "day-plan"
+    ]
+
+    try:
+        generated = generate_day_by_day_activities(
+            confirmed_topics,
+            data.get("dailyStudyMinutes", 0),
+            other_activities,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=str(error),
+        ) from error
+
+    plan_id = study_plan.get("id", "")
+    day_plan_activities = []
+
+    existing_ids = {
+        activity.get("id")
+        for activity in other_activities
+        if activity.get("id")
+    }
+
+    for generated_activity in generated:
+        topic_name = generated_activity["topic"]
+        study_date = generated_activity["studyDate"]
+
+        key = (
+            topic_name.strip().casefold(),
+            study_date,
+        )
+
+        prior_activity = previous_day_plan.get(key, {})
+
+        activity_id = prior_activity.get("id") or str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                (
+                    f"study-plan-day:"
+                    f"{plan_id}:"
+                    f"{study_date}:"
+                    f"{topic_name.casefold()}"
+                ),
+            )
+        )
+
+        if activity_id in existing_ids:
+            raise HTTPException(
+                status_code=409,
+                detail="A generated study activity conflicts with an existing activity.",
+            )
+
+        existing_ids.add(activity_id)
+
+        day_plan_activities.append(
+            {
+                "id": activity_id,
+                **generated_activity,
+                "activityType": "study",
+                "completed": bool(
+                    prior_activity.get("completed", False)
+                ),
+                "createdAt": prior_activity.get(
+                    "createdAt",
+                    datetime.utcnow().isoformat(),
+                ),
+                "generatedBy": "day-plan",
+            }
+        )
+
+    data["activities"] = other_activities + day_plan_activities
 
 def _study_plan_material_response(material: Dict[str, Any]) -> Dict[str, Any]:
     data = material.get("data", {})
@@ -3474,12 +3574,20 @@ async def confirm_study_plan_topics(
             "confirmedAt": confirmed_at,
             "topicNames": confirmed_topic_names,
         }
+
         topic_review = data.get("topicReview", {})
+
         _sync_study_plan_review_activities(
             study_plan,
             topic_review.get("additionalReviewTopics", []),
             confirmed_topics,
         )
+
+        _sync_study_plan_day_plan_activities(
+            study_plan,
+            confirmed_topics,
+        )
+
         _save_study_plan_document(study_plan, user_id)
 
         return {
@@ -3810,6 +3918,15 @@ async def add_study_plan_activity(
         "createdAt": request.createdAt or datetime.utcnow().isoformat(),
     }
     activities.append(activity)
+
+    data = study_plan.setdefault("data", {})
+
+    if data.get("topicConfirmation", {}).get("status") == "confirmed":
+        _sync_study_plan_day_plan_activities(
+            study_plan,
+            data.get("confirmedTopics", []),
+        )
+
     _save_study_plan_document(study_plan, user_claims["sub"])
 
     return {
