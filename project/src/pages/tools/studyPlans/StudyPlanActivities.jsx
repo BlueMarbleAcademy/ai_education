@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   CalendarDays,
@@ -45,6 +46,7 @@ const StudyPlanActivities = ({
   isSaving = false,
   error = "",
 }) => {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const activities = plan.activities || [];
   const sortedActivities = [...activities].sort(compareActivities);
@@ -178,6 +180,26 @@ const StudyPlanActivities = ({
                 </div>
               </div>
               <div className="flex items-center gap-3 pl-9 sm:pl-0">
+                {isPracticeQuizActivity(activity) && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate("/tools/practice-tests", {
+                        state: {
+                          topic:
+                            activity.topic ||
+                            activity.instruction ||
+                            activity.topicNames?.[0] ||
+                            "General practice",
+                          autoStart: true,
+                        },
+                      })
+                    }
+                    className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
+                  >
+                    Practice quiz
+                  </button>
+                )}
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#607067]">
                   <Clock3 className="h-3.5 w-3.5" />
                   {activity.estimatedMinutes} minutes
@@ -407,6 +429,11 @@ const getStudyMethodLabel = (activity) =>
   STUDY_METHOD_LABELS[activity.studyMethod] ||
   getActivityTypeLabel(activity.activityType) ||
   "Study activity";
+
+const isPracticeQuizActivity = (activity) => {
+  const studyMethod = activity?.studyMethod || activity?.activityType;
+  return studyMethod === "practice_quiz";
+};
 
 const compareActivities = (first, second) => {
   const dateOrder = first.studyDate.localeCompare(second.studyDate);
