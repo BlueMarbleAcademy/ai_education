@@ -42,6 +42,21 @@ const formatTopic = (t) => {
     .replace(/\band\b/g, "and");
 };
 
+const formatDashboardDate = (date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+
+const formatDashboardDay = (dateValue) =>
+  new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(`${dateValue}T12:00:00`));
+
 const Dashboard = () => {
   const { instance, accounts } = useMsal();
   const navigate = useNavigate();
