@@ -8,6 +8,9 @@ import {
   getStudyStreak,
   getCachedStudyStreak,
   consumeRecentStudyStreakUpdate,
+  getStudyPlans,
+  getStudyPlan,
+  updateStudyPlanActivity,
 } from "../api/apiService";
 import { useNavigate } from "react-router-dom";
 import {
@@ -26,6 +29,9 @@ import {
   Zap,
   PenTool,
   Folder,
+  CheckCircle2,
+  Circle,
+  ListChecks,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUserRecents } from "../hooks/useUserRecents";
@@ -51,6 +57,11 @@ const Dashboard = () => {
   const [suggestedNextSteps, setSuggestedNextSteps] = useState([]);
   const [loadingNextSteps, setLoadingNextSteps] = useState(true);
   const [focusAreas, setFocusAreas] = useState([]);
+  const [studyActivities, setStudyActivities] = useState([]);
+  const [studyActivitiesLoading, setStudyActivitiesLoading] = useState(true);
+  const [studyActivitiesError, setStudyActivitiesError] = useState("");
+  const [savingActivityId, setSavingActivityId] = useState(null);
+  const [activitySaveError, setActivitySaveError] = useState("");
   const [quizioLoaded, setQuizioLoaded] = useState(false);
   const [quizioLoading, setQuizioLoading] = useState(false);
   const [displayStreak, setDisplayStreak] = useState(0);
@@ -258,6 +269,96 @@ const [loadingTopic, setLoadingTopic] = useState(null);
     fetchTasks();
   }, [userData]);
 
+  useEffect(() => {
+    if (!userData) return;
+
+    let cancelled = false;
+
+    const fetchStudyActivities = async () => {
+      setStudyActivitiesLoading(true);
+      setStudyActivitiesError("");
+
+      try {
+        const plans = await getStudyPlans();
+        const planDetails = await Promise.all(
+          (plans || []).map(async (plan) => {
+            const result = await getStudyPlan(plan.id);
+            return {
+              id: plan.id,
+              title: plan.examName || plan.title || "Untitled study plan",
+              subject: plan.subject,
+              activities: Array.isArray(result?.data?.activities)
+                ? result.data.activities
+                : [],
+            };
+          })
+        );
+
+        if (cancelled) return;
+
+        setStudyActivities(
+          planDetails
+            .flatMap((plan) =>
+              plan.activities.map((activity) => ({
+                ...activity,
+                planId: plan.id,
+                planTitle: plan.title,
+                planSubject: plan.subject,
+              }))
+            )
+            .filter(
+              (activity) =>
+                activity.id &&
+                /^\d{4}-\d{2}-\d{2}$/.test(activity.studyDate || "")
+            )
+            .sort((first, second) =>
+              first.studyDate.localeCompare(second.studyDate)
+            )
+        );
+      } catch (fetchError) {
+        console.error("Error fetching dashboard study activities:", fetchError);
+        if (!cancelled) {
+          setStudyActivitiesError("Failed to load your study checklist.");
+        }
+      } finally {
+        if (!cancelled) {
+          setStudyActivitiesLoading(false);
+        }
+      }
+    };
+
+    fetchStudyActivities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userData]);
+
+  const toggleStudyActivity = async (activity) => {
+    setSavingActivityId(activity.id);
+    setActivitySaveError("");
+
+    try {
+      const response = await updateStudyPlanActivity(
+        activity.planId,
+        activity.id,
+        !activity.completed
+      );
+      setStudyActivities((currentActivities) =>
+        currentActivities.map((item) =>
+          item.planId === activity.planId && item.id === activity.id
+            ? { ...item, completed: Boolean(response?.activity?.completed) }
+            : item
+        )
+      );
+    } catch (saveError) {
+      console.error("Error updating dashboard study activity:", saveError);
+      setActivitySaveError("Your activity couldn't be updated. Please try again.");
+    } finally {
+      setSavingActivityId(null);
+    }
+  };
+
   // Fetch the saved streak once the signed-in account is available.
   useEffect(() => {
     let cancelled = false;
@@ -354,6 +455,18 @@ const [loadingTopic, setLoadingTopic] = useState(null);
   // If B2C returns the email as the display name, use only the local part
   const rawFirst = userName.split(" ")[0];
   const firstName = rawFirst.includes("@") ? rawFirst.split("@")[0] : rawFirst;
+  const todayValue = formatDashboardDate(new Date());
+  const activitiesByDay = studyActivities.reduce((groups, activity) => {
+    groups[activity.studyDate] = groups[activity.studyDate] || [];
+    groups[activity.studyDate].push(activity);
+    return groups;
+  }, {});
+  const checklistDays = Object.entries(activitiesByDay)
+    .filter(
+      ([date, activities]) =>
+        date >= todayValue || activities.some((activity) => !activity.completed)
+    )
+    .sort(([firstDate], [secondDate]) => firstDate.localeCompare(secondDate));
 
 
   const studyGoals = [
@@ -454,6 +567,118 @@ const [loadingTopic, setLoadingTopic] = useState(null);
           <p className="text-red-700 text-sm">{error}</p>
         </div>
       )}
+
+      <section
+        aria-labelledby="daily-study-checklist-heading"
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5"
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600">
+              <ListChecks className="h-5 w-5" />
+            </div>
+            <div>
+              <h2
+                id="daily-study-checklist-heading"
+                className="text-base font-semibold text-gray-900"
+              >
+                Daily study checklist
+              </h2>
+              <p className="text-xs text-gray-500">
+                Activities from your saved study plans
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/tools/study-planner")}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            Open study planner
+          </button>
+        </div>
+
+        {activitySaveError && (
+          <p role="alert" className="mt-4 text-sm text-red-600">
+            {activitySaveError}
+          </p>
+        )}
+
+        {studyActivitiesLoading ? (
+          <p className="mt-5 text-sm text-gray-500" role="status">
+            Loading your study activities...
+          </p>
+        ) : studyActivitiesError ? (
+          <p className="mt-5 text-sm text-red-600" role="alert">
+            {studyActivitiesError}
+          </p>
+        ) : checklistDays.length === 0 ? (
+          <div className="mt-5 rounded-xl bg-gray-50 px-4 py-6 text-center">
+            <Calendar className="mx-auto h-7 w-7 text-gray-300" />
+            <p className="mt-2 text-sm text-gray-500">
+              No scheduled study activities yet. Add activities in your study planner to see them here.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-5 space-y-5">
+            {checklistDays.map(([date, activities]) => (
+              <div key={date}>
+                <h3 className="mb-2 text-sm font-semibold text-gray-700">
+                  {formatDashboardDay(date)}
+                </h3>
+                <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100">
+                  {activities.map((activity) => {
+                    const title =
+                      activity.instruction || activity.topic || "Study activity";
+                    const completed = Boolean(activity.completed);
+
+                    return (
+                      <li
+                        key={`${activity.planId}-${activity.id}`}
+                        className="flex items-center gap-3 px-3 py-3"
+                      >
+                        <button
+                          type="button"
+                          aria-label={`${completed ? "Mark incomplete" : "Mark complete"}: ${title}`}
+                          aria-pressed={completed}
+                          disabled={savingActivityId !== null}
+                          onClick={() => toggleStudyActivity(activity)}
+                          className="shrink-0 rounded-full text-indigo-600 hover:bg-indigo-50 disabled:cursor-wait disabled:opacity-50"
+                        >
+                          {completed ? (
+                            <CheckCircle2 className="h-5 w-5" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-gray-400" />
+                          )}
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`truncate text-sm font-medium ${
+                              completed
+                                ? "text-gray-400 line-through"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {title}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-gray-500">
+                            {[activity.planTitle, activity.planSubject]
+                              .filter(Boolean)
+                              .join(" · ")}
+                            {activity.estimatedMinutes
+                              ? ` · ${activity.estimatedMinutes} min`
+                              : ""}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Recent Tools + Quizio */}
       <motion.div
