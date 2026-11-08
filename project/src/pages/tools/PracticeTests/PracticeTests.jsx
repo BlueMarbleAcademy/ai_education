@@ -64,9 +64,12 @@ const PracticeTests = () => {
   const location = useLocation();
   const quizFromDashboard = location.state?.quiz;
   const topicFromDashboard = location.state?.topic;
+  const studyPlanIdFromLocation = location.state?.studyPlanId;
+  const sourceMaterialIdsFromLocation = location.state?.sourceMaterialIds;
   const autoStartFromDashboard = location.state?.autoStart ?? false;
   const flashcardsFromDeck = location.state?.flashcards;
   const flashcardDeckTitle = location.state?.deckTitle;
+  const [assignedStudyPlan, setAssignedStudyPlan] = useState(null);
   // Hooks for quiz functionality
   const { timer, resetTimer, setTimerValue } = useQuizTimer(quizStatus);
   const {
@@ -140,6 +143,10 @@ const PracticeTests = () => {
     if (topicFromDashboard) {
       setCreationMode("topic");
       setMainTopic(topicFromDashboard);
+      setAssignedStudyPlan({
+        studyPlanId: studyPlanIdFromLocation || null,
+        sourceMaterialIds: sourceMaterialIdsFromLocation || [],
+      });
       return;
     }
 
@@ -185,7 +192,7 @@ const PracticeTests = () => {
         }
       })();
     }
-  }, [quizFromDashboard, topicFromDashboard, autoStartFromDashboard, searchParams, fetchQuizById, fetchQuizWithHistory, resetTimer]);
+  }, [quizFromDashboard, topicFromDashboard, studyPlanIdFromLocation, sourceMaterialIdsFromLocation, autoStartFromDashboard, searchParams, fetchQuizById, fetchQuizWithHistory, resetTimer]);
 
   const loadQuizIntoViewer = (quizDocument) => {
     const quizData = quizDocument?.data || {};
@@ -256,6 +263,7 @@ const PracticeTests = () => {
     setSelectedTopics([]);
     setCustomTopics("");
     setMainTopic(""); // Reset main topic
+    setAssignedStudyPlan(null);
     setNumQuestions(20);
     setSubjectCategory("conceptual");
     setQuestionFormats({
@@ -440,7 +448,9 @@ const PracticeTests = () => {
           customTopics, // Additional focus topics from Step 2
           questionFormats,
           folderId, // Pass folderId if present
-          subjectCategory
+          subjectCategory,
+          assignedStudyPlan?.studyPlanId,
+          assignedStudyPlan?.sourceMaterialIds
         );
       }
 

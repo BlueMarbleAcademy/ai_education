@@ -183,18 +183,23 @@ const StudyPlanActivities = ({
                 {isPracticeQuizActivity(activity) && (
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
+                      const topicName = activity.topic || activity.topicNames?.[0];
+                      const assignedTopic = (plan.confirmedTopics || plan.identifiedTopics || []).find(
+                        (topic) =>
+                          topic.name?.trim().toLowerCase() ===
+                          topicName?.trim().toLowerCase()
+                      );
+
                       navigate("/tools/practice-tests", {
                         state: {
-                          topic:
-                            activity.topic ||
-                            activity.instruction ||
-                            activity.topicNames?.[0] ||
-                            "General practice",
+                          topic: topicName || activity.instruction || "General practice",
+                          studyPlanId: plan.id,
+                          sourceMaterialIds: assignedTopic?.sourceMaterialIds || [],
                           autoStart: true,
                         },
-                      })
-                    }
+                      });
+                    }}
                     className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
                   >
                     Practice quiz

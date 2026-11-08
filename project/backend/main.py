@@ -2179,6 +2179,83 @@ async def create_quiz_from_topic(
         # Use the topic string as synthetic "text" input for the quiz generator
         previous_questions = payload.get("previous_questions") or []
         synthetic_text = f"Create a quiz for the following topic/chapter/concept:\n\n{topic}"
+        study_plan_id = payload.get("study_plan_id")
+        source_material_ids = payload.get("source_material_ids") or []
+        if not isinstance(source_material_ids, list) or not all(
+            isinstance(material_id, str) and material_id.strip()
+            for material_id in source_material_ids
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="source_material_ids must be a list of material IDs",
+            )
+
+        requested_material_ids = list(
+            dict.fromkeys(material_id.strip() for material_id in source_material_ids)
+        )
+        if requested_material_ids:
+            if not isinstance(study_plan_id, str) or not study_plan_id.strip():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="study_plan_id is required when source materials are provided",
+                )
+            study_plan_id = study_plan_id.strip()
+
+            study_plan = _read_owned_study_plan(study_plan_id, user_claims["sub"])
+            material_items = list(container.query_items(
+                query=(
+                    "SELECT * FROM c WHERE c.userId = @userId "
+                    "AND c.contentType = 'study_plan_material' AND c.planId = @planId"
+                ),
+                parameters=[
+                    {"name": "@userId", "value": user_claims["sub"]},
+                    {"name": "@planId", "value": study_plan_id},
+                ],
+                enable_cross_partition_query=True,
+            ))
+            material_details = {
+                str(item.get("id")): item
+                for item in material_items
+                if isinstance(item, dict) and item.get("id")
+            }
+            connected_materials = collect_study_plan_materials(
+                study_plan,
+                material_details,
+            )
+            materials_by_id = {
+                material["id"]: material for material in connected_materials
+            }
+            if any(material_id not in materials_by_id for material_id in requested_material_ids):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="One or more assigned study materials could not be found",
+                )
+
+            assigned_materials = [
+                materials_by_id[material_id]
+                for material_id in requested_material_ids
+            ]
+            unreadable_materials = [
+                material for material in assigned_materials
+                if not str(material.get("extractedText") or "").strip()
+            ]
+            if unreadable_materials:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Assigned study material does not contain readable text",
+                )
+
+            material_sections = [
+                f"Assigned study material: {material.get('name', 'Study material')}\n"
+                f"{str(material['extractedText']).strip()}"
+                for material in assigned_materials
+            ]
+            synthetic_text += (
+                "\n\nUse the following assigned study material as the source "
+                "for the quiz questions:\n\n"
+                + "\n\n---\n\n".join(material_sections)
+            )
+
         if previous_questions:
             sample_lines = "\n".join(
                 f"- {q.get('question', q) if isinstance(q, dict) else q}"
@@ -2212,6 +2289,7 @@ async def create_quiz_from_topic(
                 "customTopics": focus_topics,
                 "questionFormats": formats_dict,
                     "subjectCategory": subject_category,
+                "sourceMaterialIds": requested_material_ids,
             },
             "attempts": [],
         }, source_topic=topic_key or topic)

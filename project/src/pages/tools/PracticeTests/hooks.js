@@ -353,7 +353,9 @@ export const useQuizData = () => {
       customTopics,
       questionFormats,
       folderId = null,
-      subjectCategory = "conceptual"
+      subjectCategory = "conceptual",
+      studyPlanId = null,
+      sourceMaterialIds = []
     ) => {
       try {
         setQuizAttempts([]);
@@ -415,6 +417,8 @@ export const useQuizData = () => {
             {}
           ),
           subject_category: subjectCategory,
+          study_plan_id: studyPlanId,
+          source_material_ids: sourceMaterialIds,
         };
 
       // Add folderId if provided
