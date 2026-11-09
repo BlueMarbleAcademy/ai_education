@@ -50,6 +50,15 @@ const StudyPlanActivities = ({
   const [showForm, setShowForm] = useState(false);
   const activities = plan.activities || [];
   const sortedActivities = [...activities].sort(compareActivities);
+  const activitiesByDate = sortedActivities.reduce((groups, activity) => {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup?.studyDate === activity.studyDate) {
+      lastGroup.activities.push(activity);
+    } else {
+      groups.push({ studyDate: activity.studyDate, activities: [activity] });
+    }
+    return groups;
+  }, []);
   const completedCount = activities.filter((activity) => activity.completed).length;
   const upcomingCount = activities.length - completedCount;
 
@@ -121,103 +130,115 @@ const StudyPlanActivities = ({
       )}
 
       {activities.length > 0 && (
-        <ol className="mt-5 divide-y divide-[#e5ebe7] border-t border-[#e5ebe7]">
-          {sortedActivities.map((activity) => (
-            <li
-              key={activity.id}
-              className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <button
-                  type="button"
-                  aria-label={`${activity.completed ? "Mark incomplete" : "Mark complete"}: ${activity.instruction || activity.topic}`}
-                  aria-pressed={activity.completed}
-                  onClick={() => onToggleActivity(activity.id)}
-                  disabled={isSaving}
-                  className={`mt-0.5 rounded-md p-1 transition ${
-                    activity.completed
-                      ? "text-[#6941a5] hover:bg-[#f4effa]"
-                      : "text-[#829087] hover:bg-[#f7f3fa]"
-                  } disabled:cursor-wait disabled:opacity-50`}
-                >
-                  {activity.completed ? (
-                    <CheckCircle2 className="h-5 w-5" />
-                  ) : (
-                    <Circle className="h-5 w-5" />
-                  )}
-                </button>
-                <div className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h3
-                      className={`truncate text-sm font-bold ${
-                        activity.completed
-                          ? "text-[#77847c] line-through"
-                          : "text-[#26372d]"
-                      }`}
-                    >
-                      {activity.instruction || activity.topic}
-                    </h3>
-                    {activity.activityType === "review" && (
-                      <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
-                        {activity.generatedBy === "final-review" ? "Final review" : activity.generatedBy === "automatic-review" ? "Spaced review" : "Review activity"}
-                      </span>
-                    )}
-                    {activity.studyMethod && (
-                      <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
-                        {getStudyMethodLabel(activity)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-[#718077]">
-                    {`${getStudyMethodLabel(activity)} · `}
-                    <time dateTime={activity.studyDate}>
-                      {formatPlanDate(activity.studyDate)}
-                    </time>
-                  </p>
-                  {activity.topicNames?.length > 0 && (
-                    <p className="mt-1 break-words text-xs text-[#607067]">Topics: {activity.topicNames.join(", ")}</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-3 pl-9 sm:pl-0">
-                {isPracticeQuizActivity(activity) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const topicName = activity.topic || activity.topicNames?.[0];
-                      const assignedTopic = findAssignedTopic(plan, topicName);
-
-                      navigate("/tools/practice-tests", {
-                        state: {
-                          topic: topicName || activity.instruction || "General practice",
-                          studyPlanId: plan.id,
-                          sourceMaterialIds: assignedTopic?.sourceMaterialIds || [],
-                          autoStart: true,
-                        },
-                      });
-                    }}
-                    className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
+        <div className="mt-5 space-y-5 border-t border-[#e5ebe7] pt-5">
+          {activitiesByDate.map(({ studyDate, activities: dateActivities }) => (
+            <section key={studyDate} aria-labelledby={`study-date-${studyDate}`}>
+              <h3
+                id={`study-date-${studyDate}`}
+                className="mb-1 flex items-center gap-2 text-sm font-bold text-[#33443a]"
+              >
+                <CalendarDays className="h-4 w-4 text-[#5b3a8c]" />
+                <time dateTime={studyDate}>{formatPlanDate(studyDate)}</time>
+              </h3>
+              <ol className="divide-y divide-[#e5ebe7]">
+                {dateActivities.map((activity) => (
+                  <li
+                    key={activity.id}
+                    className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    Practice quiz
-                  </button>
-                )}
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#607067]">
-                  <Clock3 className="h-3.5 w-3.5" />
-                  {activity.estimatedMinutes} minutes
-                </span>
-                <span
-                  className={`rounded-md px-2 py-1 text-xs font-semibold ${
-                    activity.completed
-                      ? "bg-[#eadcf5] text-[#6941a5]"
-                      : "bg-[#eef2f0] text-[#66746c]"
-                  }`}
-                >
-                  {activity.completed ? "Completed" : "Planned"}
-                </span>
-              </div>
-            </li>
+                    <div className="flex min-w-0 items-start gap-3">
+                      <button
+                        type="button"
+                        aria-label={`${activity.completed ? "Mark incomplete" : "Mark complete"}: ${activity.instruction || activity.topic}`}
+                        aria-pressed={activity.completed}
+                        onClick={() => onToggleActivity(activity.id)}
+                        disabled={isSaving}
+                        className={`mt-0.5 rounded-md p-1 transition ${
+                          activity.completed
+                            ? "text-[#6941a5] hover:bg-[#f4effa]"
+                            : "text-[#829087] hover:bg-[#f7f3fa]"
+                        } disabled:cursor-wait disabled:opacity-50`}
+                      >
+                        {activity.completed ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : (
+                          <Circle className="h-5 w-5" />
+                        )}
+                      </button>
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <h4
+                            className={`truncate text-sm font-bold ${
+                              activity.completed
+                                ? "text-[#77847c] line-through"
+                                : "text-[#26372d]"
+                            }`}
+                          >
+                            {activity.instruction || activity.topic}
+                          </h4>
+                          {activity.activityType === "review" && (
+                            <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
+                              {activity.generatedBy === "final-review" ? "Final review" : activity.generatedBy === "automatic-review" ? "Spaced review" : "Review activity"}
+                            </span>
+                          )}
+                          {activity.studyMethod && (
+                            <span className="shrink-0 rounded-full bg-[#f5f8ef] px-2 py-0.5 text-[11px] font-semibold text-[#53633a]">
+                              {getStudyMethodLabel(activity)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-[#718077]">
+                          {getStudyMethodLabel(activity)}
+                        </p>
+                        {activity.topicNames?.length > 0 && (
+                          <p className="mt-1 break-words text-xs text-[#607067]">
+                            Topics: {activity.topicNames.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 pl-9 sm:pl-0">
+                      {isPracticeQuizActivity(activity) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const topicName = activity.topic || activity.topicNames?.[0];
+                            const assignedTopic = findAssignedTopic(plan, topicName);
+
+                            navigate("/tools/practice-tests", {
+                              state: {
+                                topic: topicName || activity.instruction || "General practice",
+                                studyPlanId: plan.id,
+                                sourceMaterialIds: assignedTopic?.sourceMaterialIds || [],
+                                autoStart: true,
+                              },
+                            });
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
+                        >
+                          Practice quiz
+                        </button>
+                      )}
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#607067]">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {activity.estimatedMinutes} minutes
+                      </span>
+                      <span
+                        className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                          activity.completed
+                            ? "bg-[#eadcf5] text-[#6941a5]"
+                            : "bg-[#eef2f0] text-[#66746c]"
+                        }`}
+                      >
+                        {activity.completed ? "Completed" : "Planned"}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
           ))}
-        </ol>
+        </div>
       )}
     </section>
   );
@@ -418,9 +439,10 @@ const getStudyDays = (plan) => {
 
 const formatPlanDate = (value) =>
   new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
+    weekday: "long",
+    month: "long",
     day: "numeric",
+    year: "numeric",
   }).format(new Date(`${value}T12:00:00`));
 
 const getActivityTypeLabel = (value) =>
