@@ -147,6 +147,43 @@ const PracticeTests = () => {
         studyPlanId: studyPlanIdFromLocation || null,
         sourceMaterialIds: sourceMaterialIdsFromLocation || [],
       });
+
+      if (autoStartFromDashboard) {
+        const runTopicQuiz = async () => {
+          try {
+            setQuizStatus("loading");
+            setShowUpload(true);
+            setCurrentStep(3);
+            const quizData = await generateQuizFromTopic(
+              topicFromDashboard,
+              numQuestions,
+              selectedTopics,
+              customTopics,
+              questionFormats,
+              folderId,
+              subjectCategory,
+              studyPlanIdFromLocation,
+              sourceMaterialIdsFromLocation || []
+            );
+
+            setGeneratedQuiz(quizData);
+            setUserAnswers(Array((quizData.questions || []).length).fill(null));
+            setCurrentQuizQuestion(0);
+            setQuizStatus("ready");
+            setQuizMode("quiz");
+            setShowQuiz(false);
+            setShowSummary(false);
+            setShowAnswerFeedback(false);
+            resetTimer();
+          } catch (err) {
+            console.error("Failed to auto-generate study-plan quiz:", err);
+            setError(err.message || "Failed to generate the study plan quiz.");
+            setQuizStatus("idle");
+          }
+        };
+
+        runTopicQuiz();
+      }
       return;
     }
 

@@ -185,11 +185,7 @@ const StudyPlanActivities = ({
                     type="button"
                     onClick={() => {
                       const topicName = activity.topic || activity.topicNames?.[0];
-                      const assignedTopic = (plan.confirmedTopics || plan.identifiedTopics || []).find(
-                        (topic) =>
-                          topic.name?.trim().toLowerCase() ===
-                          topicName?.trim().toLowerCase()
-                      );
+                      const assignedTopic = findAssignedTopic(plan, topicName);
 
                       navigate("/tools/practice-tests", {
                         state: {
@@ -434,6 +430,45 @@ const getStudyMethodLabel = (activity) =>
   STUDY_METHOD_LABELS[activity.studyMethod] ||
   getActivityTypeLabel(activity.activityType) ||
   "Study activity";
+
+const normalizeTopicKey = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+const findAssignedTopic = (plan, topicName) => {
+  const topicCandidates = plan?.confirmedTopics || plan?.identifiedTopics || [];
+  const normalizedTarget = normalizeTopicKey(topicName);
+
+  if (!normalizedTarget || topicCandidates.length === 0) {
+    return null;
+  }
+
+  return (
+    topicCandidates.find((topic) => {
+      const names = [
+        topic?.name,
+        topic?.displayName,
+        topic?.label,
+        topic?.topic,
+      ];
+
+      return names.some((candidate) => {
+        const normalizedCandidate = normalizeTopicKey(candidate);
+        if (!normalizedCandidate) {
+          return false;
+        }
+
+        return (
+          normalizedCandidate === normalizedTarget ||
+          normalizedCandidate.includes(normalizedTarget) ||
+          normalizedTarget.includes(normalizedCandidate)
+        );
+      });
+    }) || null
+  );
+};
 
 const isPracticeQuizActivity = (activity) => {
   const studyMethod = activity?.studyMethod || activity?.activityType;
