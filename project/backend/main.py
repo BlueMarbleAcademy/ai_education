@@ -496,6 +496,35 @@ class LocalContainer:
             filtered.sort(key=lambda x: x.get("createdAt", "") or x.get("createdat", ""), reverse=True)
             return filtered
 
+        if "from c where c.userid = @userid and c.contenttype = 'mindmap'" in q:
+            user_id = params.get("@userid")
+
+            filtered = [
+                it
+                for it in items
+                if (it.get("userId") == user_id or it.get("user_id") == user_id)
+                and (
+                    it.get("contentType", "").lower() == "mindmap"
+                    or it.get("contenttype", "").lower() == "mindmap"
+                )
+            ]
+
+            if "c.data.slug = @slug" in q:
+                slug = params.get("@slug")
+                filtered = [
+                    it
+                    for it in filtered
+                    if it.get("data", {}).get("slug") == slug
+                ]
+
+            if "order by c.createdat desc" in q:
+                filtered.sort(
+                    key=lambda x: x.get("createdAt", "") or x.get("createdat", ""),
+                    reverse=True,
+                )
+
+            return filtered
+
         if "from c where c.userid = @uid and c.contenttype = 'study_plan'" in q:
             user_id = params.get("@uid")
             filtered = [

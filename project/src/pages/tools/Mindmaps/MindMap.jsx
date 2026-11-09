@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import ReactFlow, { 
@@ -707,6 +707,7 @@ const BottomToolbar = ({
 const MindMaps = () => {
   const { id: slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
   
@@ -739,6 +740,20 @@ const MindMaps = () => {
     setSelectedNode(null);
   }, [setNodes, setEdges]);
 
+  const [studyPlanTopic, setStudyPlanTopic] = useState(
+    location.state?.topic?.trim() || ""
+  );
+
+  const [studyPlanId, setStudyPlanId] = useState(
+    location.state?.studyPlanId || null
+  );
+
+  const [sourceMaterialIds, setSourceMaterialIds] = useState(
+    Array.isArray(location.state?.sourceMaterialIds)
+      ? location.state.sourceMaterialIds
+      : []
+  );
+
   // Load a specific mindmap
   const loadMindmapById = useCallback(async (mindmap) => {
     try {
@@ -746,22 +761,47 @@ const MindMaps = () => {
       setShowMindmapSidebar(false);
       
       const data = mindmap.data;
-      const nodesWithCallbacks = data.nodes.map(node => ({
+
+      const nodesWithCallbacks = data.nodes.map((node) => ({
         ...node,
-        data: { ...node.data, onDelete: deleteNode }
+        data: { ...node.data, onDelete: deleteNode },
       }));
+
       setNodes(nodesWithCallbacks);
       setEdges(data.edges || []);
       setCurrentMindmapId(mindmap.id);
       setMindmapTitle(data.title);
       
       // Calculate next ID
-      const existingIds = data.nodes.map(node => {
+      const existingIds = nodesWithCallbacks.map(node => {
         const match = node.id.match(/node-(\d+)/);
         return match ? parseInt(match[1], 10) : 0;
       });
       setNextId(Math.max(...existingIds, 0) + 1);
-      
+
+      if (data.nodes.length === 0 && studyPlanTopic) {
+        const persistedNodes = nodesWithCallbacks.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            onDelete: undefined,
+          },
+        }));
+
+        await updateMindmap(mindmap.id, {
+          ...data,
+          nodes: persistedNodes,
+          edges: data.edges || [],
+          metadata: {
+            ...data.metadata,
+            updatedAt: new Date().toISOString(),
+            studyPlanId,
+            sourceMaterialIds,
+            studyPlanTopic,
+          },
+        });
+      }
+
       // Update URL
       navigate(`/tools/maps/${mindmap.id}`, { replace: true });
     } catch (err) {
@@ -770,7 +810,12 @@ const MindMaps = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [navigate, setNodes, setEdges, deleteNode]);
+  }, [
+      navigate,
+      setNodes,
+      setEdges,
+      deleteNode,
+  ]);
 
   // Update node (name/color)
   const updateNode = useCallback((nodeId, updates) => {
@@ -800,18 +845,47 @@ const MindMaps = () => {
           setIsLoading(true);
           const mindmap = await getMindmap(slug);
           const data = mindmap.data;
-          
-          const nodesWithCallbacks = data.nodes.map(node => ({
-            ...node,
-            data: { ...node.data, onDelete: deleteNode }
-          }));
+
+          if (data.metadata?.studyPlanTopic) {
+            setStudyPlanTopic(data.metadata.studyPlanTopic);
+          }
+
+          if (data.metadata?.studyPlanId) {
+            setStudyPlanId(data.metadata.studyPlanId);
+          }
+
+          if (Array.isArray(data.metadata?.sourceMaterialIds)) {
+            setSourceMaterialIds(data.metadata.sourceMaterialIds);
+          }
+
+          const nodesWithCallbacks =
+            data.nodes.length === 0 && studyPlanTopic
+              ? [
+                  {
+                    id: "node-1",
+                    type: "custom",
+                    position: { x: 400, y: 300 },
+                    data: {
+                      label: studyPlanTopic,
+                      color: "blue",
+                      shape: "square",
+                      onDelete: deleteNode,
+                      id: "node-1",
+                    },
+                  },
+                ]
+              : data.nodes.map((node) => ({
+                  ...node,
+                  data: { ...node.data, onDelete: deleteNode },
+                }));
+
           setNodes(nodesWithCallbacks);
           setEdges(data.edges || []);
           setCurrentMindmapId(mindmap.id);
           setMindmapTitle(data.title);
           
           // Calculate next ID
-          const existingIds = data.nodes.map(node => {
+          const existingIds = nodesWithCallbacks.map(node => {
             const match = node.id.match(/node-(\d+)/);
             return match ? parseInt(match[1], 10) : 0;
           });
@@ -826,7 +900,15 @@ const MindMaps = () => {
       
       loadMindmap();
     }
-  }, [slug, isAuthenticated, inProgress, deleteNode]);
+  }, [
+      slug,
+      isAuthenticated,
+      inProgress,
+      deleteNode,
+      studyPlanTopic,
+      setNodes,
+      setEdges,
+  ]);
 
   // Add node with custom label/color
   const addNode = useCallback(({ label, color }) => {
@@ -1033,7 +1115,12 @@ const MindMaps = () => {
         })),
         edges,
         svgPreview: previewImage,
-        metadata: { updatedAt: new Date().toISOString() }
+        metadata: {
+          updatedAt: new Date().toISOString(),
+          studyPlanId,
+          sourceMaterialIds,
+          studyPlanTopic,
+        }
       };
       
       if (currentMindmapId) {
@@ -1054,7 +1141,16 @@ const MindMaps = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [slug, mindmapTitle, nodes, edges, currentMindmapId]);
+  }, [
+      slug,
+      mindmapTitle,
+      nodes,
+      edges,
+      currentMindmapId,
+      studyPlanId,
+      sourceMaterialIds,
+      studyPlanTopic,
+  ]);
 
   return (
     <div className="w-full h-screen bg-gray-50 relative overflow-hidden">

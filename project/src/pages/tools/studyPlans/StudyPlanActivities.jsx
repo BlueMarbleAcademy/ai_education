@@ -10,6 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import { getAvailableStudyDays } from "./studyPlanDates";
+import { createMindmap } from "../../../api/apiService";
 
 const ACTIVITY_TYPES = [
   { value: "reading", label: "Reading" },
@@ -217,6 +218,37 @@ const StudyPlanActivities = ({
                           className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
                         >
                           Practice quiz
+                        </button>
+                      )}
+                      {isMindMapActivity(activity) && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const topicName =
+                              activity.topic ||
+                              activity.topicNames?.[0] ||
+                              activity.instruction ||
+                              "Study Mind Map";
+
+                            const assignedTopic = findAssignedTopic(plan, topicName);
+
+                            try {
+                              const response = await createMindmap(topicName);
+
+                              navigate(`/tools/maps/${response.slug}`, {
+                                state: {
+                                  topic: topicName,
+                                  studyPlanId: plan.id,
+                                  sourceMaterialIds: assignedTopic?.sourceMaterialIds || [],
+                                },
+                              });
+                            } catch (error) {
+                              console.error("Failed to create study plan mind map:", error);
+                            }
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
+                        >
+                          Mind map
                         </button>
                       )}
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#607067]">
@@ -495,6 +527,11 @@ const findAssignedTopic = (plan, topicName) => {
 const isPracticeQuizActivity = (activity) => {
   const studyMethod = activity?.studyMethod || activity?.activityType;
   return studyMethod === "practice_quiz";
+};
+
+const isMindMapActivity = (activity) => {
+    const studyMethod = activity?.studyMethod || activity?.activityType;
+    return studyMethod === "mind_map";
 };
 
 const compareActivities = (first, second) => {
