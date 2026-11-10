@@ -397,6 +397,11 @@ export const getStudyPlanMaterialsForAnalysis = async (planId = null) => {
   return callProtectedApi(endpoint, { method: "GET" });
 };
 
+export const getStudyPlanVoiceContext = (planId, activityId) => {
+  const query = new URLSearchParams({ activity_id: activityId });
+  return callProtectedApi(`${API_BASE}/study-plans/${encodeURIComponent(planId)}/voice-context?${query}`);
+};
+
 export const generateHarderQuiz = async (questions, title, numQuestions = 15, folderId = null) => {
   return callProtectedApi("http://localhost:8000/generate-harder-quiz", {
     method: "POST",

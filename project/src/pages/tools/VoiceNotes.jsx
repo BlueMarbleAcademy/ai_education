@@ -1,11 +1,11 @@
 // VoiceNotes.jsx — tags instead of folders, now with Pause/Resume while recording
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useMsal } from '@azure/msal-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mic, Save, Trash2, Download, Share2, Tag as TagIcon, AudioWaveform as Waveform, PauseCircle, PlayCircle } from 'lucide-react';
-import { recordStudyToolUse } from '../../api/apiService';
+import { recordStudyToolUse, callProtectedApi, getStudyPlanVoiceContext } from '../../api/apiService';
 
 const API_URL = "http://localhost:8000";
 
@@ -34,8 +34,16 @@ const VoiceNotes = () => {
   const folderId = searchParams.get('folderId');
 
   const noteId = searchParams.get("noteId");
+  const studyPlanId = searchParams.get('studyPlanId');
+  const activityId = searchParams.get('activityId');
+  const fromPlanner = Boolean(studyPlanId || activityId);
+  const [studyContext, setStudyContext] = useState(null);
+  const [contextLoading, setContextLoading] = useState(fromPlanner);
+  const [contextError, setContextError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const { instance, accounts } = useMsal();
+  const { instance, accounts, inProgress } = useMsal();
   const navigate = useNavigate();
   
   // Get user ID from logged-in account (account-based, not device-based)
@@ -68,6 +76,7 @@ const VoiceNotes = () => {
   const [selectedTagFilter, setSelectedTagFilter] = useState('');
   const [noteTitle, setNoteTitle] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -77,9 +86,10 @@ const VoiceNotes = () => {
   const [privacySettings, setPrivacySettings] = useState({});
   const [tagInput, setTagInput] = useState('');
   const [pendingTags, setPendingTags] = useState([]); // tags for the note being created
-  const [micPermissionError, setMicPermissionError] = useState(false);
+  const [micPermissionError, setMicPermissionError] = useState('');
 
   const mediaRecorderRef = useRef(null);
+  const recordingAttemptRef = useRef(0);
   const timerRef = useRef(null);
   const mimeTypeRef = useRef('audio/webm');
   const canvasRef = useRef(null);
@@ -90,13 +100,53 @@ const VoiceNotes = () => {
 
   const { transcript, resetTranscript } = useSpeechRecognition();
 
-  const fetchNotes = async () => {
+  useEffect(() => {
+    if (inProgress !== 'none') return;
+    let active = true;
+    setStudyContext(null);
+    setContextError('');
+    setSaveError('');
+    setNotes([]);
+    setContextLoading(fromPlanner);
+    if (!fromPlanner) return;
+    if (!studyPlanId || !activityId) {
+      setContextError('The study plan link is incomplete. Open this activity from the planner again.');
+      setContextLoading(false);
+      return;
+    }
+    getStudyPlanVoiceContext(studyPlanId, activityId)
+      .then((context) => {
+        if (!active) return;
+        setStudyContext(context);
+        setNoteTitle(context.topic);
+      })
+      .catch((error) => { if (active) setContextError(error.message || 'Could not open this study activity.'); })
+      .finally(() => { if (active) setContextLoading(false); });
+    return () => { active = false; };
+  }, [studyPlanId, activityId, fromPlanner, inProgress]);
+
+  useEffect(() => () => {
+    recordingAttemptRef.current += 1;
+    mediaRecorderRef.current?.stream.getTracks().forEach((track) => track.stop());
+    clearInterval(timerRef.current);
+    cancelAnimationFrame(animationRef.current);
+    audioContextRef.current?.close().catch(() => {});
+    SpeechRecognition.stopListening();
+  }, []);
+
+  const fetchNotes = useCallback(async () => {
     if (!userId) return; // Don't fetch if not logged in
+    if (fromPlanner && (!studyPlanId || !activityId || !studyContext)) return;
     try {
       const params = new URLSearchParams();
       if (selectedTagFilter) params.append('tag', selectedTagFilter);
-      const res = await axios.get(`${API_URL}/voice-notes?${params.toString()}`);
-      const items = res.data || [];
+      if (fromPlanner) {
+        params.set('study_plan_id', studyPlanId);
+        params.set('study_activity_id', activityId);
+      }
+      const items = (fromPlanner
+        ? await callProtectedApi(`${API_URL}/voice-notes?${params}`)
+        : (await axios.get(`${API_URL}/voice-notes?${params}`)).data) || [];
       setNotes(items);
       const tags = new Set();
       items.forEach(n => (n.tags || []).forEach(t => tags.add(t)));
@@ -104,9 +154,9 @@ const VoiceNotes = () => {
     } catch (err) {
       console.error("Error fetching notes:", err);
     }
-  };
+  }, [userId, fromPlanner, studyPlanId, activityId, studyContext, selectedTagFilter]);
 
-  useEffect(() => { fetchNotes(); }, [selectedTagFilter, userId]);
+  useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
     // If we navigated here with ?noteId=..., move that note to the top so it's visible immediately
     useEffect(() => {
@@ -157,7 +207,7 @@ const VoiceNotes = () => {
       window.removeEventListener('pageshow', handlePageshow);
       clearTimeout(refreshTimeout);
     };
-  }, [userId]);
+  }, [userId, fetchNotes]);
 
   // canvas sizing
   useEffect(() => {
@@ -218,17 +268,29 @@ const VoiceNotes = () => {
   };
 
   const startRecording = async () => {
-    resetTranscript();
-    setMicPermissionError(false);
-    
+    if (isStarting || isRecording) return;
+    if (fromPlanner && (!studyContext || contextLoading || contextError)) return;
+    setMicPermissionError('');
+    setIsStarting(true);
+    const attempt = ++recordingAttemptRef.current;
+    let permissionTimer;
+    let stream;
     try {
-      SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
-    } catch (e) {
-      // Speech recognition might fail, continue anyway
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+        throw new Error('Recording is not supported in this browser. Open this page in Chrome or Edge to record.');
+      }
+      resetTranscript();
+      const permission = navigator.mediaDevices.getUserMedia({ audio: true });
+      permission.then((pendingStream) => {
+        if (recordingAttemptRef.current !== attempt) pendingStream.getTracks().forEach((track) => track.stop());
+      }, () => {});
+      stream = await Promise.race([
+        permission,
+        new Promise((_, reject) => {
+          permissionTimer = setTimeout(() => reject(new Error('Microphone access is still waiting. Allow microphone access in your browser, or open this page in Chrome and try again.')), 20000);
+        }),
+      ]);
+      if (recordingAttemptRef.current !== attempt) return;
       const mimeType = getSupportedMimeType();
       mimeTypeRef.current = mimeType || 'audio/webm';
       mediaRecorderRef.current = new MediaRecorder(stream,
@@ -244,27 +306,49 @@ const VoiceNotes = () => {
         setChunks(localChunks);
       };
 
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      await audioContextRef.current.resume();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
-      sourceRef.current.connect(analyserRef.current);
-      drawWaveform();
-
       mediaRecorderRef.current.start();
       setIsRecording(true);
       setIsPaused(false);
       setRecordingDuration(0);
       timerRef.current = setInterval(() => setRecordingDuration((prev) => prev + 1), 1000);
+      // Waveform and transcription are optional; neither should block audio recording.
+      try {
+        const AudioEngine = window.AudioContext || window.webkitAudioContext;
+        if (AudioEngine) {
+          audioContextRef.current = new AudioEngine();
+          audioContextRef.current.resume().catch(() => {});
+          analyserRef.current = audioContextRef.current.createAnalyser();
+          sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+          sourceRef.current.connect(analyserRef.current);
+          drawWaveform();
+        }
+      } catch (error) {
+        console.warn('Waveform is unavailable:', error.name);
+      }
+      try {
+        Promise.resolve(SpeechRecognition.startListening({ continuous: true, language: 'en-US' })).catch(() => {});
+      } catch {
+        // Recording still works when browser speech recognition is unavailable.
+      }
     } catch (error) {
+      if (recordingAttemptRef.current !== attempt) return;
+      recordingAttemptRef.current += 1;
+      stream?.getTracks().forEach((track) => track.stop());
       console.log('Microphone access denied or error:', error.name);
-      setMicPermissionError(true);
+      const messages = {
+        NotAllowedError: 'Microphone access was blocked. Allow it in this browser and in macOS microphone privacy settings, then try again.',
+        NotFoundError: 'No microphone was found. Connect a microphone and try again.',
+        NotReadableError: 'The microphone is unavailable. Close other apps using it and try again.',
+      };
+      setMicPermissionError(messages[error.name] || error.message || 'Could not start recording. Try this page in Chrome.');
       try {
         SpeechRecognition.stopListening();
       } catch (e) {
         // Ignore if speech recognition wasn't started
       }
-      return; // Stop execution here
+    } finally {
+      clearTimeout(permissionTimer);
+      setIsStarting(false);
     }
   };
 
@@ -337,6 +421,7 @@ const VoiceNotes = () => {
   const removePendingTag = (t) => setPendingTags(prev => prev.filter(x => x !== t));
 
   const saveNoteToBackend = async () => {
+    if (saving || !chunks.length || isRecording || (fromPlanner && !studyContext)) return;
     const blob = new Blob(chunks, { type: mimeTypeRef.current });
     if (!blob || !noteTitle.trim()) return;
 
@@ -348,6 +433,10 @@ const VoiceNotes = () => {
     formData.append('duration', recordingDuration || 0);
     formData.append('visibility', privacySettings['temp'] || 'Private');
     formData.append('tags', pendingTags.join(', '));
+    if (fromPlanner) {
+      formData.append('study_plan_id', studyPlanId);
+      formData.append('study_activity_id', activityId);
+    }
     
     // Add folderId if provided
     if (folderId) {
@@ -355,8 +444,11 @@ const VoiceNotes = () => {
     }
 
     try {
-      const res = await axios.post(`${API_URL}/voice-notes`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const newNote = res.data;
+      setSaving(true);
+      setSaveError('');
+      const newNote = fromPlanner
+        ? await callProtectedApi(`${API_URL}/voice-notes`, { method: 'POST', body: formData })
+        : (await axios.post(`${API_URL}/voice-notes`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })).data;
       setNotes(prev => [newNote, ...prev]);
 
       await recordStudyToolUse("voice_note", "save_voice_note");
@@ -371,13 +463,15 @@ const VoiceNotes = () => {
         resetTranscript();
         setAudioUrl(null);
         setChunks([]);
-        setNoteTitle('');
+        setNoteTitle(studyContext?.topic || '');
         setPendingTags([]);
         setShowSaveAnimation(false);
       }, 400);
     } catch (err) {
       console.error("Error saving voice note:", err);
-      alert("Failed to save note. Check server logs.");
+      setSaveError(err.message || "Failed to save note. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -454,6 +548,27 @@ const VoiceNotes = () => {
         </div>
       </div>
 
+      {fromPlanner && (
+        <section className="mb-6 border-l-4 border-blue-500 pl-4 text-sm text-gray-700" aria-label="Assigned study activity">
+          {contextLoading && <p role="status">Loading your assigned topic and materials...</p>}
+          {contextError && <p role="alert" className="text-red-600">{contextError}</p>}
+          {studyContext && <>
+            <h2 className="font-semibold break-words">Study plan topic: {studyContext.topic}</h2>
+            <p className="mt-2">{studyContext.prompt}</p>
+            <p className="mt-2">{studyContext.materials.length} linked study material{studyContext.materials.length === 1 ? '' : 's'}</p>
+            {studyContext.materials.map((material) => (
+              <details key={material.id} className="mt-2">
+                <summary className="cursor-pointer break-words font-medium">{material.name}</summary>
+                <p className="mt-2 whitespace-pre-wrap break-words">{material.text}</p>
+                {material.truncated && <p className="mt-1 text-xs">Preview of the first 6,000 characters.</p>}
+              </details>
+            ))}
+          </>}
+          <button type="button" className="mt-3 text-blue-600 underline" disabled={isRecording || saving} onClick={() => navigate(`/tools/study-planner?planId=${encodeURIComponent(studyPlanId || '')}`)}>Back to study plan</button>
+        </section>
+      )}
+      {saveError && <p role="alert" className="mb-4 text-sm text-red-600">{saveError}</p>}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <input
           type="text"
@@ -482,6 +597,7 @@ const VoiceNotes = () => {
       <div className="mb-4">
         <input
           type="text"
+          aria-label="Voice note title"
           placeholder="Enter a title for this note"
           value={noteTitle}
           onChange={(e) => setNoteTitle(e.target.value)}
@@ -513,12 +629,13 @@ const VoiceNotes = () => {
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="min-w-0 bg-white p-4 sm:p-8 rounded-xl shadow-lg mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <button
               onClick={() => (isRecording ? stopRecording() : startRecording())}
-              className={`p-4 rounded-full transition ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}
+              disabled={isStarting || saving || (fromPlanner && (!studyContext || contextLoading || Boolean(contextError)))}
+              className={`shrink-0 p-4 rounded-full transition ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}
               title={isRecording ? 'Stop' : 'Start recording'}
             >
               <Mic className="h-6 w-6" />
@@ -536,7 +653,7 @@ const VoiceNotes = () => {
 
             <div>
               <p className="text-sm text-gray-700">
-                {isRecording ? (isPaused ? 'Paused' : 'Recording...') : 'Ready to record'}
+                {isStarting ? 'Waiting for microphone access...' : isRecording ? (isPaused ? 'Paused' : 'Recording...') : 'Ready to record'}
               </p>
               {isRecording && <p className={`text-xs ${isPaused ? 'text-gray-500' : 'text-red-600'}`}>{formatDuration(recordingDuration)}</p>}
             </div>
@@ -554,10 +671,10 @@ const VoiceNotes = () => {
               </select>
               <button
                 onClick={saveNoteToBackend}
-                disabled={!noteTitle.trim() || !chunks.length}
+                disabled={saving || isRecording || !noteTitle.trim() || !chunks.length || (fromPlanner && !studyContext)}
                 className={`flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition ${showSaveAnimation ? 'scale-95 opacity-0' : 'scale-100 opacity-100'} ${(!noteTitle.trim() || !chunks.length) && 'opacity-50 cursor-not-allowed'}`}
               >
-                <Save className="h-4 w-4" /> Save Note
+                <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Save Note'}
               </button>
             </>
           )}
@@ -565,7 +682,7 @@ const VoiceNotes = () => {
 
         {micPermissionError && (
           <div className="bg-red-100 border-2 border-red-400 p-4 rounded-lg mt-4">
-            <p className="text-red-700 font-medium">Please Enable your microphone.</p>
+            <p role="alert" className="text-red-700 font-medium">{micPermissionError}</p>
           </div>
         )}
 
@@ -578,8 +695,8 @@ const VoiceNotes = () => {
         )}
 
         {audioUrl && !isRecording && (
-          <div className="mt-6 flex items-center gap-4">
-            <audio controls src={audioUrl} className="flex-1" />
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <audio controls src={audioUrl} className="min-w-0 w-full flex-1 basis-56" />
             <a href={audioUrl} download={`voice_note_${Date.now()}${getExtensionForMime(mimeTypeRef.current)}`} className="flex items-center gap-2 text-purple-600 hover:text-purple-700">
               <Download className="h-4 w-4" /> Download
             </a>
@@ -587,12 +704,13 @@ const VoiceNotes = () => {
         )}
       </div>
 
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Saved Notes</h2>
+      <h2 className="text-xl font-semibold text-gray-900 mb-6">{fromPlanner ? 'Saved memos for this activity' : 'Saved Notes'}</h2>
       {Array.isArray(filtered) && filtered.length > 0 ? (
         filtered.map((note) => (
-          <div key={note.id} className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow mb-4 flex flex-col md:flex-row md:items-start md:justify-between">
-            <div className="flex-1">
+          <div key={note.id} className="min-w-0 bg-white p-4 sm:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow mb-4 flex flex-col md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0 flex-1">
               <h4 className="text-lg font-semibold text-gray-900 mb-1">{note.title || 'Untitled'}</h4>
+              {note.sourceTopic && <p className="mb-2 break-words text-sm text-blue-700">Study topic: {note.sourceTopic}</p>}
               <div className="flex flex-wrap items-center gap-2 mb-2 text-sm text-gray-500">
                 <span>{note.timestamp}</span>
                 <span className="text-gray-400">({formatDuration(note.duration)})</span>
@@ -606,7 +724,7 @@ const VoiceNotes = () => {
                 </div>
               </div>
               <p className="text-gray-900 mb-4 whitespace-pre-wrap">{note.text}</p>
-              {note.audio_url && (<audio controls src={note.audio_url} className="w-full" />)}
+              {note.audio_url && (<audio controls src={note.audio_url} className="min-w-0 w-full" />)}
             </div>
 
             <div className="flex items-center gap-4 mt-4 md:mt-0">

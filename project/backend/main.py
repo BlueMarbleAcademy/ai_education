@@ -1482,13 +1482,74 @@ async def track_tool_access(
         return {"success": False}
 
 # ----- Voice Notes -----
+async def _voice_planner_user(request: Request) -> str:
+    authorization = request.headers.get("Authorization", "")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        raise HTTPException(401, "Sign in to open a study plan voice memo")
+    claims = await validate_token(token=token.strip())
+    return claims["sub"]
+
+
+def _study_plan_voice_context(plan_id: str, activity_id: str, user_id: str) -> Dict[str, Any]:
+    plan = _read_owned_study_plan(plan_id, user_id)
+    data = plan.get("data", {})
+    activity = next((row for row in data.get("activities", []) if row.get("id") == activity_id), None)
+    if not activity or (activity.get("studyMethod") or activity.get("activityType")) != "voice_memo":
+        raise HTTPException(404, "Voice memo study activity not found")
+    names = activity.get("topicNames") or [activity.get("topic") or activity.get("instruction") or ""]
+    topic = ", ".join(name for name in names if name).strip()
+    if not topic:
+        raise HTTPException(422, "This activity has no assigned topic")
+    selected_topics = data.get("confirmedTopics") or data.get("identifiedTopics") or []
+    source_ids = list(dict.fromkeys(
+        material_id for row in selected_topics
+        if str(row.get("name", "")).strip().casefold() in {name.strip().casefold() for name in names}
+        for material_id in row.get("sourceMaterialIds", [])
+    ))
+    linked_ids = {
+        row if isinstance(row, str) else row.get("id") or row.get("materialId")
+        for row in data.get("materials", []) if isinstance(row, (str, dict))
+    }
+    source_ids = source_ids or sorted(value for value in linked_ids if value)
+    materials = []
+    for material_id in source_ids:
+        if material_id not in linked_ids:
+            raise HTTPException(404, "Assigned study material is not connected to this plan")
+        material = _read_owned_study_material(material_id, user_id)
+        if material.get("planId") != plan_id:
+            raise HTTPException(404, "Assigned study material not found")
+        material_data = material.get("data", {})
+        text = str(material_data.get("extractedText") or "").strip()
+        if not text:
+            raise HTTPException(422, "Assigned material has no readable text. Analyze the materials again first.")
+        materials.append({"id": material_id, "name": material_data.get("name") or "Study material", "text": text[:6000], "truncated": len(text) > 6000})
+    return {
+        "studyPlanId": plan_id, "studyActivityId": activity_id, "topic": topic,
+        "prompt": f"Explain {topic} in your own words. Recall the key ideas and steps, then compare your explanation with your course notes.",
+        "sourceMaterialIds": source_ids, "materials": materials,
+    }
+
+
+@app.get("/study-plans/{plan_id}/voice-context")
+async def get_study_plan_voice_context(plan_id: str, activity_id: str, user_claims: dict = Depends(validate_token)):
+    return _study_plan_voice_context(plan_id, activity_id, user_claims["sub"])
+
+
 @app.get("/voice-notes")
 async def get_voice_notes(
     request: Request,
     user_id: Optional[str] = Query(None),
     tag: Optional[List[str]] = Query(None, description="Repeatable: ?tag=math&tag=lecture"),
+    study_plan_id: Optional[str] = Query(None),
+    study_activity_id: Optional[str] = Query(None),
 ):
     uid = _resolve_user_id(request, user_id_q=user_id)
+    if study_plan_id or study_activity_id:
+        if not study_plan_id or not study_activity_id:
+            raise HTTPException(422, "A study plan and activity are required")
+        uid = await _voice_planner_user(request)
+        _study_plan_voice_context(study_plan_id, study_activity_id, uid)
     tags = _normalize_tags(tag)
 
     query = "SELECT * FROM c WHERE c.userId = @uid AND c.contentType = 'voice_note'"
@@ -1505,6 +1566,8 @@ async def get_voice_notes(
     items = list(container.query_items(query=query, parameters=params, enable_cross_partition_query=True))
     results: List[Dict[str, Any]] = []
     for it in items:
+        if study_plan_id and (it.get("studyPlanId") != study_plan_id or it.get("studyActivityId") != study_activity_id):
+            continue
         it = _ensure_note_defaults(it)
         it = _attach_playback_urls(it, request)
         results.append(it)
@@ -1522,14 +1585,25 @@ async def create_voice_note(
     visibility: str = Form("Private"),
     user_id: Optional[str] = Form(None),
     folder_id: Optional[str] = Form(None),
+    study_plan_id: Optional[str] = Form(None),
+    study_activity_id: Optional[str] = Form(None),
 ):
     uid = _resolve_user_id(request, user_id_form=user_id)
+    planner_context = None
+    if study_plan_id or study_activity_id:
+        if not study_plan_id or not study_activity_id:
+            raise HTTPException(422, "A study plan and activity are required")
+        uid = await _voice_planner_user(request)
+        planner_context = _study_plan_voice_context(study_plan_id, study_activity_id, uid)
     note_id = str(uuid.uuid4())
 
     try:
         file_bytes = await audio.read()
     finally:
         await audio.close()
+
+    if planner_context and not file_bytes:
+        raise HTTPException(422, "Record a voice memo before saving")
 
     filename = audio.filename or f"{note_id}.webm"
     content_type = _guess_content_type(filename)
@@ -1579,6 +1653,15 @@ async def create_voice_note(
     # Add folderId if provided
     if folder_id:
         item["folderId"] = folder_id
+
+    if planner_context:
+        item.update({
+            "studyPlanId": planner_context["studyPlanId"],
+            "studyActivityId": planner_context["studyActivityId"],
+            "sourceTopic": planner_context["topic"],
+            "sourceMaterialIds": planner_context["sourceMaterialIds"],
+            "studyPrompt": planner_context["prompt"],
+        })
 
     container.create_item(body=item)
     item = _ensure_note_defaults(item)

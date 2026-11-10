@@ -199,6 +199,18 @@ const StudyPlanActivities = ({
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 pl-9 sm:pl-0">
+                      {(activity.studyMethod || activity.activityType) === "voice_memo" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const params = new URLSearchParams({ studyPlanId: plan.id, activityId: activity.id });
+                            navigate(`/tools/voice-notes?${params}`);
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
+                        >
+                          Voice memo
+                        </button>
+                      )}
                       {(activity.studyMethod || activity.activityType) === "flashcards" && (
                         <button
                           type="button"
