@@ -104,11 +104,11 @@ function AppContent() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen((o) => !o)} />
       <div
-        className="flex-1 flex flex-col min-h-screen transition-all duration-300"
+        className="min-w-0 flex-1 flex flex-col min-h-screen transition-all duration-300"
         style={{ marginLeft: sidebarOpen ? "224px" : "64px" }}
       >
         <TopBar />
-        <main className="flex-1">
+        <main className="min-w-0 flex-1">
           {appRoutes}
         </main>
       </div>

@@ -28,6 +28,7 @@ import {
   updateStudyPlanActivity,
 } from "../../../api/apiService";
 import StudyPlanActivities from "./StudyPlanActivities";
+import StudyPlanProgress from "./StudyPlanProgress";
 import StudyPlanMaterials from "./StudyPlanMaterials";
 import StudyPlanWizard from "./StudyPlanWizard";
 import StudyPlanDisplay from "./StudyPlanDisplay";
@@ -605,7 +606,7 @@ const StudyPlans = () => {
         activityId,
         !activity.completed
       );
-      setCreatedPlan(response.plan);
+      setCreatedPlan((plan) => plan?.id === response.plan.id ? response.plan : plan);
       setSavedPlans((plans) =>
         plans.map((plan) =>
           plan.id === response.plan.id
@@ -737,6 +738,9 @@ const StudyPlans = () => {
           <div><div className="flex items-center gap-2 text-sm font-semibold text-blue-700"><Calendar className="h-4 w-4" /> Study planner</div><h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900">Your week at a glance</h1><p className="mt-1 text-sm text-gray-600">Plan focused sessions, keep a little breathing room, and make progress visible.</p></div>
           <button onClick={handleCreatePlan} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"><PlusCircle className="h-4 w-4" /> {createdPlan ? "New study plan" : "Create study plan"}</button>
         </div>
+        {createdPlan?.id === planId && planStatus !== "loading" && (
+          <StudyPlanProgress key={createdPlan.id} plan={createdPlan} isSaving={activitySaving} />
+        )}
         <div className="flex flex-col gap-3 rounded-xl border border-primary-700 bg-primary-600 p-3 text-white shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <button
