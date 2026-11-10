@@ -198,7 +198,35 @@ const StudyPlanActivities = ({
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 pl-9 sm:pl-0">
+                    <div className="flex flex-wrap items-center gap-3 pl-9 sm:pl-0">
+                      {(activity.studyMethod || activity.activityType) === "flashcards" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const names = activity.topicNames?.length
+                              ? activity.topicNames
+                              : [activity.topic || activity.instruction];
+                            const topics = plan.confirmedTopics || plan.identifiedTopics || [];
+                            const matchedTopics = topics.filter((topic) =>
+                              names.some((name) => normalizeTopicKey(topic.name) === normalizeTopicKey(name))
+                            );
+                            const sourceIds = matchedTopics.flatMap((topic) => topic.sourceMaterialIds || []);
+                            const materialIds = sourceIds.length ? sourceIds : (plan.materials || []).map(
+                              (material) => typeof material === "string" ? material : material.id || material.materialId
+                            );
+                            const params = new URLSearchParams({
+                              topic: names.filter(Boolean).join(", "),
+                              studyPlanId: plan.id,
+                              activityId: activity.id,
+                            });
+                            [...new Set(materialIds.filter(Boolean))].forEach((id) => params.append("materialId", id));
+                            navigate(`/tools/flashcards?${params}`);
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-[#c8a5d9] bg-[#f6f0fc] px-2.5 py-1.5 text-xs font-semibold text-[#5b3a8c] transition hover:bg-[#efe3fa]"
+                        >
+                          Flashcards
+                        </button>
+                      )}
                       {isPracticeQuizActivity(activity) && (
                         <button
                           type="button"

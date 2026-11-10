@@ -13,9 +13,17 @@ const AIFlashcards = () => {
   const { isGuest } = useGuest();
   const [searchParams] = useSearchParams();
   const folderId = searchParams.get("folderId");
+  const studyPlanId = searchParams.get("studyPlanId");
+  const assignedTopic = studyPlanId ? searchParams.get("topic") || "" : "";
+  const studyPlanContext = studyPlanId ? {
+    studyPlanId,
+    activityId: searchParams.get("activityId"),
+    sourceMaterialIds: searchParams.getAll("materialId"),
+  } : null;
 
   const [tab, setTab] = useState("topic"); // "topic" | "pdf"
-  const [topicPrompt, setTopicPrompt] = useState("");
+  const [topicPrompt, setTopicPrompt] = useState(assignedTopic);
+  const [generationError, setGenerationError] = useState("");
   const [numCards, setNumCards] = useState(10);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
@@ -34,6 +42,12 @@ const AIFlashcards = () => {
     if (!isGuest && !decksFetchedRef.current) fetchSavedDecks();
   }, [fetchSavedDecks, decksFetchedRef, isGuest]);
 
+  useEffect(() => {
+    setTopicPrompt(assignedTopic);
+    setGenerationError("");
+    if (assignedTopic) setTab("topic");
+  }, [assignedTopic, studyPlanId]);
+
   const handleNumCardsChange = (e) => {
     const v = e.target.value;
     if (v === "") { setNumCards(""); return; }
@@ -47,13 +61,14 @@ const AIFlashcards = () => {
   };
 
   const handleTopicGenerate = async () => {
-    if (!topicPrompt) return;
+    if (!topicPrompt.trim() || isProcessing) return;
     setIsProcessing(true);
+    setGenerationError("");
     try {
-      const result = await generateFlashcardsFromTopic(topicPrompt, numCards, folderId);
+      const result = await generateFlashcardsFromTopic(topicPrompt, numCards, folderId, studyPlanContext);
       navigate(`/tools/flashcards/study/${result.deckId}`, { state: { title: topicPrompt } });
     } catch (err) {
-      alert("Failed to generate flashcards from topic");
+      setGenerationError(err.message || "Failed to generate flashcards from topic");
     } finally {
       setIsProcessing(false);
     }
@@ -111,6 +126,19 @@ const AIFlashcards = () => {
         </div>
       </div>
 
+      {studyPlanContext && (
+        <div className="mb-6 border-l-4 border-primary-500 pl-4 text-sm text-gray-700">
+          <p className="font-semibold break-words">Study plan topic: {assignedTopic}</p>
+          <p>{studyPlanContext.sourceMaterialIds.length
+            ? `${studyPlanContext.sourceMaterialIds.length} linked study material${studyPlanContext.sourceMaterialIds.length === 1 ? "" : "s"}`
+            : "Using available materials from this study plan"}</p>
+          <button type="button" className="mt-2 text-primary-600 underline" onClick={() => navigate(`/tools/study-planner?planId=${encodeURIComponent(studyPlanId)}`)}>
+            Back to study plan
+          </button>
+        </div>
+      )}
+      {generationError && <p role="alert" className="mb-4 text-sm text-red-600">{generationError}</p>}
+
       {/* Creation panel */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm mb-8">
 
@@ -122,6 +150,7 @@ const AIFlashcards = () => {
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
+              disabled={Boolean(studyPlanContext) && key === "pdf"}
               onClick={() => setTab(key)}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 tab === key
@@ -139,10 +168,14 @@ const AIFlashcards = () => {
           {tab === "topic" ? (
             <div>
               <p className="text-sm text-gray-500 mb-4">
-                Type any topic, concept, or course name and let AI build a complete deck for you.
+                {studyPlanContext
+                  ? "Choose the number of cards for your assigned topic."
+                  : "Type any topic, concept, or course name and let AI build a complete deck for you."}
               </p>
               <textarea
+                aria-label="Flashcard topic"
                 value={topicPrompt}
+                readOnly={Boolean(studyPlanContext)}
                 onChange={(e) => setTopicPrompt(e.target.value)}
                 placeholder="e.g. Cell division, World War II, Linear systems..."
                 className="w-full rounded-xl border border-gray-200 p-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none h-28"
@@ -162,7 +195,7 @@ const AIFlashcards = () => {
                   <p className="text-xs text-gray-400 mt-1">1 – 100 cards</p>
                 </label>
                 <button
-                  disabled={!topicPrompt || numCards === ""}
+                  disabled={!topicPrompt.trim() || numCards === "" || isProcessing}
                   onClick={handleTopicGenerate}
                   className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >

@@ -175,7 +175,7 @@ export const useDeckData = () => {
     );
 
     const generateFlashcardsFromTopic = useCallback(
-    async (topic, numCards = 10, folderId = null) => {
+    async (topic, numCards = 10, folderId = null, studyPlanContext = null) => {
         try {
             const token = await getToken();
 
@@ -185,6 +185,11 @@ export const useDeckData = () => {
                     topic,
                     num_cards: numCards,
                     ...(folderId && { folder_id: folderId }),
+                    ...(studyPlanContext && {
+                        study_plan_id: studyPlanContext.studyPlanId,
+                        study_activity_id: studyPlanContext.activityId,
+                        source_material_ids: studyPlanContext.sourceMaterialIds,
+                    }),
                 },
                 {
                     headers: {
