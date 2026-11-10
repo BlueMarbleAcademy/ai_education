@@ -243,14 +243,24 @@ const StudyPlanActivities = ({
                         <button
                           type="button"
                           onClick={() => {
-                            const topicName = activity.topic || activity.topicNames?.[0];
-                            const assignedTopic = findAssignedTopic(plan, topicName);
+                            const topicNames = activity.topicNames?.length
+                              ? activity.topicNames
+                              : [activity.topic || activity.instruction || "General practice"];
+                            const assignedTopics = topicNames
+                              .map((name) => findAssignedTopic(plan, name))
+                              .filter(Boolean);
+                            const sourceIds = assignedTopics.flatMap(
+                              (topic) => topic.sourceMaterialIds || []
+                            );
+                            const sourceMaterialIds = [...new Set(
+                              sourceIds.length ? sourceIds : (plan.materials || []).map((material) => material.id)
+                            )];
 
                             navigate("/tools/practice-tests", {
                               state: {
-                                topic: topicName || activity.instruction || "General practice",
+                                topic: topicNames.join(", "),
                                 studyPlanId: plan.id,
-                                sourceMaterialIds: assignedTopic?.sourceMaterialIds || [],
+                                sourceMaterialIds,
                                 autoStart: true,
                               },
                             });
