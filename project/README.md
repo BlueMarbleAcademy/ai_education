@@ -1,117 +1,176 @@
+# Blue Marble Academy – AI Education Platform
 
+A study platform that uses AI to help students learn. Users can generate and study flashcards, take AI-generated practice tests, build mind maps, record voice notes, summarize documents, and build exam study plans from their own course materials.
 
-# AI Education
+- **Frontend:** React 18 + Vite + Tailwind CSS (this folder)
+- **Backend:** FastAPI (Python) in [backend/](backend/)
+- **Auth:** Azure AD B2C via MSAL (guest mode is also available)
+- **Storage:** Azure Cosmos DB, with a local JSON fallback for development
+- **AI:** OpenAI / Azure OpenAI
 
-Welcome to the **AI Education** project. This repository hosts a project designed to explore and educate users about artificial intelligence through interactive web experiences and learning resources. The project leverages modern web development technologies alongside AI-related integrations.
+## Features
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Project Structure](#project-structure)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
-
-## Overview
-
-The **AI Education** project is intended as a platform for exploring AI concepts in an educational setting. It includes both frontend and backend components with dedicated folders for various parts of the project. Whether you are an educator, student, or developer, this project aims to offer a practical introduction to AI and related technologies.
+| Area | Route | Description |
+| --- | --- | --- |
+| Dashboard | `/dashboard` | Recents and study stats |
+| Flashcards | `/tools/flashcards` | AI-generated decks, study mode, pre-generated sample decks |
+| Practice Tests | `/tools/practice-tests` | AI quiz wizard, saved quizzes, attempt history, performance summary, PDF export |
+| Mind Maps | `/tools/mind-maps` | Interactive mind maps (ReactFlow) with image export |
+| Voice Notes | `/tools/voice-notes` | Record notes (audio stored in Azure Blob Storage) |
+| Summarizer | `/tools/summarizer` | Summarize uploaded documents |
+| Study Planner | `/tools/study-planner` | Exam-date based plans built from uploaded materials, linked to flashcards, mind maps, voice memos and quizzes, with progress tracking and missed-day rescheduling |
+| Workspace | `/workspace` | Folders, unfiled items, trash |
+| Public Library / Sharing | `/public_library`, `/share/:token` | Browse and share items via link |
 
 ## Project Structure
 
-The repository is organized as follows:
+This folder is the repository root of the app (the frontend lives here, not in `src/` alone).
 
 ```
-ai_education/
-├── b_m_a/
-│   └── project/
-│       ├── .ai/          # (AI configuration or assets)
-│       ├── backend/      # (Backend code and API services)
-│       ├── project/      # (Additional project-specific files)
-│       ├── src/          # (Frontend source code)
-│       ├── index.html    # (Entry point for the web application)
-│       ├── package.json  # (NPM project configuration)
-│       ├── package-lock.json
-│       ├── vite.config.js
-│       ├── tailwind.config.js
-│       ├── postcss.config.js
-│       ├── .gitignore
-│       └── eslint.config.js
+project/
+├── backend/                 # FastAPI API
+│   ├── main.py              # App entry point and routes
+│   ├── database.py          # Cosmos DB client
+│   ├── openai_client.py     # OpenAI / Azure OpenAI calls
+│   ├── pdf_utils.py         # Document text extraction
+│   ├── study_plan_*.py      # Study planner logic (dates, scheduling, materials, exams)
+│   ├── models.py
+│   ├── requirements.txt
+│   ├── .env.example         # Copy to .env
+│   └── run.sh
+├── src/
+│   ├── pages/               # Route pages (tools/, shared/, workspace, dashboard…)
+│   ├── components/          # Shared UI components
+│   ├── hooks/               # Auth token, profile, stats, recents hooks
+│   ├── context/             # Guest mode context
+│   ├── authConfig.js        # MSAL / Azure B2C config
+│   └── config.js            # API endpoints
+├── sample_flashcards/       # Sample flashcard decks (JSON)
+├── sample_quizzes/          # Sample quizzes by grade (JSON)
+├── tests/                   # Node test runner tests
+├── _localdb/                # Local JSON store (dev mode)
+├── index.html
+├── package.json
+├── vite.config.js
+└── tailwind.config.js
 ```
 
-This structure separates concerns to keep the codebase organized:
-- **Frontend:** Managed under `src/` with an HTML entry point.
-- **Backend:** Housed in the `backend/` folder for server-side logic.
-- **AI Assets/Config:** Located under the `.ai` folder.
+## Prerequisites
 
-## Technologies Used
+- [Node.js](https://nodejs.org/) 18+ (with npm)
+- [Python](https://www.python.org/) 3.10+
+- Git
+- Credentials for the services you want to use (ask a team member; see [Configuration](#configuration)). **Never commit secrets.**
 
-- **JavaScript/TypeScript:** Main language for frontend and build tools.
-- **Python:** Used in backend or AI modules (if applicable).
-- **Vite:** Fast development server and build tool.
-- **Tailwind CSS:** Utility-first CSS framework for styling.
-- **ESLint:** For linting JavaScript code.
+## Getting Started
 
-## Installation
+You need two terminals: one for the backend, one for the frontend.
 
-To get started with the project locally, follow these steps:
+### 1. Clone the repository
 
-1. **Clone the repository:**
+```bash
+git clone https://github.com/BlueMarbleAcademy/ai_education.git
+cd ai_education/project
+```
 
-   ```bash
-   git clone https://github.com/BlueMarbleAcademy/ai_education.git
-   cd ai_education/b_m_a/project
-   ```
+If your clone has the app at a different depth, `cd` into the folder that contains `package.json` and `backend/`.
 
+### 2. Configure and start the backend
 
-2.  Setup Python Environment:**
+```powershell
+cd backend
+python -m venv venv
 
-   If the backend requires Python dependencies, navigate to the backend directory and install the necessary packages (ensure you have Python installed):
+# Windows (PowerShell)
+.\venv\Scripts\Activate.ps1
+# macOS / Linux
+# source venv/bin/activate
 
-   ```bash
-   cd backend
-   .\venv\Scripts\activate
-   pip install -r requirements.txt
-   uvicorn main:app --host 0.0.0.0 --port 8000
-   ```
+pip install -r requirements.txt
 
+# Create your env file, then fill in the values
+copy .env.example .env      # macOS/Linux: cp .env.example .env
 
-Once the installation is complete, you can run the development server:
-Open a new terminal and keep the backend terminal open
-Dirct to src folder
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 
-3. **Start the frontend development server:**
+On macOS/Linux you can instead run `./run.sh` (activates `venv` if present and starts uvicorn).
 
-   ```bash
-   cd src
-   npm i/ npm install
-   npm run dev
-   ```
+### 3. Start the frontend
 
-   This will launch the project on a local server (usually at `http://localhost:3000` or as specified by Vite).
+In a second terminal, from the project root (the folder with `package.json`):
 
-4. To access azure here are the credentials where you can find the azure keys and database models
-    username: bluemarbleai@outlook.com
-    password: 4<Fid=)6cV/Va4;
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 (Vite's default port; the terminal prints the exact URL).
+
+> The backend allows the origin `http://localhost:5173` by default (`FRONTEND_ORIGINS`). If Vite starts on a different port, add that origin to `FRONTEND_ORIGINS` in `backend/.env` and restart the backend.
+
+## Configuration
+
+### Backend (`backend/.env`)
+
+Copy [backend/.env.example](backend/.env.example) to `backend/.env`. Key variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | OpenAI key for AI features and study-plan material analysis |
+| `AZURE_OPENAI_QUIZ_GENERATOR_*`, and the other Azure OpenAI deployment settings used in `main.py` | Azure OpenAI endpoint, key and deployment names for quiz/flashcard/summarizer generation (`/health` reports which are set) |
+| `COSMOS_DB_URL`, `COSMOS_DB_KEY` | Cosmos DB (database `ai-education-platform-db`, container `userContent`) |
+| `CLIENT_ID`, `CLIENT_SECRET`, `AUTHORITY` | Azure AD token validation |
+| `AZURE_STORAGE_CONNECTION_STRING`, `AZURE_BLOB_*` | Blob storage for voice notes |
+| `FRONTEND_ORIGINS` | Comma-separated allowed CORS origins (default `http://localhost:5173`) |
+| `USE_LOCAL_JSON_STORE` | Set to `true` to store data in `backend/_localdb` instead of Cosmos DB |
+| `COSMOS_FALLBACK_TO_LOCAL` | `1` (default) falls back to local JSON if Cosmos is unreachable; `0` to fail fast |
+
+**Running without Cosmos DB:** set `USE_LOCAL_JSON_STORE=true`. AI features still require valid OpenAI / Azure OpenAI keys.
+
+### Frontend
+
+- `VITE_API_BASE_URL` (optional) – backend URL used by most hooks; defaults to `http://localhost:8000`. Set it in a `.env.local` file at the project root to override.
+- [src/config.js](src/config.js) and [src/authConfig.js](src/authConfig.js) hard-code the backend URL (`http://127.0.0.1:8000`) and the Azure B2C tenant/client IDs. Edit these if you point at a different backend or tenant.
+- Sign-in uses Azure AD B2C. If you don't have access to the tenant, use the guest option on the sign-in page.
+
+### Getting credentials
+
+Azure keys and database details are shared by the team through the Azure portal or a team member. Do not store credentials in this README or commit them to git.
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Production build into `dist/` |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run tests (`node --test`) |
+
+## Study Planner Notes
+
+See [backend/README.md](backend/README.md) for details. In short:
+
+- Uploads accept PDF, DOCX, TXT, PPTX, PNG, JPG and JPEG files up to 20 MB each.
+- Scans and diagrams are read with the OpenAI key (image-reading usage applies; no Azure OCR account needed).
+- Confirming topics creates review activities and reserves the last pre-exam day for final review.
+- The missed-day control moves unfinished work to available days and preserves completed work.
+
+## Troubleshooting
+
+- **`Activate.ps1 cannot be loaded` on Windows:** run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`, then activate again.
+- **CORS errors in the browser:** make sure the frontend origin is listed in `FRONTEND_ORIGINS` and restart the backend.
+- **Frontend can't reach the API:** confirm the backend is running on port 8000 and check `/health`.
+- **AI features fail:** check `/health` to see which environment variables are missing.
+- **Port already in use:** change the uvicorn `--port` (and update `VITE_API_BASE_URL`, `src/config.js` and `src/authConfig.js`) or stop the other process.
 
 ## Contributing
 
-Contributions are welcome! If you have suggestions, improvements, or bug fixes, please open an issue or submit a pull request. For major changes, it’s best to open an issue first to discuss what you would like to change.
+1. Create a feature branch from `main`.
+2. Make your changes; run `npm run lint` and `npm test`.
+3. Open a pull request describing the change.
 
 ## License
 
-This project does not currently have a license. Please add a license if you intend to open source it or share it with the community.
-
-## Contact
-
-For any questions or feedback, feel free to reach out via [GitHub Issues](https://github.com/Sagar387/ai_education/issues) or contact the repository owner directly on GitHub.
-
----
-
-*Created by [Sagar387](https://github.com/Sagar387)*
-
----
-
-Feel free to adjust the sections and details as your project evolves. Enjoy building and learning with AI!
+No license has been specified yet.
